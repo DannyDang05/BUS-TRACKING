@@ -1,0 +1,287 @@
+html,
+body {
+    height: 100%;
+    margin: 0;
+    padding: 0;
+    font-family: 'Poppins', 'Roboto', sans-serif;
+    font-size: 0.9rem;
+}
+
+.admin-container {
+    display: flex;
+    flex-direction: column;
+    height: 100vh;
+}
+
+.admin-header {
+    width: 100%;
+    height: 65px;
+    border-bottom: 1px solid #e0e0e0;
+    padding: 0 1rem;
+    box-sizing: border-box;
+    display: flex;
+    align-items: center;
+
+    .header-container {
+        width: 100%;
+        height: 100%;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        background-color: #fff;
+
+        .header-left {
+            display: flex;
+            align-items: center;
+
+            .header-menu-icon {
+                font-size: 1.5rem;
+                color: #808080;
+                cursor: pointer;
+                margin-right: 1.5rem;
+                padding: 0.6rem 0.6rem;
+                border: 5px;
+
+                &:hover {
+                    background-color: #e4dede;
+                    border-radius: 50%;
+                }
+            }
+        }
+
+        .header-center {
+            flex-grow: 1;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .header-right {
+            display: flex;
+            align-items: center;
+            gap: 1.25rem;
+
+            .header-action-item {
+                display: flex;
+                align-items: center;
+                cursor: pointer;
+                padding: 0.3rem 0.5rem;
+                border-radius: 10px;
+                transition: background-color 0.2s ease, color 0.2s ease;
+
+                &:hover {
+                    background-color: #e4dede;
+                    color: #808080;
+                }
+
+                .action-icon {
+                    font-size: 1.2rem;
+                    margin-right: 0.4rem;
+                    color: #808080;
+                }
+
+                .action-text {
+                    font-size: 0.9rem;
+                    font-weight: 500;
+                    color: #808080;
+                }
+            }
+
+            .header-user-profile {
+                display: flex;
+                align-items: center;
+                gap: 0.6rem;
+                cursor: pointer;
+                padding: 0.3rem 0.5rem;
+                border-radius: 4px;
+                transition: background-color 0.2s ease;
+
+                &:hover {
+                    background-color: #e4dede;
+                }
+
+                .user-avatar-img {
+                    width: 30px;
+                    height: 30px;
+                    border-radius: 50%;
+                    object-fit: cover;
+                }
+
+                .user-avatar-icon {
+                    font-size: 1.8rem;
+                    color: #808080;
+                }
+
+                .user-name {
+                    font-weight: 600;
+                    font-size: 0.95rem;
+                    color: #808080;
+                }
+            }
+        }
+    }
+}
+
+.admin-body-container {
+    display: flex;
+    flex-grow: 1;
+    overflow: hidden;
+
+}
+
+.admin-content {
+    display: flex;
+    flex-direction: column;
+    flex-grow: 1;
+    margin: 10px;
+
+    .admin-main {
+        flex-grow: 1;
+        position: relative;
+        overflow: hidden;
+        border-radius: 7px;
+        box-shadow: 0 4px 8px 4px rgba(0, 0, 0, 0.1);
+
+
+        .map-container {
+            width: 100%;
+            height: 100%;
+        }
+
+        .table-drivers {
+            text-align: right;
+
+            .create-button {
+                margin: 10px;
+                border-radius: 10px;
+                color: #4f3cc9;
+                font-family: Roboto, Helvetica, Arial, sans-serif;
+                font-weight: 700;
+                padding: 4px 5px;
+
+                .icon-plus {
+                    margin-right: 10px;
+                }
+            }
+        }
+
+        .create-container {
+
+            display: flex;
+            flex-direction: column;
+            gap: 16px;
+            padding: 16px;
+            height: 100%;
+            box-sizing: border-box;
+
+            .password-container {
+                display: flex;
+                gap: 20px;
+            }
+
+            .save-button-container {
+                margin: auto -16px -16px -16px;
+                display: flex;
+                justify-content: left;
+                background-color: #E0E0E0;
+                height: 70px;
+                align-items: center;
+
+                textfield {
+                    width: 50%;
+                    ;
+                }
+
+                .save-button {
+                    margin-left: 16px;
+                    border-radius: 10px;
+                    width: 95px;
+                    height: 40px;
+
+                    &[disabled] {
+                        background-color: #cfcbcb;
+                    }
+
+                    &:not([disabled]) {
+                        background-color: #4f3cc9;
+                        color: white;
+                        cursor: pointer;
+                        box-shadow: 0 4px 8px 4px rgba(0, 0, 0, 0.1);
+                    }
+                }
+            }
+        }
+    }
+}
+
+.admin-sidebar {
+    width: 200px;
+    position: relative;
+
+
+    &.collapsed {
+        width: 80px;
+
+
+    }
+
+
+
+    .proside-bar {
+        height: 100%;
+        z-index: 1;
+    }
+
+
+
+    .pro-sidebar-inner {
+        background-color: #fff !important;
+
+
+        .map-container,
+        .feature-container,
+        .logout-container,
+        .mainpage-container,
+        .students-container,
+        .drivers-container {
+
+            color: #808080;
+
+            .pro-inner-item {
+                height: 100%;
+                display: flex;
+                align-items: center;
+                padding-top: 0;
+                padding-bottom: 0;
+
+                &:hover {
+                    background-color: #f1eeee;
+                }
+            }
+
+
+            a,
+            p {
+                color: #808080;
+                text-decoration: none;
+                width: 100%;
+                height: 100%;
+                display: flex;
+                align-items: center;
+            }
+
+
+        }
+
+        .pro-inner-list-item {
+
+            .map-container,
+            .mainpage-container,
+            .students-container,
+            .drivers-container {
+                margin-top: 4px;
+                margin-bottom: 10px;
+            }
+        }
+    }
+}
