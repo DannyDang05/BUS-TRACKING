@@ -1,22 +1,25 @@
-import mysql from "mysql2";
+import mysql from "mysql2/promise"; // Sử dụng promise-based
 
-const connectDB = () => {
-  const connection = mysql.createConnection({
-    host: "localhost",
-    user: "root",
-    password: "123456",
-    database: "bustracking",
-  });
+// Tạo một "pool" thay vì "connection"
+const pool = mysql.createPool({
+  host: process.env.DB_HOST || 'localhost',
+  user: process.env.DB_USER || 'root',
+  password: process.env.DB_PASSWORD || '123456',
+  database: process.env.DB_DATABASE || 'bustracking',
+  waitForConnections: true,
+  connectionLimit: 10,
+  queueLimit: 0
+});
 
-  connection.connect((err) => {
-    if (err) {
-      console.error("❌ Lỗi kết nối MySQL:", err);
-    } else {
-      console.log("✅ Đã kết nối MySQL thành công!");
-    }
-  });
-
-  return connection;
+// Hàm kiểm tra kết nối
+const checkConnection = async () => {
+  try {
+    const connection = await pool.getConnection(); // Lấy 1 kết nối từ pool
+    console.log("✅ Đã kết nối MySQL thành công (sử dụng Pool)!");
+    connection.release(); // Trả kết nối về pool
+  } catch (err) {
+    console.error("❌ Lỗi kết nối MySQL:", err);
+  }
 };
 
-export default connectDB;
+export { pool, checkConnection };

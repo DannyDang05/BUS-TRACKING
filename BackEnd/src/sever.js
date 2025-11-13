@@ -1,15 +1,19 @@
 import express from "express";
 import bodyParser from "body-parser";
 import viewEngine from "./config/viewEngine.js";
-import initWebRouter from "./route/web.js";   // ✅ giờ import này hợp lệ
-import connectDB from "./config/connectDB.js";
+import initWebRouter from "./route/web.js";
+import initAPIRouter from "./route/api.js";
+import { checkConnection } from "./config/connectDB.js"; // Import hàm check
 import cookieParser from "cookie-parser";
 import helmet from "helmet";
 import path from "path";
 import cors from "cors";
 import dotenv from "dotenv";
+import { createServer } from 'http'; // ✅ Thêm HTTP server
+import { initWebSocket } from "./services/webSocketService.js"; // ✅ Thêm WS
 
 dotenv.config();
+await checkConnection(); // ✅ Kiểm tra kết nối DB khi khởi động
 
 const app = express();
 const __dirname = path.resolve();
@@ -19,10 +23,8 @@ app.use(bodyParser.json({ limit: "50mb" }));
 app.use(bodyParser.urlencoded({ extended: true, limit: "50mb" }));
 app.use(
   cors({
-    origin: "http://localhost:3000",
+    origin: process.env.CORS_ORIGIN || "http://localhost:3000",
     credentials: true,
-    methods: ["GET", "POST", "PUT", "DELETE"],
-    allowedHeaders: ["Content-Type", "Authorization"],
   })
 );
 app.use(helmet());
@@ -30,10 +32,17 @@ app.use(express.json());
 app.use(cookieParser());
 
 viewEngine(app);
-initWebRouter(app);
-connectDB(app);
 
+// Khởi tạo các Router
+initWebRouter(app);
+initAPIRouter(app);
+
+// ✅ Cấu hình Server (HTTP + WebSocket)
 const port = process.env.PORT || 6969;
-app.listen(port, () => {
-  console.log(`✅ Server đang chạy tại http://localhost:${port}`);
+const server = createServer(app); // Tạo HTTP server từ app Express
+
+initWebSocket(server); // Khởi tạo WebSocket Server
+
+server.listen(port, () => {
+  console.log(`✅ Server (HTTP & WS) đang chạy tại http://localhost:${port}`);
 });
