@@ -148,7 +148,16 @@ body {
             height: 100%;
         }
 
-        .table-drivers {
+        .search-bar-container {
+            margin: 10px;
+            display:flex;
+            gap:5px;
+            justify-content: right;
+
+        }
+
+        .table-drivers,
+        .table-students {
             text-align: right;
 
             .create-button {
@@ -242,8 +251,13 @@ body {
         .feature-container,
         .logout-container,
         .mainpage-container,
-        .students-container,
-        .drivers-container {
+        .student-container,
+        .driver-container,
+        .route-container,
+        .bus-container,
+        .calendar-container,
+        .notification-container {
+            margin: 10px;
 
             color: #808080;
 
@@ -273,15 +287,6 @@ body {
 
         }
 
-        .pro-inner-list-item {
-
-            .map-container,
-            .mainpage-container,
-            .students-container,
-            .drivers-container {
-                margin-top: 4px;
-                margin-bottom: 10px;
-            }
-        }
+        .pro-inner-list-item {}
     }
 }

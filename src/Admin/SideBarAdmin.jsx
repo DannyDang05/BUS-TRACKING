@@ -3,7 +3,10 @@ import { FaFacebookSquare } from "react-icons/fa";
 import { DiReact } from "react-icons/di";
 import 'react-pro-sidebar/dist/css/styles.css';
 import { Outlet, Link } from "react-router-dom";
-import { FaSignOutAlt, FaHome } from 'react-icons/fa'; 
+import { FaSignOutAlt, FaHome , FaBusAlt } from 'react-icons/fa'; 
+import { FaRoute } from "react-icons/fa6";
+import { FaRegCalendarAlt } from "react-icons/fa";
+import { IoMdNotifications } from "react-icons/io";
 import {
     ProSidebar,
     Menu,
@@ -40,13 +43,33 @@ const SideBarAdmin = (props) => {
                         </MenuItem>
                     </Menu>
                     <Menu >
-                            <MenuItem className="students-container" icon={<PiStudentBold color="#808080" size={"24px"} />}>
-                                <Link to="/students">Students</Link>
+                            <MenuItem className="student-container" icon={<PiStudentBold color="#808080" size={"24px"} />}>
+                                <Link to="/students">Student</Link>
                             </MenuItem>
                     </Menu>
                     <Menu>
-                            <MenuItem className="drivers-container" icon={<TbUserFilled color="#808080" size={"24px"} />}>
-                                <Link to="/drivers">Drivers</Link>
+                            <MenuItem className="driver-container" icon={<TbUserFilled color="#808080" size={"24px"} />}>
+                                <Link to="/drivers">Driver</Link>
+                            </MenuItem>
+                    </Menu>
+                    <Menu>
+                            <MenuItem className="route-container" icon={<FaRoute color="#808080" size={"24px"} />}>
+                                <Link to="/routes">Route</Link>
+                            </MenuItem>
+                    </Menu>
+                    <Menu>
+                            <MenuItem className="calendar-container" icon={<FaRegCalendarAlt color="#808080" size={"24px"} />}>
+                                <Link to="/calendars">Calendar</Link>
+                            </MenuItem>
+                    </Menu>
+                    <Menu>
+                            <MenuItem className="bus-container" icon={<FaBusAlt color="#808080" size={"24px"} />}>
+                                <Link to="/buses">Bus</Link>
+                            </MenuItem>
+                    </Menu>
+                    <Menu>
+                            <MenuItem className="notification-container" icon={<IoMdNotifications color="#808080" size={"24px"} />}>
+                                <Link to="/notification">Notification</Link>
                             </MenuItem>
                     </Menu>
                 </SidebarContent>
