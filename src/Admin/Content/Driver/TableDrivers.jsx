@@ -1,6 +1,9 @@
 import * as React from 'react';
 import { useNavigate } from "react-router-dom"
-import { DataGrid } from '@mui/x-data-grid';
+import { DataGrid, GridToolbarContainer } from '@mui/x-data-grid';
+import { Button } from '@mui/material';
+
+
 import Paper from '@mui/material/Paper';
 
 
@@ -37,18 +40,36 @@ const rows = [
   { id: 9, lastName: 'Roxie', firstName: 'Harvey', age: 65 },
 ];
 
-const TableDriver = () => {
+const DeleteButton = () => {
+  return (
+
+    <GridToolbarContainer sx={{ justifyContent: 'flex-end', }}>
+      <Button
+        variant="contained"
+        color="error"
+        size="small"
+      >
+        Delete
+      </Button>
+    </GridToolbarContainer>
+  );
+}
+const TableDriver = (props) => {
+  const { rowSelected, setRowSelected } = props;
   const navigate = useNavigate()
-  const handleClickOnRow = (object) =>{
+  const handleClickOnRow = (object) => {
     const driverID = object.id
     navigate(`/drivers/update-driver/${driverID}`)
     console.log("thongtin", object)
   }
   return (
-    <Paper sx={{ height: "100%", width: '100%' }}>
+    <Paper sx={{ width: '100%' }}>
       <DataGrid
         rows={rows}
+        rowHeight={40}
         columns={columns}
+        autoHeight={true}
+        slots={rowSelected ? { toolbar: DeleteButton } : {}}
         initialState={{
           pagination: {
             paginationModel: { page: 0, pageSize: 5 }
@@ -56,15 +77,18 @@ const TableDriver = () => {
         }}
         pageSizeOptions={[5, 10]}
         checkboxSelection
+        onRowSelectionModelChange={(selection) => setRowSelected(selection.length > 0)}
         disableRowSelectionOnClick={true}
-        onRowClick={(e)=>handleClickOnRow(e)}
+        onRowClick={(e) => handleClickOnRow(e)}
         sx={{
+
           '& .MuiDataGrid-cell:focus': {
             outline: 'none',
           },
+
         }}
 
-          />
+      />
     </Paper>
   );
 }
