@@ -5,7 +5,7 @@ const pool = mysql.createPool({
   host: process.env.DB_HOST || 'localhost',
   user: process.env.DB_USER || 'root',
   password: process.env.DB_PASSWORD || '123456',
-  database: process.env.DB_DATABASE || 'bustracking',
+  database: process.env.DB_DATABASE || 'school_bus_db', // ✅ THAY ĐỔI Ở ĐÂY
   waitForConnections: true,
   connectionLimit: 10,
   queueLimit: 0

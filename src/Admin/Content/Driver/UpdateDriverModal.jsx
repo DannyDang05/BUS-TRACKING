@@ -1,138 +1,154 @@
-import { TextField, Box, Button } from '@mui/material';
+import { TextField, Box, Button, CircularProgress, Typography } from '@mui/material';
 import { useEffect, useState } from 'react';
-import { FaSave, FaSleigh } from "react-icons/fa";
+import { FaSave } from "react-icons/fa";
+// BƯỚC 1: IMPORT CÁC HOOKS VÀ API CẦN THIẾT
+import { useNavigate, useParams } from 'react-router-dom';
+import { getDriverById, updateDriver } from '../../services/apiService'; // Import 2 hàm API
+
 const UpdateDriverModal = () => {
-    const [name, setName] = useState("")
-    const [phone, setPhone] = useState("")
-    const [email, setEmail] = useState("")
-    const [password, setPassword] = useState("")
-    const [confirmPassword, setConfirmPassWord] = useState("")
-    const [licenseNumber, setLicenseNumber] = useState("")
-    const [licenseClass, setLicenseClass] = useState("")
+    const navigate = useNavigate();
+    const { id } = useParams(); // Lấy 'id' từ URL (ví dụ: /drivers/update-driver/TX001)
 
+    // BƯỚC 2: CẬP NHẬT STATE (Tương tự Create, nhưng không cần 'Id')
+    const [FullName, setFullName] = useState("");
+    const [MaBangLai, setMaBangLai] = useState("");
+    const [PhoneNumber, setPhoneNumber] = useState("");
+
+    // Thêm state cho việc tải dữ liệu
+    const [loading, setLoading] = useState(true);
+    const [error, setError] = useState(null);
+
+    // BƯỚC 3: LẤY DỮ LIỆU TÀI XẾ KHI COMPONENT ĐƯỢC TẢI
+    useEffect(() => {
+        const fetchDriverData = async () => {
+            try {
+                setLoading(true);
+                setError(null);
+                const response = await getDriverById(id); // Gọi API lấy chi tiết
+                
+                if (response && response.errorCode === 0) {
+                    // Điền dữ liệu vào state
+                    const driver = response.data;
+                    setFullName(driver.FullName);
+                    setMaBangLai(driver.MaBangLai);
+                    setPhoneNumber(driver.PhoneNumber);
+                } else {
+                    setError(response.message || "Không tìm thấy tài xế.");
+                }
+            } catch (err) {
+                setError("Lỗi khi tải dữ liệu: " + err.message);
+            } finally {
+                setLoading(false);
+            }
+        };
+
+        fetchDriverData();
+    }, [id]); // Phụ thuộc vào 'id', nếu id thay đổi, fetch lại
+
+    // BƯỚC 4: CẬP NHẬT HÀM VALIDATION
     const isValid = () => {
-        if (name.trim() === "") {
-            return false;
-        }
-        if (phone.trim() === "") {
-            return false;
-        } else if (!/^\+?(\d{9,12})$/.test(phone.trim())) {
-            return false;
-        }
-        if (email.trim() === "") {
-            return false;
-        } else if (!/^[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}$/i.test(email)) {
-            return false;
-        }
-        if (password === "") {
-            return false;
-        } else if (password.length < 8) {
-            return false;
-        }
-        if (confirmPassword ===""){
-            return false;
-        }else if (confirmPassword != password){
-            return false;
-        }
-        if (licenseNumber.trim() === "") {
-            return false;
+        if (FullName.trim() === "") return false;
+        if (MaBangLai.trim() === "") return false;
+        if (PhoneNumber.trim() === "") return false;
+        return true;
+    };
+
+    // BƯỚC 5: CẬP NHẬT HÀM SUBMIT
+    const handleSubmit = async (event) => {
+        event.preventDefault();
+
+        if (!isValid()) {
+            return;
         }
 
-        if (licenseClass.trim() === "") {
-            return false
-        }
-    return true;
+        const driverData = {
+            FullName,
+            MaBangLai,
+            PhoneNumber
+        };
 
+        try {
+            // Gọi API cập nhật
+            const response = await updateDriver(id, driverData); 
+            
+            if (response && response.errorCode === 0) {
+                console.log("Cập nhật tài xế thành công:", response.message);
+                navigate("/drivers"); // Quay lại trang danh sách
+            } else {
+                alert(`Lỗi: ${response.message}`);
+            }
+        } catch (error) {
+            console.error("Lỗi hệ thống:", error);
+            alert("Đã xảy ra lỗi không mong muốn. Vui lòng thử lại.");
+        }
+    };
+
+    // Xử lý hiển thị khi đang tải hoặc lỗi
+    if (loading) {
+        return <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '100%' }}><CircularProgress /></Box>;
     }
-    
+
+    if (error) {
+        return <Typography color="error" sx={{ padding: '16px' }}>{error}</Typography>;
+    }
+
     return (
         <Box
             component="form"
             className="create-container"
             autoComplete="off"
+            onSubmit={handleSubmit}
         >
 
-            {/* Mỗi TextField là một hàng */}
-            <h2>Identity</h2>
-            <TextField
-                required
-                sx={{ width: '50%' }}
-                id="name"
-                name="name"
-                label="Full Name"
-                variant="outlined"
-                onChange={(event)=>setName(event.target.value)}
-
-            />
+            {/* BƯỚC 6: CẬP NHẬT CÁC TRƯỜNG INPUT */}
+            <h2>Cập nhật thông tin Tài xế (ID: {id})</h2>
+            {/* Không cho phép sửa ID */}
             
             <TextField
                 required
                 sx={{ width: '50%' }}
-                id="phone"
-                name="phone"
-                label="Phone Number"
+                id="FullName"
+                name="FullName"
+                label="Họ và Tên"
                 variant="outlined"
-                onChange={(event)=>setPhone(event.target.value)}
+                value={FullName}
+                onChange={(event) => setFullName(event.target.value)}
             />
 
             <TextField
                 required
                 sx={{ width: '50%' }}
-                id="email"
-                name="email"
-                label="Email"
-                type="email"
+                id="PhoneNumber"
+                name="PhoneNumber"
+                label="Số Điện Thoại"
                 variant="outlined"
-                onChange={(event)=>setEmail(event.target.value)}
+                value={PhoneNumber}
+                onChange={(event) => setPhoneNumber(event.target.value)}
             />
-            <h2>Password</h2>
-            <div className='password-container'>
-            <TextField
-                required
-                sx={{ width: '20%' }}
-                id="password"
-                name="password"
-                label="Password"
-                type="password"
-                variant="outlined"
-                onChange={(event)=>setPassword(event.target.value)}
-            />
-            <TextField
-                required
-                sx={{ width: '20%' }}
-                id="confirm password"
-                name="confirm password"
-                label="Confirm Password"
-                type="password"
-                variant="outlined"
-                onChange={(event)=>setConfirmPassWord(event.target.value)}
-            />
-            </div>
-            <h2>License</h2>
+            
+            <h2>Giấy phép</h2>
             <TextField
                 required
                 sx={{ width: '50%' }}
-                id="license_number"
-                name="license_number"
-                label="License Number"
+                id="MaBangLai"
+                name="MaBangLai"
+                label="Mã Bằng Lái"
                 variant="outlined"
-                onChange={(event)=>setLicenseNumber(event.target.value)}
+                value={MaBangLai}
+                onChange={(event) => setMaBangLai(event.target.value)}
             />
+            
+            {/* Đã xóa các trường email, password, license class */}
 
-            <TextField
-                required
-                sx={{ width: '50%' }}
-                id="vehicle_permit"
-                name="vehicle_permit"
-                label="Licence Class"
-                variant="outlined"
-                onChange={(event)=>setLicenseClass(event.target.value)}
-            />
             <div className='save-button-container'>
-                <Button variant="outlined" disabled={!isValid()} className='save-button'>
-                    <FaSave size={"1.5em"} style={{ marginRight: "5px" }} /> Save
+                <Button 
+                    type="submit"
+                    variant="outlined" 
+                    disabled={!isValid()} 
+                    className='save-button'
+                >
+                    <FaSave size={"1.5em"} style={{ marginRight: "5px" }} /> Cập Nhật
                 </Button>
-
             </div>
         </Box>
     );

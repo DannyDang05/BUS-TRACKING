@@ -1,10 +1,11 @@
 import { pool } from "../config/connectDB.js";
-import bcrypt from 'bcryptjs';
+// Không cần import bcrypt nữa vì bảng `drivers` không lưu password
 
 // GET /api/v1/drivers
+// Lấy danh sách tài xế từ bảng `drivers`
 const getAllDrivers = async (req, res) => {
   try {
-    const [rows] = await pool.query('SELECT id, fullName, phone, email, licenseNumber, licenseClass, createdAt FROM Drivers');
+    const [rows] = await pool.query('SELECT Id, FullName, MaBangLai, PhoneNumber, UserId FROM drivers');
     return res.status(200).json({ errorCode: 0, message: 'OK', data: rows });
   } catch (e) {
     console.log(e);
@@ -13,26 +14,26 @@ const getAllDrivers = async (req, res) => {
 };
 
 // POST /api/v1/drivers
+// Tạo tài xế mới (CHƯA XỬ LÝ TẠO TÀI KHOẢN `users`)
 const createNewDriver = async (req, res) => {
-  const { fullName, phone, email, password, licenseNumber, licenseClass } = req.body;
-  if (!fullName || !phone || !email || !password || !licenseNumber || !licenseClass) {
-    return res.status(400).json({ errorCode: 1, message: 'Thiếu thông tin bắt buộc.' });
+  // Lấy các trường từ DB mới
+  const { Id, FullName, MaBangLai, PhoneNumber } = req.body; 
+  
+  if (!Id || !FullName || !MaBangLai || !PhoneNumber) {
+    return res.status(400).json({ errorCode: 1, message: 'Thiếu thông tin (Id, Tên, Mã Bằng Lái, SĐT).' });
   }
 
   try {
-    // Mã hóa mật khẩu
-    const salt = await bcrypt.genSalt(10);
-    const hashedPassword = await bcrypt.hash(password, salt);
-
+    // Không mã hóa mật khẩu ở đây nữa
     const [result] = await pool.query(
-      'INSERT INTO Drivers (fullName, phone, email, password, licenseNumber, licenseClass) VALUES (?, ?, ?, ?, ?, ?)',
-      [fullName, phone, email, hashedPassword, licenseNumber, licenseClass]
+      'INSERT INTO drivers (Id, FullName, MaBangLai, PhoneNumber) VALUES (?, ?, ?, ?)',
+      [Id, FullName, MaBangLai, PhoneNumber]
     );
 
-    return res.status(201).json({ errorCode: 0, message: 'Tạo tài xế mới thành công!', driverId: result.insertId });
+    return res.status(201).json({ errorCode: 0, message: 'Tạo tài xế mới thành công!', driverId: Id });
   } catch (e) {
     if (e.code === 'ER_DUP_ENTRY') {
-      return res.status(409).json({ errorCode: 2, message: 'Email, SĐT hoặc Bằng lái đã tồn tại.' });
+      return res.status(409).json({ errorCode: 2, message: 'Id, Mã Bằng Lái đã tồn tại.' });
     }
     console.log(e);
     return res.status(500).json({ errorCode: -1, message: 'Lỗi server.' });
@@ -40,11 +41,12 @@ const createNewDriver = async (req, res) => {
 };
 
 // GET /api/v1/drivers/:id
+// Lấy chi tiết 1 tài xế
 const getDriverDetail = async (req, res) => {
     const id = req.params.id;
     try {
         const [rows] = await pool.query(
-            'SELECT id, fullName, phone, email, licenseNumber, licenseClass FROM Drivers WHERE id = ?', [id]
+            'SELECT Id, FullName, MaBangLai, PhoneNumber, UserId FROM drivers WHERE Id = ?', [id]
         );
         if (rows.length === 0) {
             return res.status(404).json({ errorCode: 3, message: 'Không tìm thấy tài xế.' });
@@ -57,19 +59,19 @@ const getDriverDetail = async (req, res) => {
 };
 
 // PUT /api/v1/drivers/:id
+// Cập nhật thông tin tài xế
 const updateDriver = async (req, res) => {
   const id = req.params.id;
-  const { fullName, phone, email, licenseNumber, licenseClass } = req.body;
+  const { FullName, MaBangLai, PhoneNumber } = req.body; // Bỏ `email`, `licenseClass`
 
-  if (!fullName || !phone || !email || !licenseNumber || !licenseClass) {
+  if (!FullName || !MaBangLai || !PhoneNumber) {
     return res.status(400).json({ errorCode: 1, message: 'Thiếu thông tin bắt buộc.' });
   }
   
   try {
-    // Lưu ý: Tạm thời chưa xử lý đổi mật khẩu ở đây
     const [result] = await pool.query(
-      'UPDATE Drivers SET fullName = ?, phone = ?, email = ?, licenseNumber = ?, licenseClass = ? WHERE id = ?',
-      [fullName, phone, email, licenseNumber, licenseClass, id]
+      'UPDATE drivers SET FullName = ?, MaBangLai = ?, PhoneNumber = ? WHERE Id = ?',
+      [FullName, MaBangLai, PhoneNumber, id]
     );
     if (result.affectedRows === 0) {
       return res.status(404).json({ errorCode: 3, message: 'Không tìm thấy tài xế.' });
@@ -77,7 +79,7 @@ const updateDriver = async (req, res) => {
     return res.status(200).json({ errorCode: 0, message: 'Cập nhật tài xế thành công.' });
   } catch (e) {
     if (e.code === 'ER_DUP_ENTRY') {
-      return res.status(409).json({ errorCode: 2, message: 'Email, SĐT hoặc Bằng lái bị trùng.' });
+      return res.status(409).json({ errorCode: 2, message: 'Mã Bằng Lái bị trùng.' });
     }
     console.log(e);
     return res.status(500).json({ errorCode: -1, message: 'Lỗi server.' });
@@ -85,10 +87,13 @@ const updateDriver = async (req, res) => {
 };
 
 // DELETE /api/v1/drivers/:id
+// Xóa tài xế
 const deleteDriver = async (req, res) => {
     const id = req.params.id;
     try {
-        const [result] = await pool.query('DELETE FROM Drivers WHERE id = ?', [id]);
+        // Cân nhắc: Xóa tài xế có nên xóa/vô hiệu hóa `users` liên kết không?
+        // Tạm thời chỉ xóa trong bảng `drivers`
+        const [result] = await pool.query('DELETE FROM drivers WHERE Id = ?', [id]);
         if (result.affectedRows === 0) {
             return res.status(404).json({ errorCode: 3, message: 'Không tìm thấy tài xế.' });
         }
