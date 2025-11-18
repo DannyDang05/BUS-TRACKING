@@ -38,7 +38,30 @@ export const deleteDriver = (id) => apiService.delete(`/drivers/${id}`);
 
 // --- API HỌC SINH (Students) ---
 export const getAllStudents = () => apiService.get('/students');
-// ... (Bạn có thể thêm các hàm create, update, delete cho học sinh tương tự)
+export const getStudentById = (id) => apiService.get(`/students/${id}`);
+export const createStudent = (studentData) => apiService.post('/students', studentData);
+export const updateStudent = (id, studentData) => apiService.put(`/students/${id}`, studentData);
+export const deleteStudent = (id) => apiService.delete(`/students/${id}`);
+
+// --- API ROUTES (Tuyến) ---
+export const getAllRoutes = () => apiService.get('/routes');
+export const getRouteById = (id) => apiService.get(`/routes/${id}`);
+export const createRoute = (routeData) => apiService.post('/routes', routeData);
+export const updateRoute = (id, routeData) => apiService.put(`/routes/${id}`, routeData);
+export const deleteRoute = (id) => apiService.delete(`/routes/${id}`);
+
+// --- API VEHICLES/BUSES (Xe) ---
+export const getAllVehicles = () => apiService.get('/vehicles');
+export const getVehicleById = (id) => apiService.get(`/vehicles/${id}`);
+export const createVehicle = (vehicleData) => apiService.post('/vehicles', vehicleData);
+export const updateVehicle = (id, vehicleData) => apiService.put(`/vehicles/${id}`, vehicleData);
+export const deleteVehicle = (id) => apiService.delete(`/vehicles/${id}`);
+
+// --- API NOTIFICATIONS (Thông báo) ---
+export const getAllNotifications = () => apiService.get('/notifications');
+export const getNotificationById = (id) => apiService.get(`/notifications/${id}`);
+export const createNotification = (notificationData) => apiService.post('/notifications', notificationData);
+export const deleteNotification = (id) => apiService.delete(`/notifications/${id}`);
 
 // --- API THEO DÕI (Tracking) ---
 export const getLiveLocations = () => apiService.get('/tracking/live');

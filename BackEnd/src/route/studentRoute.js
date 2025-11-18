@@ -4,12 +4,12 @@ import {
     createStudent, 
     updateStudent, 
     deleteStudent 
-} from "../../../controllers/studentController.js";
-import verifyToken from "../../../middleware/authMiddleware.js";
+} from "../controller/studentController.js";
+import verifyToken from "../middleWare/authMiddleware.js";
 
 const router = express.Router();
 
-router.use(verifyToken); // Bảo vệ tất cả route học sinh
+// router.use(verifyToken); 
 
 router.get("/", getAllStudents);
 router.post("/", createStudent);

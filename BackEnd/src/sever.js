@@ -2,7 +2,7 @@ import express from "express";
 import bodyParser from "body-parser";
 import viewEngine from "./config/viewEngine.js";
 import initWebRouter from "./route/web.js";
-import initAPIRouter from "./route/api.js";
+import initAPIRouter from "./route/Api.js";
 import { checkConnection } from "./config/connectDB.js"; // Import hàm check
 import cookieParser from "cookie-parser";
 import helmet from "helmet";
@@ -10,7 +10,7 @@ import path from "path";
 import cors from "cors";
 import dotenv from "dotenv";
 import { createServer } from 'http'; // ✅ Thêm HTTP server
-import { initWebSocket } from "./services/webSocketService.js"; // ✅ Thêm WS
+import { initWebSocket } from "./service/WebsocketService.js"; // ✅ Thêm WS
 
 dotenv.config();
 await checkConnection(); // ✅ Kiểm tra kết nối DB khi khởi động
@@ -23,7 +23,7 @@ app.use(bodyParser.json({ limit: "50mb" }));
 app.use(bodyParser.urlencoded({ extended: true, limit: "50mb" }));
 app.use(
   cors({
-    origin: process.env.CORS_ORIGIN || "http://localhost:3000",
+    origin: process.env.CORS_ORIGIN || "http://localhost:5173",
     credentials: true,
   })
 );

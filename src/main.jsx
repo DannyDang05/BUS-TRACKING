@@ -5,7 +5,7 @@ import { BrowserRouter, Routes, Route } from 'react-router-dom'
 
 import App from './App.jsx'
 import Map from './Admin/Content/Map.jsx'
-import StudentManagement from './Admin/Content/Student/Student.jsx'
+import Student from './Admin/Content/Student/Student.jsx'
 import MainPage from './Admin/Content/MainPage.jsx'
 import Driver from './Admin/Content/Driver/Driver.jsx'
 import CreateDriverModal from './Admin/Content/Driver/CreateDriverModal.jsx'
@@ -28,7 +28,7 @@ createRoot(document.getElementById('root')).render(
         <Route path='/' element={<App />}>
           <Route index element={<MainPage />} />
           <Route path="map" element={<Map />} />
-          <Route path="students" element={<StudentManagement />} />
+          <Route path="students" element={<Student />} />
           <Route path="students/create-student" element={<CreateStudentModal />} />
           <Route path="students/update-student/:id" element={<UpdateStudentModal />} />
           <Route path="drivers" element={<Driver />} />

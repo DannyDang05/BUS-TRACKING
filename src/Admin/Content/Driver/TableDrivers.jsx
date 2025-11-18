@@ -1,10 +1,10 @@
 import * as React from 'react';
-import { useNavigate } from "react-router-dom";
+import { useNavigate } from "react-router-dom"
 import { DataGrid } from '@mui/x-data-grid';
 import Paper from '@mui/material/Paper';
 // IMPORT HOOKS VÀ API
 import { useState, useEffect } from 'react';
-import { getAllDrivers } from '../../services/apiService'; // Import hàm API
+import { getAllDrivers } from '../../../service/apiService'; // Import hàm API
 
 // BƯỚC 1: CẬP NHẬT CÁC CỘT ĐỂ KHỚP VỚI DATABASE
 // Dữ liệu từ API sẽ có các trường: Id, FullName, MaBangLai, PhoneNumber
@@ -34,60 +34,50 @@ const columns = [
 
 const TableDriver = () => {
   const navigate = useNavigate();
+  const [drivers, setDrivers] = useState([]);
+  const [loading, setLoading] = useState(false);
 
-  // BƯỚC 2: STATE ĐỂ LƯU DATA TỪ API
-  const [rows, setRows] = useState([]);
-  const [loading, setLoading] = useState(true);
-
-  // BƯỚC 3: GỌI API KHI COMPONENT MỞ RA
   useEffect(() => {
-    const fetchDrivers = async () => {
+    const fetch = async () => {
+      setLoading(true);
       try {
-        setLoading(true);
-        const apiResponse = await getAllDrivers(); // apiResponse = { errorCode, message, data }
-        if (apiResponse && apiResponse.errorCode === 0) {
-          setRows(apiResponse.data); // Gán dữ liệu tài xế vào state
-        } else {
-          console.error(apiResponse.message);
-        }
-      } catch (error) {
-        console.error("Lỗi khi tải danh sách tài xế:", error);
+        const res = await getAllDrivers();
+        // apiService interceptor returns `response.data` shape, which our backend wraps as { errorCode, message, data }
+        const list = res?.data || res || [];
+        setDrivers(list);
+      } catch (err) {
+        console.error('Lấy drivers lỗi', err);
+        setDrivers([]);
       } finally {
         setLoading(false);
       }
     };
+    fetch();
+  }, []);
 
-    fetchDrivers();
-  }, []); // [] đảm bảo useEffect chỉ chạy 1 lần
-
-  const handleClickOnRow = (params) => {
-    // BƯỚC 4: Sửa lại key ID (từ `params.id` thành `params.row.Id` hoặc `params.id` nếu getRowId dùng 'Id')
-    const driverID = params.id; 
-    navigate(`/drivers/update-driver/${driverID}`);
-    console.log("Thông tin hàng:", params.row);
-  };
+  const handleClickOnRow = (params) =>{
+    const driverID = params.row?.Id;
+    if (driverID) navigate(`/drivers/update-driver/${driverID}`);
+  }
 
   return (
-    <Paper sx={{ height: "100%", width: '100%' }}>
+    <Paper sx={{ width: '100%' }}>
       <DataGrid
-        rows={rows} // Dùng state 'rows'
+        rows={drivers}
+        getRowId={(row) => row.Id}
         columns={columns}
-        loading={loading} // Thêm trạng thái loading
-        // BƯỚC 4: BÁO CHO DATAGRID BIẾT TRƯỜNG 'Id' (viết hoa) LÀ KEY UNIQUE
-        getRowId={(row) => row.Id} 
+        loading={loading}
+        autoHeight
         initialState={{
           pagination: {
             paginationModel: { page: 0, pageSize: 5 }
           }
         }}
         pageSizeOptions={[5, 10]}
-        checkboxSelection
-        disableRowSelectionOnClick={true}
-        onRowClick={(e) => handleClickOnRow(e)}
+        disableRowSelectionOnClick
+        onRowClick={handleClickOnRow}
         sx={{
-          '& .MuiDataGrid-cell:focus': {
-            outline: 'none',
-          },
+          '& .MuiDataGrid-cell:focus': { outline: 'none' }
         }}
       />
     </Paper>

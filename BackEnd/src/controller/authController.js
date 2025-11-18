@@ -3,38 +3,41 @@ import bcrypt from 'bcryptjs';
 import jwt from 'jsonwebtoken';
 
 const login = async (req, res) => {
-  const { email, password } = req.body;
+  // accept username or email for backward compatibility
+  const username = req.body.username || req.body.Username || req.body.email || req.body.Email;
+  const password = req.body.password || req.body.Password;
 
-  if (!email || !password) {
-    return res.status(400).json({ errorCode: 1, message: 'Email và mật khẩu là bắt buộc.' });
+  if (!username || !password) {
+    return res.status(400).json({ errorCode: 1, message: 'Username và mật khẩu là bắt buộc.' });
   }
 
   try {
-    // 1. Tìm người dùng
-    const [rows] = await pool.query('SELECT * FROM Users WHERE email = ?', [email]);
+    // 1. Tìm người dùng trong bảng `users`
+    const [rows] = await pool.query('SELECT Id, Username, Password, Role, ProfileId FROM users WHERE Username = ?', [username]);
     if (rows.length === 0) {
-      return res.status(401).json({ errorCode: 2, message: 'Email không tồn tại.' });
+      return res.status(401).json({ errorCode: 2, message: 'Username không tồn tại.' });
     }
     const user = rows[0];
 
     // 2. Kiểm tra mật khẩu
-    const isMatch = await bcrypt.compare(password, user.password);
+    const dbPassword = user.Password || user.password;
+    const isMatch = await bcrypt.compare(password, dbPassword);
     if (!isMatch) {
       return res.status(401).json({ errorCode: 3, message: 'Sai mật khẩu.' });
     }
 
     // 3. Tạo Token
     const payload = {
-      id: user.id,
-      email: user.email,
-      role: user.role
+      id: user.Id,
+      username: user.Username,
+      role: user.Role
     };
     const token = jwt.sign(payload, process.env.JWT_SECRET, { expiresIn: '1d' });
 
     // 4. Gửi Token qua HttpOnly Cookie (Bảo mật)
     res.cookie('jwt_token', token, {
       httpOnly: true,
-      secure: process.env.NODE_ENV === 'production', // Chỉ gửi qua HTTPS ở môi trường production
+      secure: process.env.NODE_ENV === 'production',
       sameSite: 'strict',
       maxAge: 24 * 60 * 60 * 1000 // 1 ngày
     });
@@ -43,10 +46,10 @@ const login = async (req, res) => {
       errorCode: 0,
       message: 'Đăng nhập thành công!',
       data: {
-        id: user.id,
-        email: user.email,
-        fullName: user.fullName,
-        role: user.role
+        id: user.Id,
+        username: user.Username,
+        role: user.Role,
+        profileId: user.ProfileId
       }
     });
 

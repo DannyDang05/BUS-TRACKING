@@ -5,13 +5,13 @@ import {
     updateDriver, 
     deleteDriver, 
     getDriverDetail 
-} from "../../../controllers/driverController.js";
-import verifyToken from "../../../middleware/authMiddleware.js";
+} from "../controller/driverController.js";
+import verifyToken from "../middleWare/authMiddleware.js";
 
 const router = express.Router();
 
 // Tất cả các route tài xế đều cần xác thực
-router.use(verifyToken);
+// router.use(verifyToken);
 
 router.get("/", getAllDrivers);
 router.post("/", createNewDriver);

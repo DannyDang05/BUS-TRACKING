@@ -3,8 +3,8 @@ import {
     updateLocation, 
     getLiveLocations,
     getRouteHistory // ✅ Import hàm mới
-} from "../../../controllers/trackingController.js";
-import verifyToken from "../../../middleware/authMiddleware.js";
+} from "../controller/trackingController.js";
+import verifyToken from "../middleWare/authMiddleware.js";
 
 const router = express.Router();
 

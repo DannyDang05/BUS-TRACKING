@@ -1,8 +1,11 @@
 import express from "express";
-import authRoute from "./api/v1/authRoute.js";
-import driverRoute from "./api/v1/driverRoute.js";
-import studentRoute from "./api/v1/studentRoute.js";
-import trackingRoute from "./api/v1/trackingRoute.js";
+import authRoute from "./authRoute.js";
+import driverRoute from "./driverRoute.js";
+import studentRoute from "./studentRoute.js";
+import trackingRoute from "./trackingRoute.js";
+import routeRoute from "./routeRoute.js";
+import vehicleRoute from "./vehicleRoute.js";
+import notificationRoute from "./notificationRoute.js";
 
 const router = express.Router();
 
@@ -13,6 +16,9 @@ const initAPIRouter = (app) => {
   router.use("/v1/drivers", driverRoute);
   router.use("/v1/students", studentRoute);
   router.use("/v1/tracking", trackingRoute);
+  router.use("/v1/routes", routeRoute);
+  router.use("/v1/vehicles", vehicleRoute);
+  router.use("/v1/notifications", notificationRoute);
 
   // Gắn Router tổng vào Express app với prefix /api
   return app.use("/api", router);

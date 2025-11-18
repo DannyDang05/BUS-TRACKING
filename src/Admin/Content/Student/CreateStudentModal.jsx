@@ -1,141 +1,121 @@
-import { TextField, Box, Button } from '@mui/material';
-import { useEffect, useState } from 'react';
-import { FaSave, FaSleigh } from "react-icons/fa";
-const CreateStudentModal = () => {
-    const [name, setName] = useState("")
-    const [phone, setPhone] = useState("")
-    const [email, setEmail] = useState("")
-    const [password, setPassword] = useState("")
-    const [confirmPassword, setConfirmPassWord] = useState("")
-    const [licenseNumber, setLicenseNumber] = useState("")
-    const [licenseClass, setLicenseClass] = useState("")
+import React, { useState } from 'react';
+import { Dialog, DialogTitle, DialogContent, DialogActions, TextField, Button, Box } from '@mui/material';
+import { useNavigate } from 'react-router-dom';
+import { createStudent } from '../../../service/apiService';
 
-    const isValid = () => {
-        if (name.trim() === "") {
-            return false;
-        }
-        if (phone.trim() === "") {
-            return false;
-        } else if (!/^\+?(\d{9,12})$/.test(phone.trim())) {
-            return false;
-        }
-        if (email.trim() === "") {
-            return false;
-        } else if (!/^[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}$/i.test(email)) {
-            return false;
-        }
-        if (password === "") {
-            return false;
-        } else if (password.length < 8) {
-            return false;
-        }
-        if (confirmPassword ===""){
-            return false;
-        }else if (confirmPassword != password){
-            return false;
-        }
-        if (licenseNumber.trim() === "") {
-            return false;
-        }
+const CreateStudentModal = ({ open, onClose, onRefresh } = {}) => {
+  const navigate = useNavigate();
+  const [formData, setFormData] = useState({
+    MaHocSinh: '',
+    HoTen: '',
+    Lop: '',
+    TinhTrang: '',
+    MaPhuHuynh: '',
+    MaDiemDon: ''
+  });
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState('');
 
-        if (licenseClass.trim() === "") {
-            return false
-        }
-    return true;
+  const handleChange = (e) => {
+    const { name, value } = e.target;
+    setFormData(prev => ({
+      ...prev,
+      [name]: value
+    }));
+  };
 
+  const handleSubmit = async () => {
+    setLoading(true);
+    setError('');
+    try {
+      await createStudent(formData);
+      setFormData({
+        MaHocSinh: '',
+        HoTen: '',
+        Lop: '',
+        TinhTrang: '',
+        MaPhuHuynh: '',
+        MaDiemDon: ''
+      });
+      onRefresh?.();
+      onClose?.();
+      navigate('/students');
+    } catch (err) {
+      setError(err.response?.data?.message || 'Tạo học sinh lỗi');
+      console.error('Error creating student:', err);
+    } finally {
+      setLoading(false);
     }
-    
-    return (
-        <Box
-            component="form"
-            className="create-container"
-            autoComplete="off"
-        >
+  };
 
-            {/* Mỗi TextField là một hàng */}
-            <h2>Identity</h2>
-            <TextField
-                required
-                sx={{ width: '50%' }}
-                id="name"
-                name="name"
-                label="Full Name"
-                variant="outlined"
-                onChange={(event)=>setName(event.target.value)}
+  // Nếu dùng như route element, luôn open
+  const isOpen = open !== undefined ? open : true;
+  const closeHandler = onClose || (() => navigate('/students'));
 
-            />
-            
-            <TextField
-                required
-                sx={{ width: '50%' }}
-                id="phone"
-                name="phone"
-                label="Phone Number"
-                variant="outlined"
-                onChange={(event)=>setPhone(event.target.value)}
-            />
-
-            <TextField
-                required
-                sx={{ width: '50%' }}
-                id="email"
-                name="email"
-                label="Email"
-                type="email"
-                variant="outlined"
-                onChange={(event)=>setEmail(event.target.value)}
-            />
-            <h2>Password</h2>
-            <div className='password-container'>
-            <TextField
-                required
-                sx={{ width: '20%' }}
-                id="password"
-                name="password"
-                label="Password"
-                type="password"
-                variant="outlined"
-                onChange={(event)=>setPassword(event.target.value)}
-            />
-            <TextField
-                required
-                sx={{ width: '20%' }}
-                id="confirm password"
-                name="confirm password"
-                label="Confirm Password"
-                type="password"
-                variant="outlined"
-                onChange={(event)=>setConfirmPassWord(event.target.value)}
-            />
-            </div>
-            <h2>License</h2>
-            <TextField
-                required
-                sx={{ width: '50%' }}
-                id="license_number"
-                name="license_number"
-                label="License Number"
-                variant="outlined"
-                onChange={(event)=>setLicenseNumber(event.target.value)}
-            />
-
-            <TextField
-                required
-                sx={{ width: '50%' }}
-                id="vehicle_permit"
-                name="vehicle_permit"
-                label="Licence Class"
-                variant="outlined"
-                onChange={(event)=>setLicenseClass(event.target.value)}
-            />
-            <div className='save-button-container'>
-                <Button variant="outlined" disabled={!isValid()} className='save-button'>
-                    <FaSave size={"1.5em"} style={{ marginRight: "5px" }} /> Save
-                </Button>
-
-            </div>
+  return (
+    <Dialog open={isOpen} onClose={closeHandler} maxWidth="sm" fullWidth>
+      <DialogTitle>Tạo Học Sinh Mới</DialogTitle>
+      <DialogContent>
+        <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2, pt: 2 }}>
+          {error && <Box sx={{ color: 'error.main' }}>{error}</Box>}
+          <TextField
+            label="Mã Học Sinh"
+            name="MaHocSinh"
+            value={formData.MaHocSinh}
+            onChange={handleChange}
+            fullWidth
+            disabled={loading}
+          />
+          <TextField
+            label="Họ Tên"
+            name="HoTen"
+            value={formData.HoTen}
+            onChange={handleChange}
+            fullWidth
+            disabled={loading}
+          />
+          <TextField
+            label="Lớp"
+            name="Lop"
+            value={formData.Lop}
+            onChange={handleChange}
+            fullWidth
+            disabled={loading}
+          />
+          <TextField
+            label="Tình Trạng"
+            name="TinhTrang"
+            value={formData.TinhTrang}
+            onChange={handleChange}
+            fullWidth
+            disabled={loading}
+          />
+          <TextField
+            label="Mã Phụ Huynh"
+            name="MaPhuHuynh"
+            value={formData.MaPhuHuynh}
+            onChange={handleChange}
+            fullWidth
+            disabled={loading}
+          />
+          <TextField
+            label="Mã Điểm Đón"
+            name="MaDiemDon"
+            value={formData.MaDiemDon}
+            onChange={handleChange}
+            fullWidth
+            disabled={loading}
+          />
         </Box>
-    );
-}
+      </DialogContent>
+      <DialogActions>
+        <Button onClick={closeHandler} disabled={loading}>Hủy</Button>
+        <Button onClick={handleSubmit} variant="contained" color="primary" disabled={loading}>
+          {loading ? 'Đang tạo...' : 'Tạo'}
+        </Button>
+      </DialogActions>
+    </Dialog>
+  );
+};
 
 export default CreateStudentModal;
