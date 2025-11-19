@@ -35,7 +35,7 @@ const CreateCalendarModal = ({ open, onClose, onRefresh } = {}) => {
       });
       onRefresh?.();
       onClose?.();
-      navigate('/calendar');
+      navigate('/calendars');
     } catch (err) {
       setError(err.response?.data?.message || 'Tạo thông báo lỗi');
       console.error('Error creating notification:', err);
@@ -45,7 +45,7 @@ const CreateCalendarModal = ({ open, onClose, onRefresh } = {}) => {
   };
 
   const isOpen = open !== undefined ? open : true;
-  const closeHandler = onClose || (() => navigate('/calendar'));
+  const closeHandler = onClose || (() => navigate('/calendars'));
 
   return (
     <Dialog 

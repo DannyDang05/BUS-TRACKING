@@ -89,7 +89,7 @@ const Routee = () => {
               marginBottom: '24px',
               boxShadow: '0 4px 15px rgba(0, 151, 167, 0.1)'
             }}>
-              <Box sx={{
+              {/* <Box sx={{
                 display: 'flex',
                 gap: '12px',
                 flexWrap: 'wrap',
@@ -132,7 +132,7 @@ const Routee = () => {
                     <MenuItem value="name">Tên</MenuItem>
                   </Select>
                 </FormControl>
-              </Box>
+              </Box> */}
 
               {/* Create Button */}
               <Box>

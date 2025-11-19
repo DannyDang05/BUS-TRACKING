@@ -1,7 +1,8 @@
 import { TextField, Box, Button } from '@mui/material';
 import { useEffect, useState } from 'react';
 import { FaSave } from "react-icons/fa";
-import { updateDriver } from '../../../service/apiService';
+import { updateDriver, getDriverById } from '../../../service/apiService';
+import { useParams } from 'react-router-dom';
 
 const UpdateDriverModal = ({ driver, onUpdated }) => {
     const [FullName, setFullName] = useState("");
@@ -9,13 +10,32 @@ const UpdateDriverModal = ({ driver, onUpdated }) => {
     const [MaBangLai, setMaBangLai] = useState("");
     const [loading, setLoading] = useState(false);
 
+    const { id } = useParams();
+
     useEffect(() => {
-        if (driver) {
-            setFullName(driver.FullName || "");
-            setPhoneNumber(driver.PhoneNumber || "");
-            setMaBangLai(driver.MaBangLai || "");
+      if (driver) {
+        setFullName(driver.FullName || "");
+        setPhoneNumber(driver.PhoneNumber || "");
+        setMaBangLai(driver.MaBangLai || "");
+        return;
+      }
+
+      // if mounted as route element with :id, fetch driver
+      const load = async () => {
+        if (id) {
+          try {
+            const res = await getDriverById(id);
+            const d = res?.data || res;
+            setFullName(d.FullName || "");
+            setPhoneNumber(d.PhoneNumber || "");
+            setMaBangLai(d.MaBangLai || "");
+          } catch (err) {
+            console.error('Failed to load driver', err);
+          }
         }
-    }, [driver]);
+      };
+      load();
+    }, [driver, id]);
 
     const isValid = () => {
         if (FullName.trim() === "") return false;

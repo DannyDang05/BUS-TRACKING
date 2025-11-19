@@ -1,7 +1,7 @@
 import * as React from 'react';
 import { useNavigate } from "react-router-dom"
 import { useState, useEffect } from 'react';
-import { getAllRoutes } from '../../../service/apiService';
+import { getAllRoutes, deleteRoute } from '../../../service/apiService';
 import Paper from '@mui/material/Paper';
 import Table from '@mui/material/Table';
 import TableBody from '@mui/material/TableBody';
@@ -11,8 +11,9 @@ import TableHead from '@mui/material/TableHead';
 import TableRow from '@mui/material/TableRow';
 import PaginationControls from '../PaginationControls';
 import { IconButton, Tooltip } from '@mui/material';
-import { MapTwoTone as MapIcon, LocationOn as LocationIcon } from '@mui/icons-material';
+import { MapTwoTone as MapIcon, LocationOn as LocationIcon, Delete as DeleteIcon } from '@mui/icons-material';
 import RouteMapViewer from './RouteMapViewer';
+import ConfirmDialog from '../../Shared/ConfirmDialog';
 
 const TableRoute = (props) => {
   const { rowSelected, setRowSelected } = props;
@@ -23,6 +24,10 @@ const TableRoute = (props) => {
   const [selectedRouteId, setSelectedRouteId] = useState(null);
   const [page, setPage] = useState(0);
   const [rowsPerPage, setRowsPerPage] = useState(10);
+  const [search, setSearch] = useState('');
+  const [localSearch, setLocalSearch] = useState('');
+  const [confirmOpen, setConfirmOpen] = useState(false);
+  const [confirmTarget, setConfirmTarget] = useState(null);
 
   const handleViewMap = (routeId) => {
     setSelectedRouteId(routeId);
@@ -75,7 +80,7 @@ const TableRoute = (props) => {
     const fetch = async () => {
       setLoading(true);
       try {
-        const res = await getAllRoutes();
+        const res = await getAllRoutes(search);
         const list = res?.data || res || [];
         setRoutes(list);
       } catch (err) {
@@ -86,13 +91,28 @@ const TableRoute = (props) => {
       }
     };
     fetch();
-  }, []);
+  }, [search]);
+
+  useEffect(() => {
+    const t = setTimeout(() => setSearch(localSearch), 350);
+    return () => clearTimeout(t);
+  }, [localSearch]);
 
   const displayed = routes.slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage);
 
   return (
     <>
       <Paper className="custom-table-container">
+        <div style={{ padding: '8px 12px', display: 'flex', gap: 8, alignItems: 'center' }}>
+          <input
+            placeholder="Tìm kiếm tuyến (mã, tên, trạng thái)..."
+            value={localSearch}
+            onChange={(e) => { setLocalSearch(e.target.value); setPage(0); }}
+            className="global-search-input"
+            style={{ flex: 1, padding: '8px 10px', borderRadius: 6, border: '1px solid #ddd' }}
+          />
+          <div style={{ minWidth: 140, textAlign: 'right', color: '#666' }}>{routes.length} kết quả</div>
+        </div>
         <TableContainer>
           <Table className="custom-table">
             <TableHead>
@@ -132,6 +152,11 @@ const TableRoute = (props) => {
                             <MapIcon fontSize="small" />
                           </IconButton>
                         </Tooltip>
+                        <Tooltip title="Xóa tuyến">
+                          <IconButton size="small" onClick={(e) => { e.stopPropagation(); setConfirmTarget(r.Id); setConfirmOpen(true); }} sx={{ color: 'error.main' }}>
+                            <DeleteIcon fontSize="small" />
+                          </IconButton>
+                        </Tooltip>
                       </div>
                     </TableCell>
                   </TableRow>
@@ -140,6 +165,25 @@ const TableRoute = (props) => {
             </TableBody>
           </Table>
         </TableContainer>
+
+        <ConfirmDialog open={confirmOpen} title="Xác nhận xóa" message="Bạn có chắc muốn xóa tuyến này?" onClose={async (result) => {
+          setConfirmOpen(false);
+          const id = confirmTarget;
+          setConfirmTarget(null);
+          if (!result || !id) return;
+          try {
+            await deleteRoute(id);
+            setLoading(true);
+            const res = await getAllRoutes(search);
+            const list = res?.data || res || [];
+            setRoutes(list);
+          } catch (err) {
+            console.error('Xóa tuyến thất bại', err);
+            alert('Xóa thất bại');
+          } finally {
+            setLoading(false);
+          }
+        }} />
 
         <div className="custom-table-footer">
           <select className="rows-per-page" value={rowsPerPage} onChange={(e) => { setRowsPerPage(parseInt(e.target.value, 10)); setPage(0); }}>

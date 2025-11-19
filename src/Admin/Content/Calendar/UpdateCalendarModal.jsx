@@ -1,4 +1,6 @@
 import React, { useState, useEffect } from 'react';
+import { useParams } from 'react-router-dom';
+import { getNotificationById } from '../../../service/apiService';
 import { Dialog, DialogTitle, DialogContent, DialogActions, TextField, Button, Box } from '@mui/material';
 
 const UpdateCalendarModal = ({ open, onClose, notification }) => {
@@ -12,6 +14,7 @@ const UpdateCalendarModal = ({ open, onClose, notification }) => {
   const [error, setError] = useState('');
 
   useEffect(() => {
+    const { id } = useParams();
     if (notification) {
       setFormData({
         MaThongBao: notification.MaThongBao || '',
@@ -19,6 +22,19 @@ const UpdateCalendarModal = ({ open, onClose, notification }) => {
         ThoiGian: notification.ThoiGian || '',
         LoaiThongBao: notification.LoaiThongBao || ''
       });
+      return;
+    }
+
+    if (id) {
+      getNotificationById(id).then(res => {
+        const n = res?.data || res;
+        setFormData({
+          MaThongBao: n.MaThongBao || '',
+          NoiDung: n.NoiDung || '',
+          ThoiGian: n.ThoiGian || '',
+          LoaiThongBao: n.LoaiThongBao || ''
+        });
+      }).catch(err => console.error('Failed to load notification', err));
     }
   }, [notification, open]);
 

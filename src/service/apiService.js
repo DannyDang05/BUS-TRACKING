@@ -30,21 +30,42 @@ export const checkSessionAPI = () => apiService.get('/auth/check-session');
 
 
 // --- API TÀI XẾ (Drivers) ---
-export const getAllDrivers = () => apiService.get('/drivers');
+export const getAllDrivers = (q, page, limit) => {
+    const params = new URLSearchParams();
+    if (q != null && String(q).trim() !== '') params.append('q', String(q).trim());
+    if (page != null) params.append('page', page);
+    if (limit != null) params.append('limit', limit);
+    const qs = params.toString();
+    return apiService.get(`/drivers${qs ? `?${qs}` : ''}`);
+};
 export const getDriverById = (id) => apiService.get(`/drivers/${id}`);
 export const createDriver = (driverData) => apiService.post('/drivers', driverData);
 export const updateDriver = (id, driverData) => apiService.put(`/drivers/${id}`, driverData);
 export const deleteDriver = (id) => apiService.delete(`/drivers/${id}`);
 
 // --- API HỌC SINH (Students) ---
-export const getAllStudents = () => apiService.get('/students');
+export const getAllStudents = (q, page, limit) => {
+    const params = new URLSearchParams();
+    if (q != null && String(q).trim() !== '') params.append('q', String(q).trim());
+    if (page != null) params.append('page', page);
+    if (limit != null) params.append('limit', limit);
+    const qs = params.toString();
+    return apiService.get(`/students${qs ? `?${qs}` : ''}`);
+};
 export const getStudentById = (id) => apiService.get(`/students/${id}`);
 export const createStudent = (studentData) => apiService.post('/students', studentData);
 export const updateStudent = (id, studentData) => apiService.put(`/students/${id}`, studentData);
 export const deleteStudent = (id) => apiService.delete(`/students/${id}`);
 
 // --- API ROUTES (Tuyến) ---
-export const getAllRoutes = () => apiService.get('/routes');
+export const getAllRoutes = (q, page, limit) => {
+    const params = new URLSearchParams();
+    if (q != null && String(q).trim() !== '') params.append('q', String(q).trim());
+    if (page != null) params.append('page', page);
+    if (limit != null) params.append('limit', limit);
+    const qs = params.toString();
+    return apiService.get(`/routes${qs ? `?${qs}` : ''}`);
+};
 export const getRouteById = (id) => apiService.get(`/routes/${id}`);
 export const createRoute = (routeData) => apiService.post('/routes', routeData);
 export const updateRoute = (id, routeData) => apiService.put(`/routes/${id}`, routeData);
@@ -60,14 +81,28 @@ export const createPickupPoint = (data) => apiService.post('/pickuppoints', data
 export const updatePickupPoint = (id, data) => apiService.put(`/pickuppoints/${id}`, data);
 export const deletePickupPoint = (id) => apiService.delete(`/pickuppoints/${id}`);
 // --- API VEHICLES/BUSES (Xe) ---
-export const getAllVehicles = () => apiService.get('/vehicles');
+export const getAllVehicles = (q, page, limit) => {
+    const params = new URLSearchParams();
+    if (q != null && String(q).trim() !== '') params.append('q', String(q).trim());
+    if (page != null) params.append('page', page);
+    if (limit != null) params.append('limit', limit);
+    const qs = params.toString();
+    return apiService.get(`/vehicles${qs ? `?${qs}` : ''}`);
+};
 export const getVehicleById = (id) => apiService.get(`/vehicles/${id}`);
 export const createVehicle = (vehicleData) => apiService.post('/vehicles', vehicleData);
 export const updateVehicle = (id, vehicleData) => apiService.put(`/vehicles/${id}`, vehicleData);
 export const deleteVehicle = (id) => apiService.delete(`/vehicles/${id}`);
 
 // --- API NOTIFICATIONS (Thông báo) ---
-export const getAllNotifications = () => apiService.get('/notifications');
+export const getAllNotifications = (q, page, limit) => {
+    const params = new URLSearchParams();
+    if (q != null && String(q).trim() !== '') params.append('q', String(q).trim());
+    if (page != null) params.append('page', page);
+    if (limit != null) params.append('limit', limit);
+    const qs = params.toString();
+    return apiService.get(`/notifications${qs ? `?${qs}` : ''}`);
+};
 export const getNotificationById = (id) => apiService.get(`/notifications/${id}`);
 export const createNotification = (notificationData) => apiService.post('/notifications', notificationData);
 export const deleteNotification = (id) => apiService.delete(`/notifications/${id}`);

@@ -10,7 +10,10 @@ import TableRow from '@mui/material/TableRow';
 import PaginationControls from '../PaginationControls';
 // IMPORT HOOKS VÀ API
 import { useState, useEffect } from 'react';
-import { getAllDrivers } from '../../../service/apiService'; // Import hàm API
+import { getAllDrivers, deleteDriver } from '../../../service/apiService'; // Import hàm API
+import { IconButton } from '@mui/material';
+import { Delete as DeleteIcon } from '@mui/icons-material';
+import ConfirmDialog from '../../Shared/ConfirmDialog';
 
 // BƯỚC 1: CẬP NHẬT CÁC CỘT ĐỂ KHỚP VỚI DATABASE
 // Dữ liệu từ API sẽ có các trường: Id, FullName, MaBangLai, PhoneNumber
@@ -42,14 +45,18 @@ const TableDriver = () => {
   const navigate = useNavigate();
   const [drivers, setDrivers] = useState([]);
   const [loading, setLoading] = useState(false);
+  const [search, setSearch] = useState('');
+  const [localSearch, setLocalSearch] = useState('');
   const [page, setPage] = useState(0);
   const [rowsPerPage, setRowsPerPage] = useState(10);
+  const [confirmOpen, setConfirmOpen] = useState(false);
+  const [confirmTarget, setConfirmTarget] = useState(null);
 
   useEffect(() => {
     const fetch = async () => {
       setLoading(true);
       try {
-        const res = await getAllDrivers();
+        const res = await getAllDrivers(search);
         // apiService interceptor returns `response.data` shape, which our backend wraps as { errorCode, message, data }
         const list = res?.data || res || [];
         setDrivers(list);
@@ -61,16 +68,57 @@ const TableDriver = () => {
       }
     };
     fetch();
-  }, []);
+  }, [search]);
+
+  // debounce localSearch -> search
+  useEffect(() => {
+    const t = setTimeout(() => setSearch(localSearch), 350);
+    return () => clearTimeout(t);
+  }, [localSearch]);
 
   const handleClickOnRow = (driverID) =>{
     if (driverID) navigate(`/drivers/update-driver/${driverID}`);
+  }
+
+  const handleDelete = async (id) => {
+    setConfirmTarget(id);
+    setConfirmOpen(true);
+  }
+
+  const handleConfirmResult = async (result) => {
+    setConfirmOpen(false);
+    const id = confirmTarget;
+    setConfirmTarget(null);
+    if (!result || !id) return;
+    try {
+      await deleteDriver(id);
+      // reload
+      setLoading(true);
+      const res = await getAllDrivers(search);
+      const list = res?.data || res || [];
+      setDrivers(list);
+    } catch (err) {
+      console.error('Xóa tài xế thất bại', err);
+      alert('Xóa thất bại');
+    } finally {
+      setLoading(false);
+    }
   }
 
   const displayed = drivers.slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage);
 
   return (
     <Paper className="custom-table-container">
+      <div style={{ padding: '8px 12px', display: 'flex', gap: 8, alignItems: 'center' }}>
+        <input
+          placeholder="Tìm kiếm tài xế (họ tên, phone, bằng lái)..."
+          value={localSearch}
+          onChange={(e) => { setLocalSearch(e.target.value); setPage(0); }}
+          className="global-search-input"
+          style={{ flex: 1, padding: '8px 10px', borderRadius: 6, border: '1px solid #ddd' }}
+        />
+        <div style={{ minWidth: 140, textAlign: 'right', color: '#666' }}>{drivers.length} kết quả</div>
+      </div>
       <TableContainer>
         <Table className="custom-table">
           <TableHead>
@@ -79,20 +127,26 @@ const TableDriver = () => {
               <TableCell>Họ và Tên</TableCell>
               <TableCell>Mã Bằng Lái</TableCell>
               <TableCell>Số Điện Thoại</TableCell>
+              <TableCell>Hành Động</TableCell>
             </TableRow>
           </TableHead>
           <TableBody>
             {loading ? (
-              <TableRow><TableCell colSpan={4} className="table-empty">⏳ Đang tải dữ liệu...</TableCell></TableRow>
+              <TableRow><TableCell colSpan={5} className="table-empty">⏳ Đang tải dữ liệu...</TableCell></TableRow>
             ) : displayed.length === 0 ? (
-              <TableRow><TableCell colSpan={4} className="table-empty">Không có dữ liệu</TableCell></TableRow>
+              <TableRow><TableCell colSpan={5} className="table-empty">Không có dữ liệu</TableCell></TableRow>
             ) : (
-              displayed.map((d) => (
-                <TableRow key={d.Id} onClick={() => handleClickOnRow(d.Id)}>
-                  <TableCell>{d.Id}</TableCell>
-                  <TableCell>{d.FullName}</TableCell>
-                  <TableCell>{d.MaBangLai}</TableCell>
-                  <TableCell>{d.PhoneNumber}</TableCell>
+                displayed.map((d) => (
+                <TableRow key={d.Id}>
+                  <TableCell onClick={() => handleClickOnRow(d.Id)}>{d.Id}</TableCell>
+                  <TableCell onClick={() => handleClickOnRow(d.Id)}>{d.FullName}</TableCell>
+                  <TableCell onClick={() => handleClickOnRow(d.Id)}>{d.MaBangLai}</TableCell>
+                  <TableCell onClick={() => handleClickOnRow(d.Id)}>{d.PhoneNumber}</TableCell>
+                  <TableCell align="center">
+                    <IconButton size="small" onClick={(e) => { e.stopPropagation(); handleDelete(d.Id); }} title="Xóa" color="error">
+                      <DeleteIcon fontSize="small" />
+                    </IconButton>
+                  </TableCell>
                 </TableRow>
               ))
             )}
@@ -109,6 +163,7 @@ const TableDriver = () => {
         </select>
         <PaginationControls count={drivers.length} page={page} rowsPerPage={rowsPerPage} onPageChange={(p) => setPage(p)} />
       </div>
+      <ConfirmDialog open={confirmOpen} title="Xác nhận xóa" message="Bạn có chắc muốn xóa tài xế này?" onClose={handleConfirmResult} />
     </Paper>
   );
 }

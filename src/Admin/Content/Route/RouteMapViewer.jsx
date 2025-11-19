@@ -325,7 +325,7 @@ const RouteMapViewer = ({ open, onClose, routeId }) => {
         }}>
           ❄️ Xem Chi Tiết Tuyến Đường ❄️
         </DialogTitle>
-        <DialogContent sx={{ flex: 1, display: 'flex', overflow: 'hidden', p: 2 }}>
+        <DialogContent sx={{ flex: 1, display: 'flex', overflow: 'hidden', p: 2 ,marginTop:"30px"}}>
           <Box sx={{ display: 'flex', gap: 2.5, width: '100%', height: '100%' }}>
             <Box sx={{ flex: 1, display: 'flex', flexDirection: 'column', gap: 2, overflow: 'auto' }}>
               {loading ? (

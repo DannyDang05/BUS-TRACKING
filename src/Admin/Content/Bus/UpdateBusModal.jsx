@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Dialog, DialogTitle, DialogContent, DialogActions, TextField, Button, Box } from '@mui/material';
-import { updateVehicle } from '../../../service/apiService';
+import { updateVehicle, getVehicleById } from '../../../service/apiService';
+import { useParams } from 'react-router-dom';
 
 const UpdateBusModal = ({ open, onClose, vehicle, onRefresh }) => {
   const [formData, setFormData] = useState({
@@ -11,6 +12,8 @@ const UpdateBusModal = ({ open, onClose, vehicle, onRefresh }) => {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
 
+  const { id } = useParams();
+
   useEffect(() => {
     if (vehicle) {
       setFormData({
@@ -18,8 +21,26 @@ const UpdateBusModal = ({ open, onClose, vehicle, onRefresh }) => {
         Model: vehicle.Model || '',
         SpeedKmh: vehicle.SpeedKmh || ''
       });
+      return;
     }
-  }, [vehicle, open]);
+
+    const load = async () => {
+      if (id) {
+        try {
+          const res = await getVehicleById(id);
+          const v = res?.data || res;
+          setFormData({
+            LicensePlate: v.LicensePlate || '',
+            Model: v.Model || '',
+            SpeedKmh: v.SpeedKmh || ''
+          });
+        } catch (err) {
+          console.error('Failed to load vehicle', err);
+        }
+      }
+    };
+    load();
+  }, [vehicle, open, id]);
 
   const handleChange = (e) => {
     const { name, value } = e.target;
