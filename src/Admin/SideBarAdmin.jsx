@@ -33,42 +33,42 @@ const SideBarAdmin = (props) => {
                
                 <SidebarContent>
                     <Menu className="mainpage-container">
-                        <MenuItem icon={<FaHome color="#808080" size={"24px"}/>}>
+                        <MenuItem icon={<FaHome color="#00838f" size={"24px"}/>}>
                             <Link to="/">Homepage</Link>
                         </MenuItem>
                     </Menu>
                     <Menu className="map-container">
-                        <MenuItem icon={<FaMapMarkerAlt color="#808080" size={"24px"} />}>
+                        <MenuItem icon={<FaMapMarkerAlt color="#00838f" size={"24px"} />}>
                             <Link to="/map">Map</Link>
                         </MenuItem>
                     </Menu>
                     <Menu >
-                            <MenuItem className="student-container" icon={<PiStudentBold color="#808080" size={"24px"} />}>
+                            <MenuItem className="student-container" icon={<PiStudentBold color="#00838f" size={"24px"} />}>
                                 <Link to="/students">Student</Link>
                             </MenuItem>
                     </Menu>
                     <Menu>
-                            <MenuItem className="driver-container" icon={<TbUserFilled color="#808080" size={"24px"} />}>
+                            <MenuItem className="driver-container" icon={<TbUserFilled color="#00838f" size={"24px"} />}>
                                 <Link to="/drivers">Driver</Link>
                             </MenuItem>
                     </Menu>
                     <Menu>
-                            <MenuItem className="route-container" icon={<FaRoute color="#808080" size={"24px"} />}>
+                            <MenuItem className="route-container" icon={<FaRoute color="#00838f" size={"24px"} />}>
                                 <Link to="/routes">Route</Link>
                             </MenuItem>
                     </Menu>
                     <Menu>
-                            <MenuItem className="calendar-container" icon={<FaRegCalendarAlt color="#808080" size={"24px"} />}>
+                            <MenuItem className="calendar-container" icon={<FaRegCalendarAlt color="#00838f" size={"24px"} />}>
                                 <Link to="/calendars">Calendar</Link>
                             </MenuItem>
                     </Menu>
                     <Menu>
-                            <MenuItem className="bus-container" icon={<FaBusAlt color="#808080" size={"24px"} />}>
+                            <MenuItem className="bus-container" icon={<FaBusAlt color="#00838f" size={"24px"} />}>
                                 <Link to="/buses">Bus</Link>
                             </MenuItem>
                     </Menu>
                     <Menu>
-                            <MenuItem className="notification-container" icon={<IoMdNotifications color="#808080" size={"24px"} />}>
+                            <MenuItem className="notification-container" icon={<IoMdNotifications color="#00838f" size={"24px"} />}>
                                 <Link to="/notification">Notification</Link>
                             </MenuItem>
                     </Menu>

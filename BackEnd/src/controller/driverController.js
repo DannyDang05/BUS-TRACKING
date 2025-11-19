@@ -4,9 +4,35 @@ import { pool } from "../config/connectDB.js";
 // GET /api/v1/drivers
 // Lấy danh sách tài xế từ bảng `drivers`
 const getAllDrivers = async (req, res) => {
+  const page = Math.max(parseInt(req.query.page) || 1, 1);
+  const limit = Math.max(parseInt(req.query.limit) || 10, 1);
+  const q = req.query.q ? String(req.query.q).trim() : null;
+  const offset = (page - 1) * limit;
+
   try {
-    const [rows] = await pool.query('SELECT Id, FullName, MaBangLai, PhoneNumber, UserId FROM drivers');
-    return res.status(200).json({ errorCode: 0, message: 'OK', data: rows });
+    let where = '';
+    const params = [];
+    if (q) {
+      where = ' WHERE Id LIKE ? OR FullName LIKE ? OR MaBangLai LIKE ? OR PhoneNumber LIKE ? ';
+      const like = `%${q}%`;
+      params.push(like, like, like, like);
+    }
+
+    const countSql = `SELECT COUNT(*) as total FROM drivers ${where}`;
+    const [countRows] = await pool.query(countSql, params);
+    const totalItems = countRows[0].total || 0;
+
+    const dataSql = `SELECT Id, FullName, MaBangLai, PhoneNumber, UserId FROM drivers ${where} ORDER BY Id LIMIT ? OFFSET ?`;
+    const dataParams = params.concat([limit, offset]);
+    const [rows] = await pool.query(dataSql, dataParams);
+
+    const totalPages = Math.ceil(totalItems / limit);
+    return res.status(200).json({
+      errorCode: 0,
+      message: 'OK',
+      data: rows,
+      meta: { totalItems, totalPages, currentPage: page, pageSize: limit },
+    });
   } catch (e) {
     console.log(e);
     return res.status(500).json({ errorCode: -1, message: 'Lỗi server.' });

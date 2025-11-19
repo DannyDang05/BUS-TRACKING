@@ -3,9 +3,44 @@ import { pool } from "../config/connectDB.js";
 // GET /api/v1/students
 // Lấy danh sách học sinh từ bảng `hocsinh`
 const getAllStudents = async (req, res) => {
+  // Pagination params: page (1-based), limit, optional search q
+  const page = Math.max(parseInt(req.query.page) || 1, 1);
+  const limit = Math.max(parseInt(req.query.limit) || 10, 1);
+  const q = req.query.q ? String(req.query.q).trim() : null;
+  const offset = (page - 1) * limit;
+
   try {
-    const [rows] = await pool.query('SELECT MaHocSinh, HoTen, Lop, TinhTrang, MaPhuHuynh, MaDiemDon FROM hocsinh');
-    return res.status(200).json({ errorCode: 0, message: 'OK', data: rows });
+    let where = '';
+    const params = [];
+    if (q) {
+      where = ' WHERE MaHocSinh LIKE ? OR HoTen LIKE ? OR Lop LIKE ? ';
+      const like = `%${q}%`;
+      params.push(like, like, like);
+    }
+
+    // total count
+    const countSql = `SELECT COUNT(*) as total FROM hocsinh ${where}`;
+    const [countRows] = await pool.query(countSql, params);
+    const totalItems = countRows[0].total || 0;
+
+    // data with limit/offset
+    const dataSql = `SELECT MaHocSinh, HoTen, Lop, TinhTrang, MaPhuHuynh, MaDiemDon FROM hocsinh ${where} ORDER BY MaHocSinh LIMIT ? OFFSET ?`;
+    const dataParams = params.concat([limit, offset]);
+    const [rows] = await pool.query(dataSql, dataParams);
+
+    const totalPages = Math.ceil(totalItems / limit);
+
+    return res.status(200).json({
+      errorCode: 0,
+      message: 'OK',
+      data: rows,
+      meta: {
+        totalItems,
+        totalPages,
+        currentPage: page,
+        pageSize: limit,
+      },
+    });
   } catch (e) {
     console.log(e);
     return res.status(500).json({ errorCode: -1, message: 'Lỗi server.' });

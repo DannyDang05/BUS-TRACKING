@@ -1,7 +1,13 @@
 import * as React from 'react';
 import { useNavigate } from "react-router-dom"
-import { DataGrid } from '@mui/x-data-grid';
 import Paper from '@mui/material/Paper';
+import Table from '@mui/material/Table';
+import TableBody from '@mui/material/TableBody';
+import TableCell from '@mui/material/TableCell';
+import TableContainer from '@mui/material/TableContainer';
+import TableHead from '@mui/material/TableHead';
+import TableRow from '@mui/material/TableRow';
+import PaginationControls from '../PaginationControls';
 // IMPORT HOOKS VÀ API
 import { useState, useEffect } from 'react';
 import { getAllDrivers } from '../../../service/apiService'; // Import hàm API
@@ -12,22 +18,22 @@ const columns = [
   { 
     field: 'Id', // Khớp chính xác với tên trường từ API
     headerName: 'ID', 
-    width: 90 
+    width: 100 
   },
   { 
     field: 'FullName', // Khớp chính xác với tên trường từ API
     headerName: 'Họ và Tên', 
-    width: 250 
+    width: 300 
   },
   { 
     field: 'MaBangLai', // Khớp chính xác với tên trường từ API
     headerName: 'Mã Bằng Lái', 
-    width: 150 
+    width: 200 
   },
   {
     field: 'PhoneNumber', // Khớp chính xác với tên trường từ API
     headerName: 'Số Điện Thoại',
-    width: 200,
+    width: 250,
   },
 ];
 
@@ -36,6 +42,8 @@ const TableDriver = () => {
   const navigate = useNavigate();
   const [drivers, setDrivers] = useState([]);
   const [loading, setLoading] = useState(false);
+  const [page, setPage] = useState(0);
+  const [rowsPerPage, setRowsPerPage] = useState(10);
 
   useEffect(() => {
     const fetch = async () => {
@@ -55,31 +63,52 @@ const TableDriver = () => {
     fetch();
   }, []);
 
-  const handleClickOnRow = (params) =>{
-    const driverID = params.row?.Id;
+  const handleClickOnRow = (driverID) =>{
     if (driverID) navigate(`/drivers/update-driver/${driverID}`);
   }
 
+  const displayed = drivers.slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage);
+
   return (
-    <Paper sx={{ width: '100%' }}>
-      <DataGrid
-        rows={drivers}
-        getRowId={(row) => row.Id}
-        columns={columns}
-        loading={loading}
-        autoHeight
-        initialState={{
-          pagination: {
-            paginationModel: { page: 0, pageSize: 5 }
-          }
-        }}
-        pageSizeOptions={[5, 10]}
-        disableRowSelectionOnClick
-        onRowClick={handleClickOnRow}
-        sx={{
-          '& .MuiDataGrid-cell:focus': { outline: 'none' }
-        }}
-      />
+    <Paper className="custom-table-container">
+      <TableContainer>
+        <Table className="custom-table">
+          <TableHead>
+            <TableRow>
+              <TableCell>ID</TableCell>
+              <TableCell>Họ và Tên</TableCell>
+              <TableCell>Mã Bằng Lái</TableCell>
+              <TableCell>Số Điện Thoại</TableCell>
+            </TableRow>
+          </TableHead>
+          <TableBody>
+            {loading ? (
+              <TableRow><TableCell colSpan={4} className="table-empty">⏳ Đang tải dữ liệu...</TableCell></TableRow>
+            ) : displayed.length === 0 ? (
+              <TableRow><TableCell colSpan={4} className="table-empty">Không có dữ liệu</TableCell></TableRow>
+            ) : (
+              displayed.map((d) => (
+                <TableRow key={d.Id} onClick={() => handleClickOnRow(d.Id)}>
+                  <TableCell>{d.Id}</TableCell>
+                  <TableCell>{d.FullName}</TableCell>
+                  <TableCell>{d.MaBangLai}</TableCell>
+                  <TableCell>{d.PhoneNumber}</TableCell>
+                </TableRow>
+              ))
+            )}
+          </TableBody>
+        </Table>
+      </TableContainer>
+
+      <div className="custom-table-footer">
+        <select className="rows-per-page" value={rowsPerPage} onChange={(e) => { setRowsPerPage(parseInt(e.target.value, 10)); setPage(0); }}>
+          <option value={5}>5 / trang</option>
+          <option value={10}>10 / trang</option>
+          <option value={20}>20 / trang</option>
+          <option value={50}>50 / trang</option>
+        </select>
+        <PaginationControls count={drivers.length} page={page} rowsPerPage={rowsPerPage} onPageChange={(p) => setPage(p)} />
+      </div>
     </Paper>
   );
 }

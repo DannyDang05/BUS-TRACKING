@@ -72,7 +72,7 @@ const HeaderAdmin = (props) => {
                             {/* 4. Dùng <Menu> của MUI và rải bindMenu vào */}
                             <Menu {...bindMenu(popupState)}>
                                 <MenuItem onClick={() => handleLogout(popupState)}>
-                                    <FaPowerOff size ="1.2em" style={{marginRight:"10px", color: '#808080'}}/> OFF
+                                    <FaPowerOff size ="1.2em" className="power-off"/> OFF
                                 </MenuItem>
                             </Menu>
 

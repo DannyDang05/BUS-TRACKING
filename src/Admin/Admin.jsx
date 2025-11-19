@@ -4,6 +4,7 @@ import { useState } from "react";
 import { Outlet } from "react-router-dom";
 import './Admin.scss'
 import HeaderAdmin from "./HeaderAdmin"; // Giả sử bạn import HeaderAdmin
+import Snowflakes from './Shared/Snowflakes';
 
 const Admin = (props) => {
     const [collapsed, setCollapsed] = useState(false)
@@ -12,6 +13,8 @@ const Admin = (props) => {
     }
     return (
         <div className="admin-container">
+
+            <Snowflakes />
 
             <div className="admin-header">
                 <HeaderAdmin 

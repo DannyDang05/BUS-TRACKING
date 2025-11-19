@@ -50,6 +50,15 @@ export const createRoute = (routeData) => apiService.post('/routes', routeData);
 export const updateRoute = (id, routeData) => apiService.put(`/routes/${id}`, routeData);
 export const deleteRoute = (id) => apiService.delete(`/routes/${id}`);
 
+// Pickup points
+export const getPickupPoints = (routeId) => {
+  if (!routeId) return apiService.get('/pickuppoints');
+  return apiService.get(`/pickuppoints?routeId=${routeId}`);
+};
+export const getPickupPointById = (id) => apiService.get(`/pickuppoints/${id}`);
+export const createPickupPoint = (data) => apiService.post('/pickuppoints', data);
+export const updatePickupPoint = (id, data) => apiService.put(`/pickuppoints/${id}`, data);
+export const deletePickupPoint = (id) => apiService.delete(`/pickuppoints/${id}`);
 // --- API VEHICLES/BUSES (Xe) ---
 export const getAllVehicles = () => apiService.get('/vehicles');
 export const getVehicleById = (id) => apiService.get(`/vehicles/${id}`);

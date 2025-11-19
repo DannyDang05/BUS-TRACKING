@@ -53,11 +53,28 @@ const CreateStudentModal = ({ open, onClose, onRefresh } = {}) => {
   const closeHandler = onClose || (() => navigate('/students'));
 
   return (
-    <Dialog open={isOpen} onClose={closeHandler} maxWidth="sm" fullWidth>
-      <DialogTitle>Tạo Học Sinh Mới</DialogTitle>
+    <Dialog 
+      open={isOpen} 
+      onClose={closeHandler} 
+      maxWidth="sm" 
+      fullWidth
+      PaperProps={{
+        sx: {
+          background: 'linear-gradient(135deg, #e8f4f8 0%, #d4e8f0 100%)',
+          backdropFilter: 'blur(10px)',
+          boxShadow: '0 8px 32px rgba(0, 151, 167, 0.2)'
+        }
+      }}
+    >
+      <DialogTitle sx={{
+        background: 'linear-gradient(135deg, #0097a7 0%, #00838f 100%)',
+        color: 'white',
+        fontWeight: 'bold',
+        textShadow: '0 2px 4px rgba(0, 0, 0, 0.2)'
+      }}>❄️ Tạo Học Sinh Mới</DialogTitle>
       <DialogContent>
         <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2, pt: 2 }}>
-          {error && <Box sx={{ color: 'error.main' }}>{error}</Box>}
+          {error && <Box sx={{ color: '#d32f2f' }}>{error}</Box>}
           <TextField
             label="Mã Học Sinh"
             name="MaHocSinh"
@@ -65,6 +82,14 @@ const CreateStudentModal = ({ open, onClose, onRefresh } = {}) => {
             onChange={handleChange}
             fullWidth
             disabled={loading}
+            sx={{
+              '& .MuiOutlinedInput-root': {
+                '& fieldset': { borderColor: '#0097a7' },
+                '&:hover fieldset': { borderColor: '#00838f' },
+                '&.Mui-focused fieldset': { borderColor: '#0097a7' }
+              },
+              '& .MuiInputBase-input': { color: '#00838f' }
+            }}
           />
           <TextField
             label="Họ Tên"
@@ -73,6 +98,14 @@ const CreateStudentModal = ({ open, onClose, onRefresh } = {}) => {
             onChange={handleChange}
             fullWidth
             disabled={loading}
+            sx={{
+              '& .MuiOutlinedInput-root': {
+                '& fieldset': { borderColor: '#0097a7' },
+                '&:hover fieldset': { borderColor: '#00838f' },
+                '&.Mui-focused fieldset': { borderColor: '#0097a7' }
+              },
+              '& .MuiInputBase-input': { color: '#00838f' }
+            }}
           />
           <TextField
             label="Lớp"
@@ -81,6 +114,14 @@ const CreateStudentModal = ({ open, onClose, onRefresh } = {}) => {
             onChange={handleChange}
             fullWidth
             disabled={loading}
+            sx={{
+              '& .MuiOutlinedInput-root': {
+                '& fieldset': { borderColor: '#0097a7' },
+                '&:hover fieldset': { borderColor: '#00838f' },
+                '&.Mui-focused fieldset': { borderColor: '#0097a7' }
+              },
+              '& .MuiInputBase-input': { color: '#00838f' }
+            }}
           />
           <TextField
             label="Tình Trạng"
@@ -89,6 +130,14 @@ const CreateStudentModal = ({ open, onClose, onRefresh } = {}) => {
             onChange={handleChange}
             fullWidth
             disabled={loading}
+            sx={{
+              '& .MuiOutlinedInput-root': {
+                '& fieldset': { borderColor: '#0097a7' },
+                '&:hover fieldset': { borderColor: '#00838f' },
+                '&.Mui-focused fieldset': { borderColor: '#0097a7' }
+              },
+              '& .MuiInputBase-input': { color: '#00838f' }
+            }}
           />
           <TextField
             label="Mã Phụ Huynh"
@@ -97,6 +146,14 @@ const CreateStudentModal = ({ open, onClose, onRefresh } = {}) => {
             onChange={handleChange}
             fullWidth
             disabled={loading}
+            sx={{
+              '& .MuiOutlinedInput-root': {
+                '& fieldset': { borderColor: '#0097a7' },
+                '&:hover fieldset': { borderColor: '#00838f' },
+                '&.Mui-focused fieldset': { borderColor: '#0097a7' }
+              },
+              '& .MuiInputBase-input': { color: '#00838f' }
+            }}
           />
           <TextField
             label="Mã Điểm Đón"
@@ -105,12 +162,48 @@ const CreateStudentModal = ({ open, onClose, onRefresh } = {}) => {
             onChange={handleChange}
             fullWidth
             disabled={loading}
+            sx={{
+              '& .MuiOutlinedInput-root': {
+                '& fieldset': { borderColor: '#0097a7' },
+                '&:hover fieldset': { borderColor: '#00838f' },
+                '&.Mui-focused fieldset': { borderColor: '#0097a7' }
+              },
+              '& .MuiInputBase-input': { color: '#00838f' }
+            }}
           />
         </Box>
       </DialogContent>
-      <DialogActions>
-        <Button onClick={closeHandler} disabled={loading}>Hủy</Button>
-        <Button onClick={handleSubmit} variant="contained" color="primary" disabled={loading}>
+      <DialogActions sx={{
+        background: 'rgba(0, 151, 167, 0.05)',
+        borderTop: '1px solid rgba(0, 151, 167, 0.2)',
+        padding: 2
+      }}>
+        <Button 
+          onClick={closeHandler} 
+          disabled={loading}
+          sx={{
+            color: '#00838f',
+            '&:hover': {
+              background: 'rgba(0, 151, 167, 0.1)'
+            }
+          }}
+        >
+          Hủy
+        </Button>
+        <Button 
+          onClick={handleSubmit} 
+          variant="contained" 
+          disabled={loading}
+          sx={{
+            background: 'linear-gradient(135deg, #0097a7 0%, #00838f 100%)',
+            color: 'white',
+            '&:hover': {
+              background: 'linear-gradient(135deg, #00838f 0%, #006064 100%)',
+              transform: 'translateY(-2px)',
+              boxShadow: '0 4px 12px rgba(0, 151, 167, 0.3)'
+            }
+          }}
+        >
           {loading ? 'Đang tạo...' : 'Tạo'}
         </Button>
       </DialogActions>

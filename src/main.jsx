@@ -18,6 +18,7 @@ import UpdateCalendarModal from './Admin/Content/Calendar/UpdateCalendarModal.js
 import Routee from './Admin/Content/Route/Routee.jsx'
 import CreateRouteModal from './Admin/Content/Route/CreateRouteModal.jsx'
 import UpdateRouteModal from './Admin/Content/Route/UpdateRouteModal.jsx'
+import RouteStopsPage from './Admin/Content/Route/RouteStopsPage.jsx'
 import Bus from './Admin/Content/Bus/Bus.jsx'
 import CreateBusModal from './Admin/Content/Bus/CreateBusModal.jsx'
 import UpdateBusModal from './Admin/Content/Bus/UpdateBusModal.jsx'
@@ -40,6 +41,7 @@ createRoot(document.getElementById('root')).render(
           <Route path='routes' element={<Routee />} />
           <Route path="routes/create-route" element={<CreateRouteModal />} />
           <Route path="routes/update-route/:id" element={<UpdateRouteModal />} />
+          <Route path="routes/:id/points" element={<RouteStopsPage />} />
           <Route path='buses' element={<Bus />} />
           <Route path="buses/create-bus" element={<CreateBusModal />} />
           <Route path="buses/update-bus/:id" element={<UpdateBusModal />} />

@@ -41,11 +41,26 @@ const CreateDriverModal = ({ onCreated } = {}) => {
             className="create-container"
             autoComplete="off"
             onSubmit={handleSubmit}
+            sx={{
+              background: 'linear-gradient(135deg, #e8f4f8 0%, #d4e8f0 100%)',
+              backdropFilter: 'blur(10px)',
+              borderRadius: '12px',
+              padding: '20px',
+              boxShadow: '0 8px 32px rgba(0, 151, 167, 0.2)'
+            }}
         >
-            <h2>Driver</h2>
+            <h2 className="section-title">❄️ Driver</h2>
             <TextField
                 required
-                sx={{ width: '50%' }}
+                sx={{ 
+                  width: '50%',
+                  '& .MuiOutlinedInput-root': {
+                    '& fieldset': { borderColor: '#0097a7' },
+                    '&:hover fieldset': { borderColor: '#00838f' },
+                    '&.Mui-focused fieldset': { borderColor: '#0097a7' }
+                  },
+                  '& .MuiInputBase-input': { color: '#00838f' }
+                }}
                 id="driver-id"
                 name="driver-id"
                 label="Driver Id"
@@ -56,7 +71,15 @@ const CreateDriverModal = ({ onCreated } = {}) => {
 
             <TextField
                 required
-                sx={{ width: '50%' }}
+                sx={{ 
+                  width: '50%',
+                  '& .MuiOutlinedInput-root': {
+                    '& fieldset': { borderColor: '#0097a7' },
+                    '&:hover fieldset': { borderColor: '#00838f' },
+                    '&.Mui-focused fieldset': { borderColor: '#0097a7' }
+                  },
+                  '& .MuiInputBase-input': { color: '#00838f' }
+                }}
                 id="full-name"
                 name="full-name"
                 label="Full Name"
@@ -67,7 +90,15 @@ const CreateDriverModal = ({ onCreated } = {}) => {
 
             <TextField
                 required
-                sx={{ width: '50%' }}
+                sx={{ 
+                  width: '50%',
+                  '& .MuiOutlinedInput-root': {
+                    '& fieldset': { borderColor: '#0097a7' },
+                    '&:hover fieldset': { borderColor: '#00838f' },
+                    '&.Mui-focused fieldset': { borderColor: '#0097a7' }
+                  },
+                  '& .MuiInputBase-input': { color: '#00838f' }
+                }}
                 id="phone"
                 name="phone"
                 label="Phone Number"
@@ -78,7 +109,15 @@ const CreateDriverModal = ({ onCreated } = {}) => {
 
             <TextField
                 required
-                sx={{ width: '50%' }}
+                sx={{ 
+                  width: '50%',
+                  '& .MuiOutlinedInput-root': {
+                    '& fieldset': { borderColor: '#0097a7' },
+                    '&:hover fieldset': { borderColor: '#00838f' },
+                    '&.Mui-focused fieldset': { borderColor: '#0097a7' }
+                  },
+                  '& .MuiInputBase-input': { color: '#00838f' }
+                }}
                 id="license-number"
                 name="license-number"
                 label="License Number"
@@ -88,8 +127,25 @@ const CreateDriverModal = ({ onCreated } = {}) => {
             />
 
             <div className='save-button-container'>
-                <Button type="submit" variant="outlined" disabled={!isValid() || loading} className='save-button'>
-                    <FaSave size={"1.2em"} style={{ marginRight: "5px" }} /> {loading ? 'Saving...' : 'Save'}
+                <Button 
+                  type="submit" 
+                  variant="outlined" 
+                  disabled={!isValid() || loading} 
+                  className='save-button'
+                  sx={{
+                    borderColor: '#0097a7',
+                    color: '#0097a7',
+                    background: 'linear-gradient(135deg, #e8f4f8 0%, #d4e8f0 100%)',
+                    '&:hover': {
+                      background: 'linear-gradient(135deg, #0097a7 0%, #00838f 100%)',
+                      color: 'white',
+                      borderColor: '#00838f',
+                      transform: 'translateY(-2px)',
+                      boxShadow: '0 4px 12px rgba(0, 151, 167, 0.3)'
+                    }
+                  }}
+                >
+                    <FaSave size={"1.2em"} className="icon-inline" /> {loading ? 'Saving...' : 'Save'}
                 </Button>
             </div>
 
