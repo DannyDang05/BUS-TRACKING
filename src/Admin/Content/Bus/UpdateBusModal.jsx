@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Dialog, DialogTitle, DialogContent, DialogActions, TextField, Button, Box } from '@mui/material';
 import { updateVehicle, getVehicleById } from '../../../service/apiService';
 import { useParams } from 'react-router-dom';
+import { useLanguage } from '../../Shared/LanguageContext';
 
 const UpdateBusModal = ({ open, onClose, vehicle, onRefresh }) => {
   const [formData, setFormData] = useState({
@@ -65,6 +66,8 @@ const UpdateBusModal = ({ open, onClose, vehicle, onRefresh }) => {
     }
   };
 
+  const { t } = useLanguage();
+
   return (
     <Dialog 
       open={open} 
@@ -84,7 +87,7 @@ const UpdateBusModal = ({ open, onClose, vehicle, onRefresh }) => {
         color: 'white',
         fontWeight: 'bold',
         textShadow: '0 2px 4px rgba(0, 0, 0, 0.2)'
-      }}>❄️ Cập Nhật Xe</DialogTitle>
+      }}>❄️ {t('update')} {t('bus')}</DialogTitle>
       <DialogContent>
         <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2, pt: 2 }}>
           {error && <Box sx={{ color: '#d32f2f' }}>{error}</Box>}
@@ -178,7 +181,7 @@ const UpdateBusModal = ({ open, onClose, vehicle, onRefresh }) => {
             }
           }}
         >
-          Hủy
+          {t('cancel')}
         </Button>
         <Button 
           onClick={handleSubmit} 
@@ -192,9 +195,8 @@ const UpdateBusModal = ({ open, onClose, vehicle, onRefresh }) => {
               transform: 'translateY(-2px)',
               boxShadow: '0 4px 12px rgba(0, 151, 167, 0.3)'
             }
-          }}
-        >
-          {loading ? 'Đang cập nhật...' : 'Cập Nhật'}
+          }}>
+            {loading ? t('updating') : t('update')}
         </Button>
       </DialogActions>
     </Dialog>

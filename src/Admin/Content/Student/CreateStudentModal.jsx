@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { Dialog, DialogTitle, DialogContent, DialogActions, TextField, Button, Box } from '@mui/material';
 import { useNavigate } from 'react-router-dom';
 import { createStudent } from '../../../service/apiService';
+import { useLanguage } from '../../Shared/LanguageContext';
 
 const CreateStudentModal = ({ open, onClose, onRefresh } = {}) => {
   const navigate = useNavigate();
@@ -71,7 +72,7 @@ const CreateStudentModal = ({ open, onClose, onRefresh } = {}) => {
         color: 'white',
         fontWeight: 'bold',
         textShadow: '0 2px 4px rgba(0, 0, 0, 0.2)'
-      }}>❄️ Tạo Học Sinh Mới</DialogTitle>
+      }}>❄️ { (useLanguage().t) ? useLanguage().t('create') + ' ' + useLanguage().t('student') : 'Tạo Học Sinh Mới' }</DialogTitle>
       <DialogContent>
         <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2, pt: 2 }}>
           {error && <Box sx={{ color: '#d32f2f' }}>{error}</Box>}
@@ -173,7 +174,7 @@ const CreateStudentModal = ({ open, onClose, onRefresh } = {}) => {
           />
         </Box>
       </DialogContent>
-      <DialogActions sx={{
+        <DialogActions sx={{
         background: 'rgba(0, 151, 167, 0.05)',
         borderTop: '1px solid rgba(0, 151, 167, 0.2)',
         padding: 2
@@ -188,7 +189,7 @@ const CreateStudentModal = ({ open, onClose, onRefresh } = {}) => {
             }
           }}
         >
-          Hủy
+          {useLanguage().t('cancel')}
         </Button>
         <Button 
           onClick={handleSubmit} 
@@ -204,7 +205,7 @@ const CreateStudentModal = ({ open, onClose, onRefresh } = {}) => {
             }
           }}
         >
-          {loading ? 'Đang tạo...' : 'Tạo'}
+          {loading ? useLanguage().t('creating') : useLanguage().t('create')}
         </Button>
       </DialogActions>
     </Dialog>

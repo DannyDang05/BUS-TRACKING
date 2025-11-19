@@ -3,6 +3,7 @@ import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { FaSave } from "react-icons/fa";
 import { createDriver } from '../../../service/apiService';
+import { useLanguage } from '../../Shared/LanguageContext';
 
 const CreateDriverModal = ({ onCreated } = {}) => {
     const navigate = useNavigate();
@@ -35,6 +36,8 @@ const CreateDriverModal = ({ onCreated } = {}) => {
         }
     };
 
+    const { t } = useLanguage();
+
     return (
         <Box
             component="form"
@@ -49,7 +52,7 @@ const CreateDriverModal = ({ onCreated } = {}) => {
               boxShadow: '0 8px 32px rgba(0, 151, 167, 0.2)'
             }}
         >
-            <h2 className="section-title">❄️ Driver</h2>
+            <h2 className="section-title">❄️ {t('driver')}</h2>
             <TextField
                 required
                 sx={{ 
@@ -63,7 +66,7 @@ const CreateDriverModal = ({ onCreated } = {}) => {
                 }}
                 id="driver-id"
                 name="driver-id"
-                label="Driver Id"
+                label={t('MaHocSinh') || 'Driver Id'}
                 variant="outlined"
                 value={Id}
                 onChange={(event) => setId(event.target.value)}
@@ -82,7 +85,7 @@ const CreateDriverModal = ({ onCreated } = {}) => {
                 }}
                 id="full-name"
                 name="full-name"
-                label="Full Name"
+                label={t('FullName') || 'Full Name'}
                 variant="outlined"
                 value={FullName}
                 onChange={(event) => setFullName(event.target.value)}
@@ -101,7 +104,7 @@ const CreateDriverModal = ({ onCreated } = {}) => {
                 }}
                 id="phone"
                 name="phone"
-                label="Phone Number"
+                label={t('PhoneNumber') || 'Phone Number'}
                 variant="outlined"
                 value={PhoneNumber}
                 onChange={(event) => setPhoneNumber(event.target.value)}
@@ -120,7 +123,7 @@ const CreateDriverModal = ({ onCreated } = {}) => {
                 }}
                 id="license-number"
                 name="license-number"
-                label="License Number"
+                label={t('MaBangLai') || 'License Number'}
                 variant="outlined"
                 value={MaBangLai}
                 onChange={(event) => setMaBangLai(event.target.value)}
@@ -145,7 +148,7 @@ const CreateDriverModal = ({ onCreated } = {}) => {
                     }
                   }}
                 >
-                    <FaSave size={"1.2em"} className="icon-inline" /> {loading ? 'Saving...' : 'Save'}
+                    <FaSave size={"1.2em"} className="icon-inline" /> {loading ? t('saving') : t('save')}
                 </Button>
             </div>
 

@@ -7,6 +7,7 @@ import 'mapbox-gl/dist/mapbox-gl.css';
 import { getPickupPoints, createPickupPoint, updatePickupPoint, deletePickupPoint } from '../../../service/apiService';
 import PaginationControls from '../PaginationControls';
 import ConfirmDialog from '../../Shared/ConfirmDialog';
+import { useLanguage } from '../../Shared/LanguageContext';
 
 const MAPBOX_TOKEN = 'pk.eyJ1IjoibGlraWpvb25nMSIsImEiOiJjbWg5eXlyN24wMDFlMnJuNmIxY2kxOTc2In0.KDmPuA2vvdV6G28mpeK4KA';
 
@@ -127,6 +128,8 @@ const RouteStopsPage = () => {
     }
   };
 
+  const { t } = useLanguage();
+
   const handleOpenAdd = () => {
     setEditingPoint(null);
     setForm({ PointOrder: '', PointName: '', Address: '', Latitude: '', Longitude: '' });
@@ -189,13 +192,13 @@ const RouteStopsPage = () => {
       <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 3, pb: 2, borderBottom: '3px solid #00838f' }}>
         <Box>
           <Typography variant="h5" sx={{ fontWeight: 'bold', color: '#00838f', display: 'flex', alignItems: 'center', gap: 1 }}>
-            <MapIcon sx={{ fontSize: 28 }} /> Quản Lý Điểm Đón Xe
+            <MapIcon sx={{ fontSize: 28 }} /> {t('managePickup')}
           </Typography>
-          <Typography variant="body2" sx={{ color: '#666', mt: 0.5 }}>Tuyến #{id} - Có {points.length} điểm đón</Typography>
+          <Typography variant="body2" sx={{ color: '#666', mt: 0.5 }}>{t('route') || `Tuyến #${id}`} - {points.length} {t('points')}</Typography>
         </Box>
         <Box sx={{ display: 'flex', gap: 1 }}>
-          <Button variant="outlined" onClick={() => navigate('/routes')} sx={{ borderColor: '#00838f', color: '#00838f', '&:hover': { bgcolor: '#d0f1f4ff' } }}>← Quay lại Danh sách</Button>
-          <Button variant="contained" startIcon={<AddIcon />} onClick={handleOpenAdd} sx={{ bgcolor: '#00838f', '&:hover': { bgcolor: '#43c0c9ff' } }}>Thêm Điểm Mới</Button>
+          <Button variant="outlined" onClick={() => navigate('/routes')} sx={{ borderColor: '#00838f', color: '#00838f', '&:hover': { bgcolor: '#d0f1f4ff' } }}>{t('backToList')}</Button>
+          <Button variant="contained" startIcon={<AddIcon />} onClick={handleOpenAdd} sx={{ bgcolor: '#00838f', '&:hover': { bgcolor: '#43c0c9ff' } }}>{t('addNewPoint')}</Button>
         </Box>
       </Box>
 
@@ -206,18 +209,18 @@ const RouteStopsPage = () => {
               <Table>
                 <TableHead>
                   <TableRow sx={{ bgcolor: '#00838f' }}>
-                    <TableCell sx={{ color: 'white', fontWeight: 'bold', width: 60 }}>STT</TableCell>
-                    <TableCell sx={{ color: 'white', fontWeight: 'bold' }}>Tên Điểm</TableCell>
-                    <TableCell sx={{ color: 'white', fontWeight: 'bold', minWidth: 180 }}>Địa Chỉ</TableCell>
-                    <TableCell sx={{ color: 'white', fontWeight: 'bold', width: 100 }}>Tọa Độ</TableCell>
-                    <TableCell sx={{ color: 'white', fontWeight: 'bold', width: 80 }} align="center">Hành Động</TableCell>
-                  </TableRow>
+                      <TableCell sx={{ color: 'white', fontWeight: 'bold', width: 60 }}>{t('index')}</TableCell>
+                      <TableCell sx={{ color: 'white', fontWeight: 'bold' }}>{t('pointName')}</TableCell>
+                      <TableCell sx={{ color: 'white', fontWeight: 'bold', minWidth: 180 }}>{t('address')}</TableCell>
+                      <TableCell sx={{ color: 'white', fontWeight: 'bold', width: 100 }}>{t('coordinates')}</TableCell>
+                      <TableCell sx={{ color: 'white', fontWeight: 'bold', width: 80 }} align="center">{t('action')}</TableCell>
+                    </TableRow>
                 </TableHead>
                 <TableBody>
                   {loading ? (
-                    <TableRow><TableCell colSpan={5} align="center" sx={{ py: 3 }}>⏳ Đang tải dữ liệu...</TableCell></TableRow>
+                    <TableRow><TableCell colSpan={5} align="center" sx={{ py: 3 }}>⏳ {t('loading')}</TableCell></TableRow>
                   ) : points.length === 0 ? (
-                    <TableRow><TableCell colSpan={5} align="center" sx={{ py: 3, color: '#999' }}>📍 Chưa có điểm đón nào</TableCell></TableRow>
+                        <TableRow><TableCell colSpan={5} align="center" sx={{ py: 3, color: '#999' }}>📍 {t('noData')}</TableCell></TableRow>
                   ) : (
                     displayedPoints.map((p, idx) => (
                       <TableRow key={p.Id} sx={{ '&:hover': { bgcolor: '#fff5f2' }, '&:nth-of-type(even)': { bgcolor: '#fafafa' } }}>
@@ -225,11 +228,11 @@ const RouteStopsPage = () => {
                           <Chip label={page * rowsPerPage + idx + 1} size="small" sx={{ bgcolor: '#00838f', color: 'white', fontWeight: 'bold' }} />
                         </TableCell>
                         <TableCell sx={{ fontWeight: '500' }}>{p.PointName || '—'}</TableCell>
-                        <TableCell sx={{ fontSize: '0.85rem', color: '#555' }}>{p.Address || 'Chưa có'}</TableCell>
+                        <TableCell sx={{ fontSize: '0.85rem', color: '#555' }}>{p.Address || t('noPickupPoints')}</TableCell>
                         <TableCell sx={{ fontSize: '0.8rem', fontFamily: 'monospace', color: '#666' }}>{Number(p.Latitude).toFixed(4)}<br/>{Number(p.Longitude).toFixed(4)}</TableCell>
                         <TableCell align="center">
-                          <IconButton size="small" onClick={() => handleEdit(p)} color="primary" title="Chỉnh sửa"><EditIcon fontSize="small" /></IconButton>
-                          <IconButton size="small" onClick={() => handleDelete(p)} color="error" title="Xóa"><DeleteIcon fontSize="small" /></IconButton>
+                          <IconButton size="small" onClick={() => handleEdit(p)} color="primary" title={t('edit')}><EditIcon fontSize="small" /></IconButton>
+                          <IconButton size="small" onClick={() => handleDelete(p)} color="error" title={t('delete')}><DeleteIcon fontSize="small" /></IconButton>
                         </TableCell>
                       </TableRow>
                     ))
@@ -251,7 +254,7 @@ const RouteStopsPage = () => {
 
         <Box sx={{ width: 540, borderRadius: 2, overflow: 'hidden', boxShadow: '0 8px 24px rgba(255,87,51,0.2)', display: 'flex', flexDirection: 'column' }}>
           <Box sx={{ bgcolor: '#00838f', color: 'white', p: 1.5, fontSize: '0.95rem', fontWeight: 'bold', display: 'flex', alignItems: 'center', gap: 1 }}>
-            <NavigationIcon /> Bản Đồ Tuyến Đường ({points.length} điểm)
+            <NavigationIcon /> {t('routeMap')} ({points.length} {t('points')})
           </Box>
           <Box sx={{ flex: 1, position: 'relative', minHeight: 550, bgcolor: '#e0e0e0' }}>
             <div ref={containerRef} className="full-size" />
@@ -261,7 +264,7 @@ const RouteStopsPage = () => {
 
       <Dialog open={openDialog} onClose={() => setOpenDialog(false)} maxWidth="sm" fullWidth>
         <DialogTitle sx={{ bgcolor: '#00838f', color: 'white', fontWeight: 'bold', display: 'flex', alignItems: 'center', gap: 1 }}>
-          {editingPoint ? '✏️ Chỉnh Sửa Điểm Đón' : '📍 Thêm Điểm Đón Mới'}
+          {editingPoint ? `✏️ ${t('editPickupPoint')}` : `📍 ${t('addNewPoint')}`}
         </DialogTitle>
         <DialogContent>
           <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2.5, pt: 2 }}>
@@ -292,7 +295,7 @@ const RouteStopsPage = () => {
               rows={2}
               placeholder="VD: 123 Nguyễn Hữu Cảnh, Quận 1, TP HCM"
             />
-            <Divider sx={{ my: 1 }}>Tọa Độ GPS</Divider>
+            <Divider sx={{ my: 1 }}>{t('gpsCoordinates')}</Divider>
             <Box sx={{ display: 'flex', gap: 1.5 }}>
               <TextField 
                 label="Latitude" 
@@ -319,13 +322,13 @@ const RouteStopsPage = () => {
           </Box>
         </DialogContent>
         <DialogActions sx={{ p: 2, borderTop: '1px solid #eee' }}>
-          <Button onClick={() => setOpenDialog(false)} sx={{ color: '#666' }}>Hủy</Button>
+          <Button onClick={() => setOpenDialog(false)} sx={{ color: '#666' }}>{t('cancel')}</Button>
           <Button variant="contained" onClick={handleSubmit} sx={{ bgcolor: '#00838f', '&:hover': { bgcolor: '#d9421f' } }}>
-            {editingPoint ? '💾 Cập Nhật' : '✅ Thêm Điểm'}
+            {editingPoint ? `💾 ${t('update')}` : `✅ ${t('create')}`}
           </Button>
         </DialogActions>
       </Dialog>
-      <ConfirmDialog open={confirmOpen} title="Xác nhận xóa" message="Bạn có chắc muốn xóa điểm đón này?" onClose={handleConfirmResult} />
+      <ConfirmDialog open={confirmOpen} title={t('confirmTitle')} message={t('confirmDeleteMessage')} onClose={handleConfirmResult} />
     </Box>
   );
 };

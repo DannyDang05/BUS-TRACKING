@@ -7,47 +7,50 @@ import {
   FaClock
 } from 'react-icons/fa';
 import { Box, Card, CardContent, Typography, Grid } from '@mui/material';
+import { useLanguage } from '../Shared/LanguageContext';
 
 const MainPage = () => {
+  const { t } = useLanguage();
+
   const stats = [
     { 
       icon: <FaBus size={32} />, 
-      label: 'Tổng Xe', 
+      label: t('totalBuses'), 
       value: '12', 
       color: '#0097a7',
       bg: 'rgba(0, 151, 167, 0.1)'
     },
     { 
       icon: <FaUsers size={32} />, 
-      label: 'Tài Xế', 
+      label: t('driversLabel'), 
       value: '8', 
       color: '#00838f',
       bg: 'rgba(0, 131, 143, 0.1)'
     },
     { 
       icon: <FaRoute size={32} />, 
-      label: 'Tuyến Đường', 
+      label: t('routesLabel'), 
       value: '6', 
       color: '#0097a7',
       bg: 'rgba(0, 151, 167, 0.1)'
     },
     { 
       icon: <FaUsers size={32} />, 
-      label: 'Học Sinh', 
+      label: t('studentsLabel'), 
       value: '156', 
       color: '#00838f',
       bg: 'rgba(0, 131, 143, 0.1)'
     },
     { 
       icon: <FaCalendar size={32} />, 
-      label: 'Lịch Trình', 
+      label: t('schedulesLabel'), 
       value: '24', 
       color: '#0097a7',
       bg: 'rgba(0, 151, 167, 0.1)'
     },
     { 
       icon: <FaClock size={32} />, 
-      label: 'Hoạt Động Hôm Nay', 
+      label: t('activeToday'), 
       value: '5', 
       color: '#00838f',
       bg: 'rgba(0, 131, 143, 0.1)'
@@ -76,7 +79,7 @@ const MainPage = () => {
             marginBottom: '8px'
           }}
         >
-          ❄️ Bảng Điều Khiển Quản Lý
+          ❄️ {t('dashboardTitle')}
         </Typography>
         <Typography 
           variant="body1" 
@@ -85,7 +88,7 @@ const MainPage = () => {
             fontSize: '1rem'
           }}
         >
-          Chào mừng bạn quay lại hệ thống quản lý xe buýt
+          {t('welcomeBack')}
         </Typography>
       </Box>
 
@@ -171,7 +174,7 @@ const MainPage = () => {
               gap: '8px'
             }}
           >
-            📊 Thống Kê Gần Đây
+            📊 {t('recentStats')}
           </Typography>
           <Box sx={{
             display: 'grid',
@@ -179,10 +182,10 @@ const MainPage = () => {
             gap: '16px'
           }}>
             {[
-              { title: '🚌 Chuyến Đi Hôm Nay', count: '12/15' },
-              { title: '✅ Hoàn Thành', count: '10' },
-              { title: '⏳ Đang Chạy', count: '2' },
-              { title: '⚠️ Chậm Trễ', count: '0' }
+              { title: `🚌 ${t('tripsToday')}`, count: '12/15' },
+              { title: `✅ ${t('completed')}`, count: '10' },
+              { title: `⏳ ${t('running')}`, count: '2' },
+              { title: `⚠️ ${t('delayed')}`, count: '0' }
             ].map((item, idx) => (
               <Box 
                 key={idx}

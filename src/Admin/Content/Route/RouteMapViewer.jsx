@@ -5,12 +5,14 @@ import mapboxgl from 'mapbox-gl';
 import 'mapbox-gl/dist/mapbox-gl.css';
 import { getRouteById, getPickupPoints } from '../../../service/apiService';
 import PaginationControls from '../PaginationControls';
+import { useLanguage } from '../../Shared/LanguageContext';
 
 const MAPBOX_TOKEN = 'pk.eyJ1IjoibGlraWpvb25nMSIsImEiOiJjbWg5eXlyN24wMDFlMnJuNmIxY2kxOTc2In0.KDmPuA2vvdV6G28mpeK4KA';
 
 // Snowflakes are provided globally by Admin layout
 
 const RouteMapViewer = ({ open, onClose, routeId }) => {
+  const { t } = useLanguage();
   const [route, setRoute] = useState(null);
   const [points, setPoints] = useState([]);
   const [loading, setLoading] = useState(false);
@@ -323,13 +325,13 @@ const RouteMapViewer = ({ open, onClose, routeId }) => {
           flexShrink: 0,
           boxShadow: '0 4px 20px rgba(0, 151, 167, 0.3)'
         }}>
-          ❄️ Xem Chi Tiết Tuyến Đường ❄️
+          ❄️ {t('routeMap')} ❄️
         </DialogTitle>
         <DialogContent sx={{ flex: 1, display: 'flex', overflow: 'hidden', p: 2 ,marginTop:"30px"}}>
           <Box sx={{ display: 'flex', gap: 2.5, width: '100%', height: '100%' }}>
             <Box sx={{ flex: 1, display: 'flex', flexDirection: 'column', gap: 2, overflow: 'auto' }}>
               {loading ? (
-                <Typography sx={{ py: 4, textAlign: 'center', color: '#00838f', fontWeight: 'bold' }}>⏳ Đang tải dữ liệu tuyến...</Typography>
+                <Typography sx={{ py: 4, textAlign: 'center', color: '#00838f', fontWeight: 'bold' }}>⏳ {t('loading')}</Typography>
               ) : route ? (
                 <>
                   <Paper sx={{ 
@@ -341,11 +343,11 @@ const RouteMapViewer = ({ open, onClose, routeId }) => {
                   }}>
                     <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'start', mb: 1.5 }}>
                       <Box>
-                        <Typography variant="h6" sx={{ fontWeight: 'bold', color: '#0097a7' }}>{route.Name}</Typography>
-                        <Typography variant="caption" sx={{ color: '#00838f' }}>Mã: {route.MaTuyen}</Typography>
+                            <Typography variant="h6" sx={{ fontWeight: 'bold', color: '#0097a7' }}>{route.Name}</Typography>
+                            <Typography variant="caption" sx={{ color: '#00838f' }}>{t('codeLabel')}: {route.MaTuyen}</Typography>
                       </Box>
                       <Chip 
-                        label={route.Status === 'active' ? '✓ Hoạt động' : '✗ Không hoạt động'} 
+                        label={route.Status === 'active' ? `✓ ${t('activeStatus')}` : `✗ ${t('inactiveStatus')}`} 
                         size="small" 
                         color={route.Status === 'active' ? 'success' : 'default'}
                         sx={{ fontWeight: 'bold' }}
@@ -364,8 +366,8 @@ const RouteMapViewer = ({ open, onClose, routeId }) => {
                   </Paper>
 
                   <Box>
-                    <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 1.5 }}>
-                      <Typography variant="subtitle2" sx={{ fontWeight: 'bold', color: '#0097a7' }}>📍 {points.length} Điểm Đón</Typography>
+                      <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 1.5 }}>
+                      <Typography variant="subtitle2" sx={{ fontWeight: 'bold', color: '#0097a7' }}>📍 {points.length} {t('pickupPoints')}</Typography>
                       <Chip 
                         icon={<NavigationIcon />}
                         label={`${calculateTotalDistance()} km`} 
@@ -377,15 +379,15 @@ const RouteMapViewer = ({ open, onClose, routeId }) => {
                       <Table size="small" stickyHeader>
                         <TableHead>
                           <TableRow sx={{ background: 'linear-gradient(135deg, #0097a7 0%, #00838f 100%)' }}>
-                            <TableCell sx={{ color: 'white', fontWeight: 'bold', width: 50 }}>STT</TableCell>
-                            <TableCell sx={{ color: 'white', fontWeight: 'bold' }}>Tên Điểm</TableCell>
-                            <TableCell sx={{ color: 'white', fontWeight: 'bold' }}>Địa Chỉ</TableCell>
+                            <TableCell sx={{ color: 'white', fontWeight: 'bold', width: 50 }}>{t('index')}</TableCell>
+                              <TableCell sx={{ color: 'white', fontWeight: 'bold' }}>{t('pointName')}</TableCell>
+                              <TableCell sx={{ color: 'white', fontWeight: 'bold' }}>{t('address')}</TableCell>
                           </TableRow>
                         </TableHead>
                         <TableBody>
                           {points.length === 0 ? (
                             <TableRow>
-                              <TableCell colSpan={3} align="center" sx={{ py: 2, color: '#999' }}>Chưa có điểm đón</TableCell>
+                              <TableCell colSpan={3} align="center" sx={{ py: 2, color: '#999' }}>{t('noPickupPoints')}</TableCell>
                             </TableRow>
                           ) : (
                             displayedPoints.map((p, idx) => {
@@ -400,7 +402,7 @@ const RouteMapViewer = ({ open, onClose, routeId }) => {
                                     />
                                   </TableCell>
                                   <TableCell sx={{ fontWeight: '500', fontSize: '0.9rem', color: '#00838f' }}>{p.PointName || '—'}</TableCell>
-                                  <TableCell sx={{ fontSize: '0.8rem', color: '#666' }}>{p.Address || 'Chưa có'}</TableCell>
+                                  <TableCell sx={{ fontSize: '0.8rem', color: '#666' }}>{p.Address || t('noPickupPoints')}</TableCell>
                                 </TableRow>
                               );
                             })
@@ -410,9 +412,9 @@ const RouteMapViewer = ({ open, onClose, routeId }) => {
                     </TableContainer>
                     <div className="custom-table-footer">
                       <select className="rows-per-page" value={rowsPerPage} onChange={(e) => { setRowsPerPage(parseInt(e.target.value, 10)); setPage(0); }}>
-                        <option value={3}>3 / trang</option>
-                        <option value={5}>5 / trang</option>
-                        <option value={10}>10 / trang</option>
+                        <option value={3}>3 {t('perPage')}</option>
+                          <option value={5}>5 {t('perPage')}</option>
+                          <option value={10}>10 {t('perPage')}</option>
                       </select>
                       <PaginationControls count={points.length} page={page} rowsPerPage={rowsPerPage} onPageChange={(p) => setPage(p)} />
                     </div>
