@@ -13,6 +13,7 @@ import {
 import { IoIosSearch } from "react-icons/io";
 import { FaPlus, FaRoute } from "react-icons/fa";
 import TableRoute from "./TableRoute";
+import { useLanguage } from '../../Shared/LanguageContext';
 import { useNavigate } from "react-router-dom"
 import { useState } from "react";
 
@@ -31,6 +32,8 @@ const Routee = () => {
         setFilter(something)
     }
     
+    const { t } = useLanguage();
+
     return (
       <Box className="page-body">
             {/* Header with Icon */}
@@ -49,7 +52,7 @@ const Routee = () => {
                   textShadow: '0 2px 4px rgba(0, 0, 0, 0.1)'
                 }}
               >
-                Quản Lý Tuyến Đường
+                {t('manage')} {t('routesLabel')}
               </Typography>
             </Box>
 
@@ -71,7 +74,7 @@ const Routee = () => {
                 <Box sx={{ fontSize: '28px' }}>🗺️</Box>
                 <Box>
                   <Typography sx={{ color: '#00838f', fontSize: '0.9rem', fontWeight: '500' }}>
-                    Tổng Tuyến Đường
+                    {t('totalRoutes')}
                   </Typography>
                   <Typography sx={{ color: '#0097a7', fontWeight: 'bold', fontSize: '2rem' }}>
                     6
@@ -97,7 +100,7 @@ const Routee = () => {
               }}>
                 <TextField
                   variant="outlined"
-                  placeholder="🔍 Tìm kiếm tuyến đường..."
+                  placeholder={`🔍 ${t('searchPlaceholder')}`}
                   size="small"
                   value={search}
                   onChange={(e) => handleSearch(e.target.value)}
@@ -122,14 +125,14 @@ const Routee = () => {
                   }}
                 />
                 <FormControl size="small" sx={{ minWidth: 150 }}>
-                  <InputLabel>Bộ Lọc</InputLabel>
+                  <InputLabel>{t('filterLabel')}</InputLabel>
                   <Select
                     value={filter}
-                    label="Bộ Lọc"
+                    label={t('filterLabel')}
                     onChange={(e) => handleFilter(e.target.value)}
                   >
-                    <MenuItem value="id">ID</MenuItem>
-                    <MenuItem value="name">Tên</MenuItem>
+                    <MenuItem value="id">{t('idLabel')}</MenuItem>
+                    <MenuItem value="name">{t('nameLabel')}</MenuItem>
                   </Select>
                 </FormControl>
               </Box> */}
@@ -155,7 +158,7 @@ const Routee = () => {
                     }
                   }}
                 >
-                  <FaPlus /> Thêm Tuyến Đường
+                  <FaPlus /> {t('addRoute')}
                 </Button>
               </Box>
             </Card>

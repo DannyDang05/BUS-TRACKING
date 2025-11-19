@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Dialog, DialogTitle, DialogContent, DialogActions, TextField, Button, Box } from '@mui/material';
 import { useNavigate, useParams } from 'react-router-dom';
 import { updateStudent, getStudentById } from '../../../service/apiService';
+import { useLanguage } from '../../Shared/LanguageContext';
 
 const UpdateStudentModal = ({ open, onClose, student, onRefresh } = {}) => {
   const navigate = useNavigate();
@@ -71,6 +72,8 @@ const UpdateStudentModal = ({ open, onClose, student, onRefresh } = {}) => {
   const isOpen = open !== undefined ? open : true;
   const closeHandler = onClose || (() => navigate('/students'));
 
+  const { t } = useLanguage();
+
   return (
     <Dialog 
       open={isOpen} 
@@ -90,7 +93,7 @@ const UpdateStudentModal = ({ open, onClose, student, onRefresh } = {}) => {
         color: 'white',
         fontWeight: 'bold',
         textShadow: '0 2px 4px rgba(0, 0, 0, 0.2)'
-      }}>❄️ Cập Nhật Học Sinh</DialogTitle>
+      }}>❄️ {t('update')} {t('student')}</DialogTitle>
       <DialogContent>
         <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2, pt: 2 }}>
           {error && <Box sx={{ color: '#d32f2f' }}>{error}</Box>}
@@ -207,7 +210,7 @@ const UpdateStudentModal = ({ open, onClose, student, onRefresh } = {}) => {
             }
           }}
         >
-          Hủy
+          {t('cancel')}
         </Button>
         <Button 
           onClick={handleSubmit} 
@@ -223,7 +226,7 @@ const UpdateStudentModal = ({ open, onClose, student, onRefresh } = {}) => {
             }
           }}
         >
-          {loading ? 'Đang cập nhật...' : 'Cập Nhật'}
+          {loading ? t('updating') : t('update')}
         </Button>
       </DialogActions>
     </Dialog>

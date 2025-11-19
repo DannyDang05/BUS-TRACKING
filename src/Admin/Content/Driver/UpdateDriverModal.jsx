@@ -3,6 +3,7 @@ import { useEffect, useState } from 'react';
 import { FaSave } from "react-icons/fa";
 import { updateDriver, getDriverById } from '../../../service/apiService';
 import { useParams } from 'react-router-dom';
+import { useLanguage } from '../../Shared/LanguageContext';
 
 const UpdateDriverModal = ({ driver, onUpdated }) => {
     const [FullName, setFullName] = useState("");
@@ -58,6 +59,8 @@ const UpdateDriverModal = ({ driver, onUpdated }) => {
         }
     };
 
+    const { t } = useLanguage();
+
     return (
         <Box 
           component="form" 
@@ -72,7 +75,7 @@ const UpdateDriverModal = ({ driver, onUpdated }) => {
             boxShadow: '0 8px 32px rgba(0, 151, 167, 0.2)'
           }}
         >
-            <h2 className="section-title">❄️ Update Driver</h2>
+            <h2 className="section-title">❄️ {t('update')} {t('driver')}</h2>
             <TextField 
               required 
               sx={{ 
@@ -146,7 +149,7 @@ const UpdateDriverModal = ({ driver, onUpdated }) => {
                     }
                   }}
                 >
-                    <FaSave size={"1.2em"} className="icon-inline" /> {loading ? 'Saving...' : 'Save'}
+                    <FaSave size={"1.2em"} className="icon-inline" /> {loading ? t('saving') : t('save')}
                 </Button>
             </div>
         </Box>

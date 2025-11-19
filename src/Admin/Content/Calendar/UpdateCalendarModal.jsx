@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useParams } from 'react-router-dom';
 import { getNotificationById } from '../../../service/apiService';
 import { Dialog, DialogTitle, DialogContent, DialogActions, TextField, Button, Box } from '@mui/material';
+import { useLanguage } from '../../Shared/LanguageContext';
 
 const UpdateCalendarModal = ({ open, onClose, notification }) => {
   const [formData, setFormData] = useState({
@@ -61,6 +62,8 @@ const UpdateCalendarModal = ({ open, onClose, notification }) => {
     }
   };
 
+  const { t } = useLanguage();
+
   return (
     <Dialog 
       open={open} 
@@ -80,7 +83,7 @@ const UpdateCalendarModal = ({ open, onClose, notification }) => {
         color: 'white',
         fontWeight: 'bold',
         textShadow: '0 2px 4px rgba(0, 0, 0, 0.2)'
-      }}>❄️ Cập Nhật Thông Báo</DialogTitle>
+      }}>❄️ {t('update')} {t('notification')}</DialogTitle>
       <DialogContent>
         <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2, pt: 2 }}>
           {error && <Box sx={{ color: '#d32f2f' }}>{error}</Box>}
@@ -169,7 +172,7 @@ const UpdateCalendarModal = ({ open, onClose, notification }) => {
             }
           }}
         >
-          Hủy
+          {t('cancel')}
         </Button>
         <Button 
           onClick={handleSubmit} 
@@ -185,7 +188,7 @@ const UpdateCalendarModal = ({ open, onClose, notification }) => {
             }
           }}
         >
-          {loading ? 'Đang cập nhật...' : 'Cập Nhật'}
+          {loading ? t('updating') : t('update')}
         </Button>
       </DialogActions>
     </Dialog>

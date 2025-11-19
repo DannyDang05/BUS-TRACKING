@@ -1,6 +1,7 @@
 import { StrictMode } from 'react'
 import { createRoot } from 'react-dom/client'
 import { BrowserRouter, Routes, Route } from 'react-router-dom'
+import { LanguageProvider } from './Admin/Shared/LanguageContext';
 
 
 import App from './App.jsx'
@@ -25,6 +26,7 @@ import UpdateBusModal from './Admin/Content/Bus/UpdateBusModal.jsx'
 import Login from './Admin/Content/Auth/Login.jsx'
 createRoot(document.getElementById('root')).render(
   <StrictMode>
+    <LanguageProvider>
     <BrowserRouter>
       <Routes>
         <Route path='/' element={<App />}>
@@ -51,6 +53,7 @@ createRoot(document.getElementById('root')).render(
         <Route path="login" element={<Login/>}/>
       </Routes>
     </BrowserRouter>
+    </LanguageProvider>
 
   </StrictMode>,
 )

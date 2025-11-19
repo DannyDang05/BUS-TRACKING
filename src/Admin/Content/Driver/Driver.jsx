@@ -13,6 +13,7 @@ import {
 import { IoIosSearch } from "react-icons/io";
 import { FaPlus, FaHeadset } from "react-icons/fa";
 import TableDriver from "./TableDrivers"
+import { useLanguage } from '../../Shared/LanguageContext';
 import { useNavigate } from "react-router-dom"
 import { useState } from "react";
 
@@ -31,6 +32,8 @@ const Driver = () => {
         setFilter(something)
     }
     
+    const { t } = useLanguage();
+
     return (
       <Box className="page-body">
             {/* Header with Icon */}
@@ -50,7 +53,7 @@ const Driver = () => {
                   textShadow: '0 2px 4px rgba(0, 0, 0, 0.1)'
                 }}
               >
-                Quản Lý Tài Xế
+                {t('manage')} {t('driversLabel')}
               </Typography>
             </Box>
 
@@ -72,7 +75,7 @@ const Driver = () => {
                 <Box sx={{ fontSize: '28px' }}>🚗</Box>
                 <Box>
                   <Typography sx={{ color: '#00838f', fontSize: '0.9rem', fontWeight: '500' }}>
-                    Tổng Tài Xế
+                    {t('totalDrivers')}
                   </Typography>
                   <Typography sx={{ color: '#0097a7', fontWeight: 'bold', fontSize: '2rem' }}>
                     8
@@ -98,7 +101,7 @@ const Driver = () => {
               }}>
                 <TextField
                   variant="outlined"
-                  placeholder="🔍 Tìm kiếm tài xế..."
+                  placeholder={`🔍 ${t('searchPlaceholder')}`}
                   size="small"
                   value={search}
                   onChange={(e) => handleSearch(e.target.value)}
@@ -123,14 +126,14 @@ const Driver = () => {
                   }}
                 />
                 <FormControl size="small" sx={{ minWidth: 150 }}>
-                  <InputLabel>Bộ Lọc</InputLabel>
+                  <InputLabel>{t('filterLabel')}</InputLabel>
                   <Select
                     value={filter}
-                    label="Bộ Lọc"
+                    label={t('filterLabel')}
                     onChange={(e) => handleFilter(e.target.value)}
                   >
-                    <MenuItem value="id">ID</MenuItem>
-                    <MenuItem value="name">Tên</MenuItem>
+                    <MenuItem value="id">{t('idLabel')}</MenuItem>
+                    <MenuItem value="name">{t('nameLabel')}</MenuItem>
                   </Select>
                 </FormControl>
               </Box> */}
@@ -156,7 +159,7 @@ const Driver = () => {
                     }
                   }}
                 >
-                  <FaPlus /> Thêm Tài Xế
+                  <FaPlus /> {t('addDriver')}
                 </Button>
               </Box>
             </Card>

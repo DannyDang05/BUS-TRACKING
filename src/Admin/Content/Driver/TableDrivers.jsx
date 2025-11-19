@@ -14,6 +14,7 @@ import { getAllDrivers, deleteDriver } from '../../../service/apiService'; // Im
 import { IconButton } from '@mui/material';
 import { Delete as DeleteIcon } from '@mui/icons-material';
 import ConfirmDialog from '../../Shared/ConfirmDialog';
+import { useLanguage } from '../../Shared/LanguageContext';
 
 // BƯỚC 1: CẬP NHẬT CÁC CỘT ĐỂ KHỚP VỚI DATABASE
 // Dữ liệu từ API sẽ có các trường: Id, FullName, MaBangLai, PhoneNumber
@@ -51,6 +52,7 @@ const TableDriver = () => {
   const [rowsPerPage, setRowsPerPage] = useState(10);
   const [confirmOpen, setConfirmOpen] = useState(false);
   const [confirmTarget, setConfirmTarget] = useState(null);
+  const { t } = useLanguage();
 
   useEffect(() => {
     const fetch = async () => {
@@ -111,30 +113,30 @@ const TableDriver = () => {
     <Paper className="custom-table-container">
       <div style={{ padding: '8px 12px', display: 'flex', gap: 8, alignItems: 'center' }}>
         <input
-          placeholder="Tìm kiếm tài xế (họ tên, phone, bằng lái)..."
+          placeholder={t('searchPlaceholder') + ' (họ tên, phone, bằng lái)...'}
           value={localSearch}
           onChange={(e) => { setLocalSearch(e.target.value); setPage(0); }}
           className="global-search-input"
           style={{ flex: 1, padding: '8px 10px', borderRadius: 6, border: '1px solid #ddd' }}
         />
-        <div style={{ minWidth: 140, textAlign: 'right', color: '#666' }}>{drivers.length} kết quả</div>
+        <div style={{ minWidth: 140, textAlign: 'right', color: '#666' }}>{drivers.length} {t('results')}</div>
       </div>
       <TableContainer>
         <Table className="custom-table">
           <TableHead>
             <TableRow>
               <TableCell>ID</TableCell>
-              <TableCell>Họ và Tên</TableCell>
-              <TableCell>Mã Bằng Lái</TableCell>
-              <TableCell>Số Điện Thoại</TableCell>
-              <TableCell>Hành Động</TableCell>
+              <TableCell>{t('driver') === 'Driver' ? 'Full Name' : 'Họ và Tên'}</TableCell>
+              <TableCell>{t('MaBangLai') || 'Mã Bằng Lái'}</TableCell>
+              <TableCell>{t('PhoneNumber') || 'Số Điện Thoại'}</TableCell>
+              <TableCell>{t('action') || 'Hành Động'}</TableCell>
             </TableRow>
           </TableHead>
           <TableBody>
             {loading ? (
-              <TableRow><TableCell colSpan={5} className="table-empty">⏳ Đang tải dữ liệu...</TableCell></TableRow>
+              <TableRow><TableCell colSpan={5} className="table-empty">⏳ {t('loading')}</TableCell></TableRow>
             ) : displayed.length === 0 ? (
-              <TableRow><TableCell colSpan={5} className="table-empty">Không có dữ liệu</TableCell></TableRow>
+              <TableRow><TableCell colSpan={5} className="table-empty">{t('noData')}</TableCell></TableRow>
             ) : (
                 displayed.map((d) => (
                 <TableRow key={d.Id}>
@@ -156,14 +158,14 @@ const TableDriver = () => {
 
       <div className="custom-table-footer">
         <select className="rows-per-page" value={rowsPerPage} onChange={(e) => { setRowsPerPage(parseInt(e.target.value, 10)); setPage(0); }}>
-          <option value={5}>5 / trang</option>
-          <option value={10}>10 / trang</option>
-          <option value={20}>20 / trang</option>
-          <option value={50}>50 / trang</option>
+          <option value={5}>5 {t('perPage')}</option>
+          <option value={10}>10 {t('perPage')}</option>
+          <option value={20}>20 {t('perPage')}</option>
+          <option value={50}>50 {t('perPage')}</option>
         </select>
         <PaginationControls count={drivers.length} page={page} rowsPerPage={rowsPerPage} onPageChange={(p) => setPage(p)} />
       </div>
-      <ConfirmDialog open={confirmOpen} title="Xác nhận xóa" message="Bạn có chắc muốn xóa tài xế này?" onClose={handleConfirmResult} />
+      <ConfirmDialog open={confirmOpen} title={t('confirmTitle')} message={t('confirmDeleteMessage')} onClose={handleConfirmResult} />
     </Paper>
   );
 }

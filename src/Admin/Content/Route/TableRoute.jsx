@@ -14,6 +14,7 @@ import { IconButton, Tooltip } from '@mui/material';
 import { MapTwoTone as MapIcon, LocationOn as LocationIcon, Delete as DeleteIcon } from '@mui/icons-material';
 import RouteMapViewer from './RouteMapViewer';
 import ConfirmDialog from '../../Shared/ConfirmDialog';
+import { useLanguage } from '../../Shared/LanguageContext';
 
 const TableRoute = (props) => {
   const { rowSelected, setRowSelected } = props;
@@ -28,6 +29,7 @@ const TableRoute = (props) => {
   const [localSearch, setLocalSearch] = useState('');
   const [confirmOpen, setConfirmOpen] = useState(false);
   const [confirmTarget, setConfirmTarget] = useState(null);
+  const { t } = useLanguage();
 
   const handleViewMap = (routeId) => {
     setSelectedRouteId(routeId);
@@ -53,7 +55,7 @@ const TableRoute = (props) => {
       filterable: false,
       renderCell: (params) => (
         <div className="action-flex">
-          <Tooltip title="Quản lý điểm đón">
+          <Tooltip title={t('managePickup') || 'Quản lý điểm đón'}>
             <IconButton
               size="small"
               onClick={() => handleManagePickupPoints(params.row.Id)}
@@ -105,32 +107,32 @@ const TableRoute = (props) => {
       <Paper className="custom-table-container">
         <div style={{ padding: '8px 12px', display: 'flex', gap: 8, alignItems: 'center' }}>
           <input
-            placeholder="Tìm kiếm tuyến (mã, tên, trạng thái)..."
+            placeholder={t('searchPlaceholder') + ' (mã, tên, trạng thái)...'}
             value={localSearch}
             onChange={(e) => { setLocalSearch(e.target.value); setPage(0); }}
             className="global-search-input"
             style={{ flex: 1, padding: '8px 10px', borderRadius: 6, border: '1px solid #ddd' }}
           />
-          <div style={{ minWidth: 140, textAlign: 'right', color: '#666' }}>{routes.length} kết quả</div>
+          <div style={{ minWidth: 140, textAlign: 'right', color: '#666' }}>{routes.length} {t('results')}</div>
         </div>
         <TableContainer>
           <Table className="custom-table">
             <TableHead>
               <TableRow>
                 <TableCell>ID</TableCell>
-                <TableCell>Mã Tuyến</TableCell>
-                <TableCell>Tên Tuyến</TableCell>
-                <TableCell>Tài Xế</TableCell>
-                <TableCell>Xe</TableCell>
-                <TableCell>Trạng Thái</TableCell>
-                <TableCell>Hành Động</TableCell>
+                <TableCell>{t('MaTuyen') || 'Mã Tuyến'}</TableCell>
+                <TableCell>{t('Name') || 'Tên Tuyến'}</TableCell>
+                <TableCell>{t('driver') || 'Tài Xế'}</TableCell>
+                <TableCell>{t('vehicle') || 'Xe'}</TableCell>
+                <TableCell>{t('status') || 'Trạng Thái'}</TableCell>
+                <TableCell>{t('action') || 'Hành Động'}</TableCell>
               </TableRow>
             </TableHead>
             <TableBody>
               {loading ? (
-                <TableRow><TableCell colSpan={7} className="table-empty">⏳ Đang tải...</TableCell></TableRow>
+                <TableRow><TableCell colSpan={7} className="table-empty">⏳ {t('loading')}</TableCell></TableRow>
               ) : displayed.length === 0 ? (
-                <TableRow><TableCell colSpan={7} className="table-empty">Không có dữ liệu</TableCell></TableRow>
+                <TableRow><TableCell colSpan={7} className="table-empty">{t('noData')}</TableCell></TableRow>
               ) : (
                 displayed.map((r) => (
                   <TableRow key={r.Id}>
@@ -142,17 +144,17 @@ const TableRoute = (props) => {
                     <TableCell>{r.Status}</TableCell>
                     <TableCell>
                       <div className="table-actions">
-                        <Tooltip title="Quản lý điểm đón">
+                        <Tooltip title={t('managePickup') || 'Quản lý điểm đón'}>
                           <IconButton size="small" onClick={() => handleManagePickupPoints(r.Id)} sx={{ color: '#FF5733' }}>
                             <LocationIcon fontSize="small" />
                           </IconButton>
                         </Tooltip>
-                        <Tooltip title="Xem trên bản đồ">
+                        <Tooltip title={t('viewOnMap') || 'Xem trên bản đồ'}>
                           <IconButton size="small" onClick={() => handleViewMap(r.Id)} sx={{ color: 'primary.main' }}>
                             <MapIcon fontSize="small" />
                           </IconButton>
                         </Tooltip>
-                        <Tooltip title="Xóa tuyến">
+                        <Tooltip title={t('delete') || 'Xóa tuyến'}>
                           <IconButton size="small" onClick={(e) => { e.stopPropagation(); setConfirmTarget(r.Id); setConfirmOpen(true); }} sx={{ color: 'error.main' }}>
                             <DeleteIcon fontSize="small" />
                           </IconButton>
@@ -166,7 +168,7 @@ const TableRoute = (props) => {
           </Table>
         </TableContainer>
 
-        <ConfirmDialog open={confirmOpen} title="Xác nhận xóa" message="Bạn có chắc muốn xóa tuyến này?" onClose={async (result) => {
+        <ConfirmDialog open={confirmOpen} title={t('confirmTitle')} message={t('confirmDeleteMessage')} onClose={async (result) => {
           setConfirmOpen(false);
           const id = confirmTarget;
           setConfirmTarget(null);
@@ -187,10 +189,10 @@ const TableRoute = (props) => {
 
         <div className="custom-table-footer">
           <select className="rows-per-page" value={rowsPerPage} onChange={(e) => { setRowsPerPage(parseInt(e.target.value, 10)); setPage(0); }}>
-            <option value={5}>5 / trang</option>
-            <option value={10}>10 / trang</option>
-            <option value={20}>20 / trang</option>
-            <option value={50}>50 / trang</option>
+            <option value={5}>5 {t('perPage')}</option>
+            <option value={10}>10 {t('perPage')}</option>
+            <option value={20}>20 {t('perPage')}</option>
+            <option value={50}>50 {t('perPage')}</option>
           </select>
           <PaginationControls count={routes.length} page={page} rowsPerPage={rowsPerPage} onPageChange={(p) => setPage(p)} />
         </div>

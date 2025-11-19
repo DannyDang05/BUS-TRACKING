@@ -103,7 +103,6 @@ const CreateDriverModal = () => {
                     <FaSave size={"1.2em"} className="icon-inline" /> Save
                 </Button>
             </div>
-
         </Box>
     );
 }
