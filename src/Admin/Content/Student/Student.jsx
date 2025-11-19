@@ -32,7 +32,7 @@ const Student = (props) => {
     }
     
     return (
-        <Box sx={{ padding: '16px', height: '100%', overflowY: 'auto' }}>
+      <Box className="page-body">
             {/* Header with Icon */}
             <Box sx={{ 
               marginBottom: '24px',

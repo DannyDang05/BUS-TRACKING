@@ -1,0 +1,99 @@
+/* Styles for login page */
+
+.login-root {
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 32px;
+  background: linear-gradient(135deg, #e8f4f8 0%, #dff1f6 100%);
+}
+
+/* target the card/panel produced by the SignInPage (covers common MUI wrappers) */
+.login-root .MuiPaper-root,
+.login-root .tp-signin,
+.login-root .toolpad-signin,
+.login-root .sign-in-card,
+.login-root .tp-card {
+  max-width: 520px;
+  width: 100%;
+  padding: 28px 28px 36px 28px;
+  border-radius: 10px;
+  box-shadow: 0 10px 30px rgba(0,0,0,0.08);
+  background: rgba(255,255,255,0.98);
+  border: 1px solid rgba(0,151,167,0.06);
+}
+
+.login-root h1,
+.login-root .MuiTypography-h5 {
+  text-align: center;
+  font-size: 1.9rem;
+  margin: 0 0 6px 0;
+  color: #1f3437;
+  font-weight: 700;
+}
+
+.login-root p,
+.login-root .MuiTypography-body1 {
+  text-align: center;
+  margin: 0 0 18px 0;
+  color: #6c7a7b;
+}
+
+/* Labels and helper text */
+.login-root label,
+.login-root .MuiFormLabel-root {
+  color: #007a86;
+  font-weight: 600;
+}
+
+/* MUI Outlined inputs styling inside login */
+.login-root .MuiOutlinedInput-root {
+  background: white;
+}
+.login-root .MuiOutlinedInput-root fieldset {
+  border-color: rgba(0,151,167,0.22);
+}
+.login-root .MuiOutlinedInput-root:hover fieldset {
+  border-color: rgba(0,151,167,0.36);
+}
+.login-root .MuiOutlinedInput-root.Mui-focused fieldset {
+  border-color: #0097a7;
+  box-shadow: 0 6px 18px rgba(0,151,167,0.06);
+}
+
+/* Placeholder color */
+.login-root input::placeholder {
+  color: #a8b8ba;
+}
+
+/* Primary sign-in button */
+.login-root .MuiButton-root,
+.login-root .btn-signin,
+.login-root .btn-create {
+  background: linear-gradient(135deg, #0097a7 0%, #00838f 100%);
+  color: white;
+  border-radius: 8px;
+  padding: 12px 20px;
+  font-weight: 700;
+  box-shadow: 0 6px 18px rgba(0,151,167,0.12);
+}
+.login-root .MuiButton-root:hover,
+.login-root .btn-signin:hover,
+.login-root .btn-create:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 10px 26px rgba(0,151,167,0.16);
+}
+
+/* Small responsive tweaks */
+@media (max-width: 640px) {
+  .login-root {
+    padding: 18px;
+  }
+  .login-root .MuiPaper-root,
+  .login-root .tp-signin,
+  .login-root .sign-in-card {
+    padding: 20px;
+    border-radius: 8px;
+  }
+}

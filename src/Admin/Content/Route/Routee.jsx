@@ -32,7 +32,7 @@ const Routee = () => {
     }
     
     return (
-        <Box sx={{ padding: '16px', height: '100%', overflowY: 'auto' }}>
+      <Box className="page-body">
             {/* Header with Icon */}
             <Box className="slide-in" sx={{ 
               marginBottom: '24px',

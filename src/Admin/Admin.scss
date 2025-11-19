@@ -314,6 +314,28 @@ $winter-dark: #00546e;
                         }
                     }
                 }
+            
+            /* Reusable class for MUI TextField instances in create forms */
+            .create-textfield {
+                width: 50%;
+
+                /* MUI outlined input customization */
+                .MuiOutlinedInput-root {
+                    & fieldset {
+                        border-color: $winter-primary;
+                    }
+                    &:hover fieldset {
+                        border-color: $winter-secondary;
+                    }
+                    &.Mui-focused fieldset {
+                        border-color: $winter-primary;
+                    }
+                }
+
+                .MuiInputBase-input {
+                    color: $winter-secondary;
+                }
+            }
             }
         }
     }
@@ -529,5 +551,12 @@ $winter-dark: #00546e;
     align-items: center;
     gap: 12px;
     padding-top: 8px;
+}
+
+/* Reusable page wrapper used by multiple admin pages */
+.page-body {
+    padding: 16px;
+    height: 100%;
+    overflow-y: auto;
 }
 

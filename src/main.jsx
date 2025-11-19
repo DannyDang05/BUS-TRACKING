@@ -6,7 +6,7 @@ import { BrowserRouter, Routes, Route } from 'react-router-dom'
 import App from './App.jsx'
 import Map from './Admin/Content/Map.jsx'
 import Student from './Admin/Content/Student/Student.jsx'
-import MainPage from './Admin/Content/MainPage.jsx'
+import MainPage from './Admin/Content/Mainpage/MainPage.jsx'
 import Driver from './Admin/Content/Driver/Driver.jsx'
 import CreateDriverModal from './Admin/Content/Driver/CreateDriverModal.jsx'
 import UpdateDriverModal from './Admin/Content/Driver/UpdateDriverModal.jsx'
@@ -22,6 +22,7 @@ import RouteStopsPage from './Admin/Content/Route/RouteStopsPage.jsx'
 import Bus from './Admin/Content/Bus/Bus.jsx'
 import CreateBusModal from './Admin/Content/Bus/CreateBusModal.jsx'
 import UpdateBusModal from './Admin/Content/Bus/UpdateBusModal.jsx'
+import Login from './Admin/Content/Auth/Login.jsx'
 createRoot(document.getElementById('root')).render(
   <StrictMode>
     <BrowserRouter>
@@ -46,11 +47,8 @@ createRoot(document.getElementById('root')).render(
           <Route path="buses/create-bus" element={<CreateBusModal />} />
           <Route path="buses/update-bus/:id" element={<UpdateBusModal />} />
 
-
-
-
-
         </Route>
+        <Route path="login" element={<Login/>}/>
       </Routes>
     </BrowserRouter>
 

@@ -5,7 +5,6 @@ import React from 'react';
 export default function PaginationControls({ count, page, rowsPerPage, onPageChange }) {
   const totalPages = Math.max(1, Math.ceil(count / rowsPerPage));
   const pages = Array.from({ length: totalPages }, (_, i) => i);
-
   const prev = () => onPageChange(Math.max(0, page - 1));
   const next = () => onPageChange(Math.min(totalPages - 1, page + 1));
 
