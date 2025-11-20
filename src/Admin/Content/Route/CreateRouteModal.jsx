@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { toast } from 'react-toastify';
 import { Dialog, DialogTitle, DialogContent, DialogActions, TextField, Button, Box } from '@mui/material';
 import { useNavigate } from 'react-router-dom';
 import { createRoute } from '../../../service/apiService';
@@ -23,7 +24,15 @@ const CreateRouteModal = ({ open, onClose, onRefresh } = {}) => {
     }));
   };
 
+  const isValid = () => {
+    return formData.MaTuyen && formData.Name && formData.DriverId && formData.VehicleId;
+  };
+
   const handleSubmit = async () => {
+    if (!isValid()) {
+      toast.error('Vui lòng điền đầy đủ thông tin bắt buộc!');
+      return;
+    }
     setLoading(true);
     setError('');
     try {
@@ -37,9 +46,11 @@ const CreateRouteModal = ({ open, onClose, onRefresh } = {}) => {
       });
       onRefresh?.();
       onClose?.();
+      toast.success('Tạo tuyến thành công!');
       navigate('/routes');
     } catch (err) {
       setError(err.response?.data?.message || 'Tạo tuyến lỗi');
+      toast.error(err.response?.data?.message || 'Tạo tuyến lỗi');
       console.error('Error creating route:', err);
     } finally {
       setLoading(false);

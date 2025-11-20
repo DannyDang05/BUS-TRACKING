@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { toast } from 'react-toastify';
 import { Dialog, DialogTitle, DialogContent, DialogActions, TextField, Button, Box } from '@mui/material';
 import { useNavigate } from 'react-router-dom';
 import { createNotification } from '../../../service/apiService';
@@ -23,7 +24,15 @@ const CreateCalendarModal = ({ open, onClose, onRefresh } = {}) => {
     }));
   };
 
+  const isValid = () => {
+    return formData.MaThongBao && formData.NoiDung && formData.ThoiGian && formData.LoaiThongBao;
+  };
+
   const handleSubmit = async () => {
+    if (!isValid()) {
+      toast.error('Vui lòng điền đầy đủ thông tin bắt buộc!');
+      return;
+    }
     setLoading(true);
     setError('');
     try {
@@ -36,9 +45,11 @@ const CreateCalendarModal = ({ open, onClose, onRefresh } = {}) => {
       });
       onRefresh?.();
       onClose?.();
+      toast.success('Tạo thông báo thành công!');
       navigate('/calendars');
     } catch (err) {
       setError(err.response?.data?.message || 'Tạo thông báo lỗi');
+      toast.error(err.response?.data?.message || 'Tạo thông báo lỗi');
       console.error('Error creating notification:', err);
     } finally {
       setLoading(false);

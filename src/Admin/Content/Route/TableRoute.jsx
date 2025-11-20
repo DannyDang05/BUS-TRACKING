@@ -2,6 +2,7 @@ import * as React from 'react';
 import { useNavigate } from "react-router-dom"
 import { useState, useEffect } from 'react';
 import { getAllRoutes, deleteRoute } from '../../../service/apiService';
+import { toast } from 'react-toastify';
 import Paper from '@mui/material/Paper';
 import Table from '@mui/material/Table';
 import TableBody from '@mui/material/TableBody';
@@ -175,13 +176,14 @@ const TableRoute = (props) => {
           if (!result || !id) return;
           try {
             await deleteRoute(id);
+            toast.success('Xóa tuyến thành công!');
             setLoading(true);
             const res = await getAllRoutes(search);
             const list = res?.data || res || [];
             setRoutes(list);
           } catch (err) {
             console.error('Xóa tuyến thất bại', err);
-            alert('Xóa thất bại');
+            toast.error(err?.response?.data?.message || 'Xóa tuyến thất bại!');
           } finally {
             setLoading(false);
           }

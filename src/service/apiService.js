@@ -3,8 +3,20 @@ import axios from 'axios';
 // Cấu hình một instance axios
 const apiService = axios.create({
     baseURL: 'http://localhost:6969/api/v1', // URL cơ sở của back-end
-    withCredentials: true // RẤT QUAN TRỌNG: Để cho phép gửi/nhận cookie (jwt_token)
+    withCredentials: true // Có thể giữ lại nếu backend vẫn hỗ trợ cookie, nhưng JWT sẽ ưu tiên header
 });
+
+// Thêm interceptor để tự động đính kèm JWT token vào header Authorization nếu có
+apiService.interceptors.request.use(
+    (config) => {
+        const token = localStorage.getItem('bus_token');
+        if (token) {
+            config.headers['Authorization'] = `Bearer ${token}`;
+        }
+        return config;
+    },
+    (error) => Promise.reject(error)
+);
 
 // Thêm interceptor để xử lý lỗi chung (tùy chọn nhưng nên có)
 apiService.interceptors.response.use(

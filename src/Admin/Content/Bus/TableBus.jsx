@@ -2,6 +2,7 @@ import * as React from 'react';
 import { useNavigate } from "react-router-dom"
 import { useState, useEffect } from 'react';
 import { getAllVehicles, deleteVehicle } from '../../../service/apiService';
+import { toast } from 'react-toastify';
 import { IconButton } from '@mui/material';
 import { Delete as DeleteIcon } from '@mui/icons-material';
 import ConfirmDialog from '../../Shared/ConfirmDialog';
@@ -74,13 +75,14 @@ const TableBus = () => {
     if (!result || !id) return;
     try {
       await deleteVehicle(id);
+      toast.success('Xóa xe thành công!');
       setLoading(true);
       const res = await getAllVehicles(search);
       const list = res?.data || res || [];
       setVehicles(list);
     } catch (err) {
       console.error('Xóa xe thất bại', err);
-      alert('Xóa thất bại');
+      toast.error(err?.response?.data?.message || 'Xóa xe thất bại!');
     } finally {
       setLoading(false);
     }

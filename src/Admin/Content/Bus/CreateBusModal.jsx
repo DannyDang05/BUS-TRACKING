@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { toast } from 'react-toastify';
 import { Dialog, DialogTitle, DialogContent, DialogActions, TextField, Button, Box } from '@mui/material';
 import { useNavigate } from 'react-router-dom';
 import { createVehicle } from '../../../service/apiService';
@@ -22,7 +23,15 @@ const CreateBusModal = ({ open, onClose, onRefresh } = {}) => {
     }));
   };
 
+  const isValid = () => {
+    return formData.LicensePlate && formData.Model && formData.SpeedKmh;
+  };
+
   const handleSubmit = async () => {
+    if (!isValid()) {
+      toast.error('Vui lòng điền đầy đủ thông tin bắt buộc!');
+      return;
+    }
     setLoading(true);
     setError('');
     try {
@@ -34,9 +43,11 @@ const CreateBusModal = ({ open, onClose, onRefresh } = {}) => {
       });
       onRefresh?.();
       onClose?.();
+      toast.success('Tạo xe thành công!');
       navigate('/buses');
     } catch (err) {
       setError(err.response?.data?.message || 'Tạo xe lỗi');
+      toast.error(err.response?.data?.message || 'Tạo xe lỗi');
       console.error('Error creating vehicle:', err);
     } finally {
       setLoading(false);

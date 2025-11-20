@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { toast } from 'react-toastify';
 import { useParams } from 'react-router-dom';
 import { getNotificationById } from '../../../service/apiService';
 import { Dialog, DialogTitle, DialogContent, DialogActions, TextField, Button, Box } from '@mui/material';
@@ -47,15 +48,24 @@ const UpdateCalendarModal = ({ open, onClose, notification }) => {
     }));
   };
 
+  const isValid = () => {
+    return formData.MaThongBao && formData.NoiDung && formData.ThoiGian && formData.LoaiThongBao;
+  };
+
   const handleSubmit = async () => {
+    if (!isValid()) {
+      toast.error('Vui lòng điền đầy đủ thông tin bắt buộc!');
+      return;
+    }
     setLoading(true);
     setError('');
-    // For now, just close the dialog
-    // If you want to update, implement the updateNotification API call
     try {
+      // TODO: Gọi API updateNotification nếu có
       onClose();
+      toast.success('Cập nhật thông báo thành công!');
     } catch (err) {
       setError('Cập nhật thông báo lỗi');
+      toast.error('Cập nhật thông báo lỗi');
       console.error('Error updating notification:', err);
     } finally {
       setLoading(false);

@@ -24,38 +24,48 @@ import Bus from './Admin/Content/Bus/Bus.jsx'
 import CreateBusModal from './Admin/Content/Bus/CreateBusModal.jsx'
 import UpdateBusModal from './Admin/Content/Bus/UpdateBusModal.jsx'
 import Login from './Admin/Content/Auth/Login.jsx'
-import DriverUI from './Admin/DriverUI/DriverUI.jsx';
+import DriverUI from './DriverUI/DriverUI.jsx';
+import DriverRoute from './DriverUI/DriverRoute';
+import { ToastContainer } from 'react-toastify';
+import 'react-toastify/dist/ReactToastify.css';
+import AdminRoute from './Admin/Shared/AdminRoute';
 createRoot(document.getElementById('root')).render(
   <StrictMode>
     <LanguageProvider>
-    <BrowserRouter>
-      <Routes>
-        <Route path='/' element={<App />}>
-          <Route index element={<MainPage />} />
-          <Route path="map" element={<Map />} />
-          <Route path="students" element={<Student />} />
-          <Route path="students/create-student" element={<CreateStudentModal />} />
-          <Route path="students/update-student/:id" element={<UpdateStudentModal />} />
-          <Route path="drivers" element={<Driver />} />
-          <Route path="drivers/create-driver" element={<CreateDriverModal />} />
-          <Route path="drivers/update-driver/:id" element={<UpdateDriverModal />} />
-          <Route path='calendars' element={<Calendar />} />
-          <Route path="calendars/create-calendar" element={<CreateCalendarModal />} />
-          <Route path="calendars/update-calendar/:id" element={<UpdateCalendarModal />} />
-          <Route path='routes' element={<Routee />} />
-          <Route path="routes/create-route" element={<CreateRouteModal />} />
-          <Route path="routes/update-route/:id" element={<UpdateRouteModal />} />
-          <Route path="routes/:id/points" element={<RouteStopsPage />} />
-          <Route path='buses' element={<Bus />} />
-          <Route path="buses/create-bus" element={<CreateBusModal />} />
-          <Route path="buses/update-bus/:id" element={<UpdateBusModal />} />
-
-        </Route>
-        <Route path="login" element={<Login/>}/>
-        <Route path="driver" element={<DriverUI/>} />
-      </Routes>
-    </BrowserRouter>
+      <BrowserRouter>
+        <ToastContainer position="top-right" autoClose={3000} hideProgressBar={false} newestOnTop closeOnClick pauseOnFocusLoss draggable pauseOnHover />
+        <Routes>
+          {/* Admin protected routes */}
+          <Route element={<AdminRoute />}>
+            <Route path='/' element={<App />}>
+              <Route index element={<MainPage />} />
+              <Route path="map" element={<Map />} />
+              <Route path="students" element={<Student />} />
+              <Route path="students/create-student" element={<CreateStudentModal />} />
+              <Route path="students/update-student/:id" element={<UpdateStudentModal />} />
+              <Route path="drivers" element={<Driver />} />
+              <Route path="drivers/create-driver" element={<CreateDriverModal />} />
+              <Route path="drivers/update-driver/:id" element={<UpdateDriverModal />} />
+              <Route path='calendars' element={<Calendar />} />
+              <Route path="calendars/create-calendar" element={<CreateCalendarModal />} />
+              <Route path="calendars/update-calendar/:id" element={<UpdateCalendarModal />} />
+              <Route path='routes' element={<Routee />} />
+              <Route path="routes/create-route" element={<CreateRouteModal />} />
+              <Route path="routes/update-route/:id" element={<UpdateRouteModal />} />
+              <Route path="routes/:id/points" element={<RouteStopsPage />} />
+              <Route path='buses' element={<Bus />} />
+              <Route path="buses/create-bus" element={<CreateBusModal />} />
+              <Route path="buses/update-bus/:id" element={<UpdateBusModal />} />
+            </Route>
+          </Route>
+          {/* Public routes */}
+          <Route path="login" element={<Login/>}/>
+          {/* Driver protected route */}
+          <Route element={<DriverRoute />}>
+            <Route path="driver" element={<DriverUI/>} />
+          </Route>
+        </Routes>
+      </BrowserRouter>
     </LanguageProvider>
-
   </StrictMode>,
 )

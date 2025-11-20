@@ -1,3 +1,10 @@
+/* Ẩn alert lỗi mặc định của SignInPage/toolpad-core */
+.login-root .MuiAlert-root,
+.login-root .MuiAlert-standardError,
+.login-root .MuiAlert-message,
+.login-root .MuiAlert-icon {
+  display: none !important;
+}
 /* Styles for login page */
 
 .login-root {

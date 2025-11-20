@@ -2,6 +2,7 @@ import { TextField, Box, Button } from '@mui/material';
 import { useEffect, useState } from 'react';
 import { FaSave } from "react-icons/fa";
 import { updateDriver, getDriverById } from '../../../service/apiService';
+import { toast } from 'react-toastify';
 import { useParams } from 'react-router-dom';
 import { useLanguage } from '../../Shared/LanguageContext';
 
@@ -46,17 +47,26 @@ const UpdateDriverModal = ({ driver, onUpdated }) => {
     };
 
     const handleSubmit = async (e) => {
-        e.preventDefault();
-        if (!isValid() || !driver) return;
-        setLoading(true);
-        try {
-            await updateDriver(driver.Id, { FullName, MaBangLai, PhoneNumber });
-            setLoading(false);
-            if (onUpdated) onUpdated();
-        } catch (err) {
-            console.error('Cập nhật tài xế lỗi', err);
-            setLoading(false);
-        }
+      e.preventDefault();
+      if (!isValid()) {
+        toast.error('Vui lòng điền đầy đủ thông tin!');
+        return;
+      }
+      if (!driver) {
+        toast.error('Không tìm thấy tài xế để cập nhật!');
+        return;
+      }
+      setLoading(true);
+      try {
+        await updateDriver(driver.Id, { FullName, MaBangLai, PhoneNumber });
+        setLoading(false);
+        toast.success('Cập nhật tài xế thành công!');
+        if (onUpdated) onUpdated();
+      } catch (err) {
+        console.error('Cập nhật tài xế lỗi', err);
+        setLoading(false);
+        toast.error(err?.response?.data?.message || 'Cập nhật tài xế thất bại!');
+      }
     };
 
     const { t } = useLanguage();

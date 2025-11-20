@@ -1,7 +1,14 @@
 import jwt from 'jsonwebtoken';
 
 const verifyToken = (req, res, next) => {
-  const token = req.cookies.jwt_token; // Đọc token từ HttpOnly Cookie
+  // Ưu tiên lấy token từ header Authorization: Bearer <token>
+  let token = null;
+  const authHeader = req.headers['authorization'] || req.headers['Authorization'];
+  if (authHeader && authHeader.startsWith('Bearer ')) {
+    token = authHeader.substring(7);
+  } else if (req.cookies && req.cookies.jwt_token) {
+    token = req.cookies.jwt_token;
+  }
 
   if (!token) {
     return res.status(401).json({

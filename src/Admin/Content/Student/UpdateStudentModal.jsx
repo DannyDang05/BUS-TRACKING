@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Dialog, DialogTitle, DialogContent, DialogActions, TextField, Button, Box } from '@mui/material';
 import { useNavigate, useParams } from 'react-router-dom';
 import { updateStudent, getStudentById } from '../../../service/apiService';
+import { toast } from 'react-toastify';
 import { useLanguage } from '../../Shared/LanguageContext';
 
 const UpdateStudentModal = ({ open, onClose, student, onRefresh } = {}) => {
@@ -52,7 +53,15 @@ const UpdateStudentModal = ({ open, onClose, student, onRefresh } = {}) => {
     }));
   };
 
+  const isValid = () => {
+    return formData.MaHocSinh && formData.HoTen && formData.Lop;
+  };
+
   const handleSubmit = async () => {
+    if (!isValid()) {
+      toast.error('Vui lòng điền đầy đủ thông tin bắt buộc!');
+      return;
+    }
     setLoading(true);
     setError('');
     try {
@@ -60,9 +69,11 @@ const UpdateStudentModal = ({ open, onClose, student, onRefresh } = {}) => {
       await updateStudent(studentId, formData);
       onRefresh?.();
       onClose?.();
+      toast.success('Cập nhật học sinh thành công!');
       navigate('/students');
     } catch (err) {
       setError(err.response?.data?.message || 'Cập nhật học sinh lỗi');
+      toast.error(err.response?.data?.message || 'Cập nhật học sinh lỗi');
       console.error('Error updating student:', err);
     } finally {
       setLoading(false);

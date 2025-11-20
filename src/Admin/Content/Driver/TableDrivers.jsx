@@ -11,6 +11,7 @@ import PaginationControls from '../PaginationControls';
 // IMPORT HOOKS VÀ API
 import { useState, useEffect } from 'react';
 import { getAllDrivers, deleteDriver } from '../../../service/apiService'; // Import hàm API
+import { toast } from 'react-toastify';
 import { IconButton } from '@mui/material';
 import { Delete as DeleteIcon } from '@mui/icons-material';
 import ConfirmDialog from '../../Shared/ConfirmDialog';
@@ -94,6 +95,7 @@ const TableDriver = () => {
     if (!result || !id) return;
     try {
       await deleteDriver(id);
+      toast.success('Xóa tài xế thành công!');
       // reload
       setLoading(true);
       const res = await getAllDrivers(search);
@@ -101,7 +103,7 @@ const TableDriver = () => {
       setDrivers(list);
     } catch (err) {
       console.error('Xóa tài xế thất bại', err);
-      alert('Xóa thất bại');
+      toast.error(err?.response?.data?.message || 'Xóa tài xế thất bại!');
     } finally {
       setLoading(false);
     }

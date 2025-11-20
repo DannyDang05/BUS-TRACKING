@@ -10,6 +10,7 @@ import TableRow from '@mui/material/TableRow';
 import PaginationControls from '../PaginationControls';
 import { useState, useEffect } from 'react';
 import { getAllStudents, deleteStudent } from '../../../service/apiService'; // Import API
+import { toast } from 'react-toastify';
 import { IconButton } from '@mui/material';
 import { Delete as DeleteIcon } from '@mui/icons-material';
 import ConfirmDialog from '../../Shared/ConfirmDialog';
@@ -78,13 +79,14 @@ const TableStudent = () => {
       if (!result || !id) return;
       try {
         await deleteStudent(id);
+        toast.success('Xóa học sinh thành công!');
         setLoading(true);
         const res = await getAllStudents(search);
         const list = res?.data || res || [];
         setStudents(list);
       } catch (err) {
         console.error('Xóa học sinh thất bại', err);
-        alert('Xóa thất bại');
+        toast.error(err?.response?.data?.message || 'Xóa học sinh thất bại!');
       } finally {
         setLoading(false);
       }

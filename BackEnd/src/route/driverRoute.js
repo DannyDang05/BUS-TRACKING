@@ -7,11 +7,13 @@ import {
     getDriverDetail 
 } from "../controller/driverController.js";
 import verifyToken from "../middleWare/authMiddleware.js";
+import requireRole from "../middleWare/requireRole.js";
 
 const router = express.Router();
 
-// Tất cả các route tài xế đều cần xác thực
-// router.use(verifyToken);
+
+// Chỉ cho phép role driver
+router.use(verifyToken, requireRole('driver'));
 
 router.get("/", getAllDrivers);
 router.post("/", createNewDriver);

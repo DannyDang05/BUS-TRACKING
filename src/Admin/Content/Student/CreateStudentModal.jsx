@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { Dialog, DialogTitle, DialogContent, DialogActions, TextField, Button, Box } from '@mui/material';
 import { useNavigate } from 'react-router-dom';
 import { createStudent } from '../../../service/apiService';
+import { toast } from 'react-toastify';
 import { useLanguage } from '../../Shared/LanguageContext';
 
 const CreateStudentModal = ({ open, onClose, onRefresh } = {}) => {
@@ -25,7 +26,15 @@ const CreateStudentModal = ({ open, onClose, onRefresh } = {}) => {
     }));
   };
 
+  const isValid = () => {
+    return formData.MaHocSinh && formData.HoTen && formData.Lop;
+  };
+
   const handleSubmit = async () => {
+    if (!isValid()) {
+      toast.error('Vui lòng điền đầy đủ thông tin bắt buộc!');
+      return;
+    }
     setLoading(true);
     setError('');
     try {
@@ -40,9 +49,11 @@ const CreateStudentModal = ({ open, onClose, onRefresh } = {}) => {
       });
       onRefresh?.();
       onClose?.();
+      toast.success('Tạo học sinh thành công!');
       navigate('/students');
     } catch (err) {
       setError(err.response?.data?.message || 'Tạo học sinh lỗi');
+      toast.error(err.response?.data?.message || 'Tạo học sinh lỗi');
       console.error('Error creating student:', err);
     } finally {
       setLoading(false);

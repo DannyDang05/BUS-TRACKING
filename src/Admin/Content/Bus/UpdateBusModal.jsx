@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { toast } from 'react-toastify';
 import { Dialog, DialogTitle, DialogContent, DialogActions, TextField, Button, Box } from '@mui/material';
 import { updateVehicle, getVehicleById } from '../../../service/apiService';
 import { useParams } from 'react-router-dom';
@@ -51,15 +52,25 @@ const UpdateBusModal = ({ open, onClose, vehicle, onRefresh }) => {
     }));
   };
 
+  const isValid = () => {
+    return formData.LicensePlate && formData.Model && formData.SpeedKmh;
+  };
+
   const handleSubmit = async () => {
+    if (!isValid()) {
+      toast.error('Vui lòng điền đầy đủ thông tin bắt buộc!');
+      return;
+    }
     setLoading(true);
     setError('');
     try {
       await updateVehicle(vehicle.Id, formData);
       onRefresh?.();
       onClose();
+      toast.success('Cập nhật xe thành công!');
     } catch (err) {
       setError(err.response?.data?.message || 'Cập nhật xe lỗi');
+      toast.error(err.response?.data?.message || 'Cập nhật xe lỗi');
       console.error('Error updating vehicle:', err);
     } finally {
       setLoading(false);

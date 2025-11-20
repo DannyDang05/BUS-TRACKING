@@ -7,10 +7,13 @@ import {
   deleteVehicle
 } from "../controller/vehicleController.js";
 import verifyToken from "../middleWare/authMiddleware.js";
+import requireRole from "../middleWare/requireRole.js";
 
 const router = express.Router();
 
-// router.use(verifyToken);
+
+// Chỉ cho phép role admin
+router.use(verifyToken, requireRole('admin'));
 
 router.get("/", getAllVehicles);
 router.post("/", createVehicle);

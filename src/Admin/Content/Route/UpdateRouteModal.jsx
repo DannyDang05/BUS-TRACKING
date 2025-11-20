@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { toast } from 'react-toastify';
 import { Dialog, DialogTitle, DialogContent, DialogActions, TextField, Button, Box } from '@mui/material';
 import { useNavigate, useParams } from 'react-router-dom';
 import { updateRoute, getRouteById } from '../../../service/apiService';
@@ -58,7 +59,15 @@ const UpdateRouteModal = ({ open, onClose, route, onRefresh } = {}) => {
     }));
   };
 
+  const isValid = () => {
+    return formData.MaTuyen && formData.Name && formData.DriverId && formData.VehicleId;
+  };
+
   const handleSubmit = async () => {
+    if (!isValid()) {
+      toast.error('Vui lòng điền đầy đủ thông tin bắt buộc!');
+      return;
+    }
     setLoading(true);
     setError('');
     try {
@@ -66,9 +75,11 @@ const UpdateRouteModal = ({ open, onClose, route, onRefresh } = {}) => {
       await updateRoute(routeId, formData);
       onRefresh?.();
       onClose?.();
+      toast.success('Cập nhật tuyến thành công!');
       if (!onClose) navigate('/routes');
     } catch (err) {
       setError(err.response?.data?.message || 'Cập nhật tuyến lỗi');
+      toast.error(err.response?.data?.message || 'Cập nhật tuyến lỗi');
       console.error('Error updating route:', err);
     } finally {
       setLoading(false);

@@ -1,8 +1,10 @@
+
 import { TextField, Box, Button } from '@mui/material';
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { FaSave } from "react-icons/fa";
 import { createDriver } from '../../../service/apiService';
+import { toast } from 'react-toastify';
 
 const CreateDriverModal = () => {
     const navigate = useNavigate();
@@ -22,15 +24,20 @@ const CreateDriverModal = () => {
 
     const handleSubmit = async (e) => {
         e.preventDefault();
-        if (!isValid()) return;
+        if (!isValid()) {
+            toast.error('Vui lòng điền đầy đủ thông tin!');
+            return;
+        }
         setLoading(true);
         try {
             await createDriver({ Id, FullName, MaBangLai, PhoneNumber });
             setLoading(false);
+            toast.success('Tạo tài xế thành công!');
             navigate('/drivers');
         } catch (err) {
             console.error('Tạo tài xế lỗi', err);
             setLoading(false);
+            toast.error(err?.response?.data?.message || 'Tạo tài xế thất bại!');
         }
     };
 

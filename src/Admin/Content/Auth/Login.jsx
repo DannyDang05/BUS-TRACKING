@@ -1,33 +1,54 @@
+
 import * as React from 'react';
 import './Login.scss';
-import { AppProvider } from '@toolpad/core/AppProvider';
-import { SignInPage } from '@toolpad/core/SignInPage';
+import { AppProvider, SignInPage } from '@toolpad/core';
 import { useTheme } from '@mui/material/styles';
+import { loginAPI } from '../../../service/apiService';
+import { toast } from 'react-toastify';
+import { useNavigate } from 'react-router-dom';
 
 const providers = [{ id: 'credentials', name: 'Username and password' }];
 
-const signIn = async (provider, formData) => {
-    // The underlying SignInPage uses an input named "email" by default.
-    // To avoid changing the input name (and keep backend compatibility),
-    // we read from the "email" field but treat it as the username here.
-    const promise = new Promise((resolve) => {
-        setTimeout(() => {
-            const username = formData?.get('email'); // map email input -> username
-            const password = formData?.get('password');
-            alert(
-                `Signing in with "${provider.name}" and credentials: ${username}, ${password}`,
-            );
-            resolve({
-                type: 'CredentialsSignin',
-                error: 'Invalid credentials.',
-            });
-        }, 300);
-    });
-    return promise;
-};
-
 const Login = () => {
     const theme = useTheme();
+    const navigate = useNavigate();
+
+    // Đăng nhập thực tế
+
+    const signIn = async (provider, formData) => {
+        // Lấy username từ field "username" (không phải email)
+        const username = formData?.get('username') || formData?.get('email');
+        const password = formData?.get('password');
+        if (!username || !password) {
+            toast.error('Vui lòng nhập đầy đủ tài khoản và mật khẩu!');
+            return { error: 'Missing credentials' };
+        }
+        try {
+            const res = await loginAPI({ username, password });
+            // res: { errorCode, message, token, user }
+            if (res && res.token && res.user) {
+                localStorage.setItem('bus_token', res.token);
+                localStorage.setItem('bus_user', JSON.stringify(res.user));
+                toast.success('Đăng nhập thành công!');
+                // Điều hướng theo role
+                if (res.user.role === 'admin' || res.user.Role === 'admin') {
+                    setTimeout(() => navigate('/'), 800);
+                } else if (res.user.role === 'driver' || res.user.Role === 'driver') {
+                    setTimeout(() => navigate('/driver'), 800);
+                } else {
+                    setTimeout(() => navigate('/'), 800);
+                }
+                return { ok: true };
+            } else {
+                toast.error(res?.message || 'Đăng nhập thất bại!');
+                return { error: res?.message || 'Login failed' };
+            }
+        } catch (err) {
+            toast.error(err?.message || 'Đăng nhập thất bại!');
+            return { error: err?.message || 'Login failed' };
+        }
+    };
+
     return (
         <div className="login-root">
             <AppProvider theme={theme}>
@@ -35,13 +56,14 @@ const Login = () => {
                     signIn={signIn}
                     providers={providers}
                     slotProps={{
-                        emailField: { label: 'Username', placeholder: 'likijoong1', autoFocus: true },
-                        form: { noValidate: true }
+                        emailField: { name: 'username', label: 'Username', placeholder: 'likijoong1', autoFocus: true, type: 'text', inputMode: 'text' },
+                        form: { noValidate: true },
+                        errorAlert: { style: { display: 'none' } } // Ẩn alert lỗi mặc định
                     }}
                 />
             </AppProvider>
         </div>
     );
-}
+};
 
 export default Login;

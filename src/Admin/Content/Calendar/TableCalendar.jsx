@@ -2,6 +2,7 @@ import * as React from 'react';
 import { useNavigate } from "react-router-dom"
 import { useState, useEffect } from 'react';
 import { getAllNotifications, deleteNotification } from '../../../service/apiService';
+import { toast } from 'react-toastify';
 import { IconButton } from '@mui/material';
 import { Delete as DeleteIcon } from '@mui/icons-material';
 import ConfirmDialog from '../../Shared/ConfirmDialog';
@@ -58,13 +59,14 @@ const TableCalendar = () => {
     if (!result || !id) return;
     try {
       await deleteNotification(id);
+      toast.success('Xóa thông báo thành công!');
       setLoading(true);
       const res = await getAllNotifications(search);
       const list = res?.data || res || [];
       setNotifications(list);
     } catch (err) {
       console.error('Xóa thông báo thất bại', err);
-      alert('Xóa thất bại');
+      toast.error(err?.response?.data?.message || 'Xóa thông báo thất bại!');
     } finally {
       setLoading(false);
     }
