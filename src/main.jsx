@@ -24,6 +24,7 @@ import Bus from './Admin/Content/Bus/Bus.jsx'
 import CreateBusModal from './Admin/Content/Bus/CreateBusModal.jsx'
 import UpdateBusModal from './Admin/Content/Bus/UpdateBusModal.jsx'
 import Login from './Admin/Content/Auth/Login.jsx'
+import DriverUI from './Admin/DriverUI/DriverUI.jsx';
 createRoot(document.getElementById('root')).render(
   <StrictMode>
     <LanguageProvider>
@@ -51,6 +52,7 @@ createRoot(document.getElementById('root')).render(
 
         </Route>
         <Route path="login" element={<Login/>}/>
+        <Route path="driver" element={<DriverUI/>} />
       </Routes>
     </BrowserRouter>
     </LanguageProvider>

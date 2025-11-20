@@ -18,14 +18,16 @@ $winter-dark: #00546e;
 
 // ❄️ Snowfall Animation
 @keyframes snowfall {
-    0% { 
+    0% {
         transform: translateY(-10vh) translateX(0);
         opacity: 1;
     }
+
     90% {
         opacity: 1;
     }
-    100% { 
+
+    100% {
         transform: translateY(100vh) translateX(100px);
         opacity: 0;
     }
@@ -314,28 +316,30 @@ $winter-dark: #00546e;
                         }
                     }
                 }
-            
-            /* Reusable class for MUI TextField instances in create forms */
-            .create-textfield {
-                width: 50%;
 
-                /* MUI outlined input customization */
-                .MuiOutlinedInput-root {
-                    & fieldset {
-                        border-color: $winter-primary;
+                /* Reusable class for MUI TextField instances in create forms */
+                .create-textfield {
+                    width: 50%;
+
+                    /* MUI outlined input customization */
+                    .MuiOutlinedInput-root {
+                        & fieldset {
+                            border-color: $winter-primary;
+                        }
+
+                        &:hover fieldset {
+                            border-color: $winter-secondary;
+                        }
+
+                        &.Mui-focused fieldset {
+                            border-color: $winter-primary;
+                        }
                     }
-                    &:hover fieldset {
-                        border-color: $winter-secondary;
-                    }
-                    &.Mui-focused fieldset {
-                        border-color: $winter-primary;
+
+                    .MuiInputBase-input {
+                        color: $winter-secondary;
                     }
                 }
-
-                .MuiInputBase-input {
-                    color: $winter-secondary;
-                }
-            }
             }
         }
     }
@@ -347,6 +351,31 @@ $winter-dark: #00546e;
 
     &.collapsed {
         width: 80px;
+
+        .pro-sidebar-inner {
+
+            /* Make each item a centered flexbox */
+            .pro-inner-item {
+                display: flex;
+                justify-content: center;
+                align-items: center;
+                padding-left: 0;
+                padding-right: 0;
+                height: 40px;
+                /* tuỳ chỉnh chiều cao nếu cần */
+            }
+
+            .pro-item-content,
+            .menu-label,
+            .pro-inner-list-item-text {
+                display: none !important;
+            }
+
+            /* Links/paragraph wrapper: don't force full width, center content */
+
+
+
+        }
     }
 
     .proside-bar {
@@ -408,8 +437,9 @@ $winter-dark: #00546e;
         }
 
         .pro-inner-list-item {
-                        /* Placeholder for future styles */
-                        display: none; /* Temporary fix */
+            /* Placeholder for future styles */
+            display: none;
+            /* Temporary fix */
         }
     }
 }
@@ -421,14 +451,15 @@ $winter-dark: #00546e;
     align-items: center;
     justify-content: center;
     padding: 12px 8px;
-    background: linear-gradient(135deg, rgba(0,151,167,0.04), rgba(0,151,167,0.02));
-    border-top: 1px solid rgba(0,151,167,0.06);
+    background: linear-gradient(135deg, rgba(0, 151, 167, 0.04), rgba(0, 151, 167, 0.02));
+    border-top: 1px solid rgba(0, 151, 167, 0.06);
 }
+
 .simple-pagination .page-btn {
     min-width: 36px;
     height: 36px;
     border-radius: 6px;
-    border: 1px solid rgba(0,151,167,0.12);
+    border: 1px solid rgba(0, 151, 167, 0.12);
     background: white;
     color: #00838f;
     font-weight: 600;
@@ -439,20 +470,24 @@ $winter-dark: #00546e;
     padding: 0 10px;
     transition: all 160ms ease;
 }
+
 .simple-pagination .page-btn:hover:not(:disabled) {
     transform: translateY(-2px);
-    box-shadow: 0 6px 18px rgba(0,151,167,0.08);
+    box-shadow: 0 6px 18px rgba(0, 151, 167, 0.08);
 }
+
 .simple-pagination .page-btn:disabled {
     opacity: 0.45;
     cursor: not-allowed;
 }
+
 .simple-pagination .page-btn.active {
     background: linear-gradient(135deg, #0097a7, #00838f);
     color: white;
     border-color: transparent;
-    box-shadow: 0 6px 22px rgba(0,151,167,0.18);
+    box-shadow: 0 6px 22px rgba(0, 151, 167, 0.18);
 }
+
 .simple-pagination .page-btn.prev,
 .simple-pagination .page-btn.next {
     width: 40px;
@@ -461,17 +496,19 @@ $winter-dark: #00546e;
 /* Shared table styles for custom tables */
 .custom-table-container {
     width: 100%;
-    background: linear-gradient(135deg, rgba(255,255,255,0.85), rgba(232,244,248,0.9));
+    background: linear-gradient(135deg, rgba(255, 255, 255, 0.85), rgba(232, 244, 248, 0.9));
     border-radius: 8px;
     padding: 12px;
-    box-shadow: 0 6px 22px rgba(0,151,167,0.06);
-    border: 1px solid rgba(0,151,167,0.06);
+    box-shadow: 0 6px 22px rgba(0, 151, 167, 0.06);
+    border: 1px solid rgba(0, 151, 167, 0.06);
 }
+
 .custom-table {
     width: 100%;
     border-collapse: collapse;
     font-size: 0.95rem;
 }
+
 .custom-table thead th {
     background: linear-gradient(135deg, #0097a7 0%, #00838f 100%);
     color: #fff;
@@ -482,27 +519,32 @@ $winter-dark: #00546e;
     top: 0;
     z-index: 2;
 }
+
 .custom-table tbody td {
     padding: 12px 10px;
-    border-bottom: 1px solid rgba(0,0,0,0.04);
+    border-bottom: 1px solid rgba(0, 0, 0, 0.04);
     vertical-align: middle;
 }
+
 .custom-table tbody tr:hover {
-    background: rgba(0,151,167,0.04);
+    background: rgba(0, 151, 167, 0.04);
     cursor: pointer;
 }
+
 .custom-table tbody tr:nth-child(even) {
-    background: rgba(0,151,167,0.02);
+    background: rgba(0, 151, 167, 0.02);
 }
+
 .table-actions {
     display: flex;
     gap: 8px;
     justify-content: flex-end;
 }
+
 .rows-per-page {
     margin-left: 12px;
     border-radius: 6px;
-    border: 1px solid rgba(0,151,167,0.08);
+    border: 1px solid rgba(0, 151, 167, 0.08);
     padding: 6px 8px;
     background: white;
     color: #00838f;
@@ -514,35 +556,57 @@ $winter-dark: #00546e;
     padding: 20px;
     color: #666;
 }
+
 .action-flex {
     display: flex;
     gap: 8px;
 }
+
 .align-right {
     display: flex;
     justify-content: flex-end;
 }
+
 .full-size {
     width: 100%;
     height: 100%;
 }
+
 .section-title {
     color: #0097a7;
     text-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
 }
-.icon-inline { margin-right: 6px; }
 
-.power-off { margin-right: 10px; color: #00838f; }
+.icon-inline {
+    margin-right: 6px;
+}
+
+.power-off {
+    margin-right: 10px;
+    color: #00838f;
+}
 
 /* Slide-in animation class for pages */
 @keyframes slideIn {
-  from { opacity: 0; transform: translateX(-20px); }
-  to { opacity: 1; transform: translateX(0); }
+    from {
+        opacity: 0;
+        transform: translateX(-20px);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateX(0);
+    }
 }
-.slide-in { animation: slideIn 0.5s ease; }
+
+.slide-in {
+    animation: slideIn 0.5s ease;
+}
 
 /* small adjustment: table footer top margin */
-.custom-table-footer { margin-top: 8px; }
+.custom-table-footer {
+    margin-top: 8px;
+}
 
 /* Footer wrapper for table pagination and controls (centered) */
 .custom-table-footer {
@@ -559,4 +623,3 @@ $winter-dark: #00546e;
     height: 100%;
     overflow-y: auto;
 }
-

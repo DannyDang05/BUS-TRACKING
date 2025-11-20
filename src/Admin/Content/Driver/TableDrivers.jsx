@@ -111,7 +111,7 @@ const TableDriver = () => {
 
   return (
     <Paper className="custom-table-container">
-      <div style={{ padding: '8px 12px', display: 'flex', gap: 8, alignItems: 'center' }}>
+      <div style={{ padding: '8px 12px', display: 'flex', gap:8, alignItems: 'center' }}>
         <input
           placeholder={t('searchPlaceholder') + ' (họ tên, phone, bằng lái)...'}
           value={localSearch}
