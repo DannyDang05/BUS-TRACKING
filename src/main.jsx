@@ -25,10 +25,12 @@ import CreateBusModal from './Admin/Content/Bus/CreateBusModal.jsx'
 import UpdateBusModal from './Admin/Content/Bus/UpdateBusModal.jsx'
 import Login from './Admin/Content/Auth/Login.jsx'
 import DriverUI from './DriverUI/DriverUI.jsx';
-import DriverRoute from './DriverUI/DriverRoute';
+import DriverRoute from './DriverUI/Content/DriverRoute.jsx';
 import { ToastContainer } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 import AdminRoute from './Admin/Shared/AdminRoute';
+import DetailSchedule from './DriverUI/Content/DetailSchedule.jsx';
+import DriverDashboard from './DriverUI/Content/DriverDashBoard.jsx';
 createRoot(document.getElementById('root')).render(
   <StrictMode>
     <LanguageProvider>
@@ -59,10 +61,14 @@ createRoot(document.getElementById('root')).render(
             </Route>
           </Route>
           {/* Public routes */}
-          <Route path="login" element={<Login/>}/>
+          <Route path="login" element={<Login />} />
           {/* Driver protected route */}
           <Route element={<DriverRoute />}>
-            <Route path="driver" element={<DriverUI/>} />
+            <Route path='driver' element={<DriverUI />}>
+              <Route index element={<DriverDashboard />} />
+              <Route path="schedule/:id" element={<DetailSchedule />} />
+              
+            </Route>
           </Route>
         </Routes>
       </BrowserRouter>

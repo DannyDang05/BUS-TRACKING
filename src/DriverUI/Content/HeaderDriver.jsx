@@ -48,7 +48,7 @@ const HeaderDriver = (props) => {
                     )}
                 </PopupState>
             </div>
-            <DialogInfo infoModal={infoModal} />
+            <DialogInfo infoModal={infoModal} setInfoModal={setInfoModal} />
         </div>
     );
 };
