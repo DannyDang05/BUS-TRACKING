@@ -11,6 +11,8 @@ import React, { useState, useEffect, useCallback } from 'react';
 import './Driver.scss'
 import DialogInfo from './DialogInfo';
 
+import { IoIosRefresh } from "react-icons/io";
+
 const HeaderDriver = (props) => {
     const [infoModal, setInfoModal] = useState(false);
     // Lấy tên user từ localStorage
@@ -24,7 +26,7 @@ const HeaderDriver = (props) => {
         <div className="header-container">
             <div className="header-right">
                 <div className="header-action-item" role="button" title="Refresh" style={{ cursor: 'pointer' }}>
-                    <FaRedo className="action-icon" />
+                    <IoIosRefresh className="action-icon" />
                 </div>
                 <PopupState variant="popover" popupId="user-profile-menu">
                     {(popupState) => (

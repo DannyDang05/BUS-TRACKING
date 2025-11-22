@@ -53,7 +53,6 @@ const TableRoute = () => {
                         <TableCell>Thời Gian Bắt Đầu</TableCell>
                         <TableCell>Biển Số Xe</TableCell>
                         <TableCell>Hành Động</TableCell>
-
                     </TableRow>
                 </TableHead>
 

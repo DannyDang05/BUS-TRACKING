@@ -31,6 +31,9 @@ import 'react-toastify/dist/ReactToastify.css';
 import AdminRoute from './Admin/Shared/AdminRoute';
 import DetailSchedule from './DriverUI/Content/DetailSchedule.jsx';
 import DriverDashboard from './DriverUI/Content/DriverDashBoard.jsx';
+import ParentUI from './ParentUI/ParentUI.jsx';
+import TableChild from './ParentUI/ParentContent/TableChild.jsx';
+import ParentMap from './ParentUI/ParentContent/ParentMap.jsx';
 createRoot(document.getElementById('root')).render(
   <StrictMode>
     <LanguageProvider>
@@ -67,8 +70,11 @@ createRoot(document.getElementById('root')).render(
             <Route path='driver' element={<DriverUI />}>
               <Route index element={<DriverDashboard />} />
               <Route path="schedule/:id" element={<DetailSchedule />} />
-              
             </Route>
+          </Route>
+          <Route path="parent" element={<ParentUI />}>
+              <Route index element={<TableChild/>}></Route>
+              <Route path="map/:id" element={<ParentMap/>}/>
           </Route>
         </Routes>
       </BrowserRouter>

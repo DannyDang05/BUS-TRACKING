@@ -1,17 +1,21 @@
-.driver-container {
+/* ĐÃ ĐỔI TÊN LỚP CHÍNH */
+.parent-container {
 
-    /* Header driver đẹp, hiện đại */
+    /* Header parent đẹp, hiện đại */
     .header-container {
         width: auto;
         height: 65px;
         display: flex;
         align-items: center;
         justify-content: flex-end;
+        /* Giữ nguyên màu sắc hoặc đổi sang màu theme Phụ huynh nếu cần */
         background: linear-gradient(135deg, #43cea2 0%, #185a9d 100%);
         box-shadow: 0 4px 20px rgba(0, 151, 167, 0.13);
 
         position: relative;
         z-index: 2;
+        padding-right: 2rem;
+        /* Thêm padding cho đẹp */
     }
 
     .header-right {
@@ -80,14 +84,14 @@
         color: #00838f;
     }
 
-    .driver-body {
+    .parent-body {
         margin-top: 20px;
         padding: 0 20px 20px 20px;
-        
+
 
     }
 
-    .driver-table {
+    .parent-table {
 
         max-width: 100%;
         width: 100%;
