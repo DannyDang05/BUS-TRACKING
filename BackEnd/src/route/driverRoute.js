@@ -13,12 +13,12 @@ const router = express.Router();
 
 
 // Chỉ cho phép role driver
-router.use(verifyToken, requireRole('driver'));
+// router.use(verifyToken, requireRole('driver'));
 
 router.get("/", getAllDrivers);
 router.post("/", createNewDriver);
 router.get("/:id", getDriverDetail);
 router.put("/:id", updateDriver);
 router.delete("/:id", deleteDriver);
-
+    
 export default router;

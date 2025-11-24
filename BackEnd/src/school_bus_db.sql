@@ -1,16 +1,8 @@
--- phpMyAdmin SQL Dump
--- version 5.2.1
--- https://www.phpmyadmin.net/
---
--- Host: 127.0.0.1:3307
--- Generation Time: Nov 01, 2025 at 06:01 AM
--- Server version: 10.4.32-MariaDB
--- PHP Version: 8.2.12
-
+-- 1. CẤU HÌNH ĐẦU FILE
+SET FOREIGN_KEY_CHECKS = 0;
 SET SQL_MODE = "NO_AUTO_VALUE_ON_ZERO";
 START TRANSACTION;
 SET time_zone = "+00:00";
-
 
 /*!40101 SET @OLD_CHARACTER_SET_CLIENT=@@CHARACTER_SET_CLIENT */;
 /*!40101 SET @OLD_CHARACTER_SET_RESULTS=@@CHARACTER_SET_RESULTS */;
@@ -47,7 +39,8 @@ INSERT INTO `drivers` (`Id`, `FullName`, `MaBangLai`, `PhoneNumber`, `UserId`) V
 ('TX005', 'Trần Văn Long', 'C1-555567', '0902222222', 7),
 ('TX006', 'Lê Thị Mai', 'C1-555678', '0903333333', NULL),
 ('TX007', 'Phạm Văn Nam', 'D-555789', '0904444444', NULL),
-('TX008', 'Hoàng Thị Oanh', 'D-555890', '0905555555', NULL);
+('TX008', 'Hoàng Thị Oanh', 'D-555890', '0905555555', NULL),
+('TX009', 'Ngô Quang Liếm', 'B2-3131323123', '0898992341', NULL);
 
 -- --------------------------------------------------------
 
@@ -158,6 +151,7 @@ INSERT INTO `pickuppoints` (`Id`, `RouteId`, `Latitude`, `Longitude`, `PointOrde
 (18, 5, 10.77876000, 106.70456000, 2, 'Bảo tàng Lịch sử', 'Nguyễn Bỉnh Khiêm, Quận 1'),
 (19, 5, 10.78012000, 106.69789000, 3, 'Thảo Cầm Viên', 'Nguyễn Thị Minh Khai, Quận 1'),
 (20, 5, 10.77456000, 106.70567000, 4, 'Nhà thờ Tân Định', 'Hai Bà Trưng, Quận 3');
+
 
 -- --------------------------------------------------------
 
@@ -293,9 +287,62 @@ INSERT INTO `vehicles` (`Id`, `LicensePlate`, `Model`, `SpeedKmh`) VALUES
 (7, '51G-444.55', 'Isuzu Samco 16 chỗ', 52),
 (8, '51H-777.88', 'Peugeot Traveller 16 chỗ', 47);
 
+-- --------------------------------------------------------
+
 --
--- Indexes for dumped tables
+-- Table structure for table `thongbao_phuhuynh` (ĐÃ SỬA: BỎ CONSTRAINT Ở ĐÂY)
 --
+
+CREATE TABLE `thongbao_phuhuynh` (
+  `Id` int(11) NOT NULL AUTO_INCREMENT,
+  `MaThongBao` varchar(20) NOT NULL,
+  `MaPhuHuynh` varchar(20) NOT NULL,
+  `NoiDung` text NOT NULL,
+  `ThoiGian` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  `LoaiThongBao` varchar(50) DEFAULT 'Thông báo',
+  `DaDoc` tinyint(1) DEFAULT 0,
+  PRIMARY KEY (`Id`),
+  UNIQUE KEY `MaThongBao` (`MaThongBao`),
+  KEY `idx_phuhuynh` (`MaPhuHuynh`),
+  KEY `idx_dadoc` (`DaDoc`),
+  KEY `idx_thoigian` (`ThoiGian`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+--
+-- Dumping data for table `thongbao_phuhuynh`
+--
+INSERT INTO `thongbao_phuhuynh` (`MaThongBao`, `MaPhuHuynh`, `NoiDung`, `ThoiGian`, `LoaiThongBao`, `DaDoc`) VALUES
+('TBPH001', 'PH001', 'Hệ thống cập nhật phiên bản mới', '2025-11-15 08:00:00', 'Thông báo', 1),
+('TBPH002', 'PH001', 'Lịch bảo trì đột xuất vào 2:00 AM ngày mai', '2025-11-16 10:00:00', 'Cảnh báo', 0),
+('TBPH003', 'PH002', 'Thông báo nghỉ lễ 30/4', '2025-11-14 15:30:00', 'Thông báo', 1);
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `schedules`
+--
+
+CREATE TABLE IF NOT EXISTS `schedules` (
+  `id` int(11) NOT NULL AUTO_INCREMENT,
+  `route_id` int(11) NOT NULL,
+  `date` date NOT NULL,
+  `start_time` time NOT NULL,
+  `status` int(11) DEFAULT 1 COMMENT '1: Sắp diễn ra, 2: Đang chạy, 3: Hoàn thành, 4: Hủy',
+  `created_at` timestamp DEFAULT CURRENT_TIMESTAMP,
+  PRIMARY KEY (`id`),
+  KEY `idx_route` (`route_id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+--
+-- Dumping data for table `schedules`
+--
+INSERT INTO `schedules` (`route_id`, `date`, `start_time`, `status`) VALUES
+(1, CURDATE(), '06:30:00', 3),       
+(1, CURDATE(), '16:30:00', 1),       
+(2, CURDATE(), '07:00:00', 2),       
+(3, DATE_SUB(CURDATE(), INTERVAL 1 DAY), '06:45:00', 3), 
+(4, DATE_ADD(CURDATE(), INTERVAL 1 DAY), '06:15:00', 1), 
+(5, DATE_SUB(CURDATE(), INTERVAL 2 DAY), '07:00:00', 4); 
 
 --
 -- Indexes for table `drivers`
@@ -368,34 +415,6 @@ ALTER TABLE `vehicles`
   ADD UNIQUE KEY `LicensePlate` (`LicensePlate`);
 
 --
--- AUTO_INCREMENT for dumped tables
---
-
---
--- AUTO_INCREMENT for table `pickuppoints`
---
-ALTER TABLE `pickuppoints`
-  MODIFY `Id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=21;
-
---
--- AUTO_INCREMENT for table `routes`
---
-ALTER TABLE `routes`
-  MODIFY `Id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=6;
-
---
--- AUTO_INCREMENT for table `users`
---
-ALTER TABLE `users`
-  MODIFY `Id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=11;
-
---
--- AUTO_INCREMENT for table `vehicles`
---
-ALTER TABLE `vehicles`
-  MODIFY `Id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=9;
-
---
 -- Constraints for dumped tables
 --
 
@@ -436,6 +455,29 @@ ALTER TABLE `quanly`
 ALTER TABLE `routes`
   ADD CONSTRAINT `routes_ibfk_1` FOREIGN KEY (`DriverId`) REFERENCES `drivers` (`Id`) ON DELETE SET NULL,
   ADD CONSTRAINT `routes_ibfk_2` FOREIGN KEY (`VehicleId`) REFERENCES `vehicles` (`Id`) ON DELETE SET NULL;
+
+--
+-- Constraints for table `thongbao_phuhuynh` (CHUYỂN XUỐNG ĐÂY)
+--
+ALTER TABLE `thongbao_phuhuynh`
+  ADD CONSTRAINT `fk_thongbao_ph_phuhuynh` 
+  FOREIGN KEY (`MaPhuHuynh`) 
+  REFERENCES `phuhuynh` (`MaPhuHuynh`) 
+  ON DELETE CASCADE;
+
+--
+-- Constraints for table `schedules`
+--
+ALTER TABLE `schedules`
+  ADD CONSTRAINT `fk_schedules_routes` FOREIGN KEY (`route_id`) REFERENCES `routes` (`Id`) ON DELETE CASCADE;
+
+UPDATE `schedules` SET `status` = 1 WHERE `date` > CURDATE();
+
+-- Reset lịch trình quá khứ về "Đã hoàn thành" (3) (trừ những cái đã hủy status=4)
+UPDATE `schedules` SET `status` = 3 WHERE `date` < CURDATE() AND `status` != 4;
+
+-- BẬT LẠI KIỂM TRA KHÓA NGOẠI
+SET FOREIGN_KEY_CHECKS = 1;
 COMMIT;
 
 /*!40101 SET CHARACTER_SET_CLIENT=@OLD_CHARACTER_SET_CLIENT */;
