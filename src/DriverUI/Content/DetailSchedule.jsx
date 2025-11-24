@@ -1,5 +1,5 @@
-import React, { useState } from 'react';
-
+import React, { useState, useEffect } from 'react';
+import { useParams } from 'react-router-dom';
 import {
     Container,
     Typography,
@@ -18,8 +18,8 @@ import {
     IconButton,
     Menu,
     MenuItem,
-    
-
+    CircularProgress,
+    Alert
 } from "@mui/material";
 
 // Icons
@@ -30,20 +30,8 @@ import PlayArrowIcon from '@mui/icons-material/PlayArrow';
 import CheckCircleOutlineIcon from '@mui/icons-material/CheckCircleOutline';
 import EditCalendarIcon from '@mui/icons-material/EditCalendar';
 import DialogReport from './DialogReport';
-// Dữ liệu mock
-const mockRoute = {
-    RouteCode: "T01",
-    RouteName: "Bến Thành - Suối Tiên",
-    DriverName: "Lê Văn Tám",
-    LicensePlate: "51B-123.45",
-};
-
-const initialStudents = [
-    { StudentId: 'HS001', Name: 'Trần Thị Mai', PickupPoint: 'Cổng KTX A', Status: 'Đã đón' },
-    { StudentId: 'HS002', Name: 'Nguyễn Văn Hùng', PickupPoint: 'Tòa nhà B', Status: 'Chưa đón' },
-    { StudentId: 'HS003', Name: 'Phạm Thanh Thảo', PickupPoint: 'Nhà sách X', Status: 'Vắng mặt' },
-    { StudentId: 'HS004', Name: 'Lê Văn Khỏe', PickupPoint: 'Trường A', Status: 'Đã trả' },
-];
+import { getScheduleStudents, updatePickupStatus, updateScheduleStatus, reportIssue } from '../../service/apiService';
+import { toast } from 'react-toastify';
 
 const getStatusColor = (status) => {
     switch (status) {
@@ -59,13 +47,14 @@ const getStatusColor = (status) => {
     }
 };
 
+const DetailSchedule = () => {
+    const { id: scheduleId } = useParams(); // Lấy scheduleId từ URL
 
-
-
-const DetailSchedule = (props) => {
-
-
-    const [students, setStudents] = useState(initialStudents);
+    // STATE CHO DỮ LIỆU
+    const [students, setStudents] = useState([]);
+    const [routeInfo, setRouteInfo] = useState(null);
+    const [loading, setLoading] = useState(true);
+    const [error, setError] = useState(null);
 
     // STATE CHO MENU CẬP NHẬT TRẠNG THÁI
     const [anchorEl, setAnchorEl] = useState(null);
@@ -76,41 +65,99 @@ const DetailSchedule = (props) => {
     const issueTypes = [
         'Tắc đường', 'Xe hỏng', 'Trục trặc thiết bị', 'Học sinh gây rối', 'Sự cố khác'
     ];
-    const [openReport, setOpenReport] = useState(false); // Mới
-    const [issueType, setIssueType] = useState(''); // Mới
-    const [description, setDescription] = useState(''); // Mới
+    const [openReport, setOpenReport] = useState(false);
+    const [issueType, setIssueType] = useState('');
+    const [description, setDescription] = useState('');
+
+    // ===================================
+    // LOAD DỮ LIỆU TỪ API
+    // ===================================
+    useEffect(() => {
+        const fetchScheduleDetails = async () => {
+            try {
+                setLoading(true);
+                const response = await getScheduleStudents(scheduleId);
+                const studentData = response.data || [];
+                
+                setStudents(studentData.map(s => ({
+                    pickupPointId: s.pickupPointId,
+                    StudentId: s.studentId,
+                    Name: s.studentName,
+                    PickupPoint: s.pickupAddress,
+                    Status: s.status,
+                    studentClass: s.studentClass,
+                    parentName: s.parentName,
+                    parentPhone: s.parentPhone
+                })));
+
+                // Mock route info (có thể lấy từ API khác nếu cần)
+                setRouteInfo({
+                    RouteCode: `SCHEDULE-${scheduleId}`,
+                    RouteName: 'Tuyến đang tải...',
+                    DriverName: localStorage.getItem('driver_name') || 'Tài xế',
+                    LicensePlate: 'N/A'
+                });
+            } catch (err) {
+                console.error('Error fetching schedule details:', err);
+                setError('Không thể tải thông tin lịch trình. Vui lòng thử lại.');
+            } finally {
+                setLoading(false);
+            }
+        };
+
+        if (scheduleId) {
+            fetchScheduleDetails();
+        }
+    }, [scheduleId]);
 
     // ===================================
     // HÀM XỬ LÝ SỰ CỐ
     // ===================================
-
     const handleReportIssue = () => {
-        setOpenReport(true); // Mở Dialog Báo cáo
+        setOpenReport(true);
     };
 
     const handleCloseReport = () => {
         setOpenReport(false);
         setIssueType('');
-        setDescription(''); // Reset form
+        setDescription('');
     };
 
-    const handleSubmitReport = () => {
+    const handleSubmitReport = async () => {
         if (!issueType || !description) {
-            alert('Vui lòng chọn loại sự cố và mô tả chi tiết.');
+            toast.error('Vui lòng chọn loại sự cố và mô tả chi tiết.');
             return;
         }
-        // Logic gửi báo cáo thực tế
-        console.log({ issueType, description });
-        alert(`Báo cáo đã được gửi:\nLoại: ${issueType}\nChi tiết: ${description}`);
-        handleCloseReport();
+
+        try {
+            const driverId = localStorage.getItem('driver_id');
+            await reportIssue({
+                driverId,
+                routeCode: routeInfo?.RouteCode,
+                issueType,
+                description
+            });
+            toast.success('Báo cáo sự cố đã được gửi thành công!');
+            handleCloseReport();
+        } catch (err) {
+            console.error('Error submitting report:', err);
+            toast.error('Không thể gửi báo cáo. Vui lòng thử lại.');
+        }
     };
 
-    const handleStartTrip = () => {
-        alert(`Bắt đầu Hành trình Tuyến ${mockRoute.RouteCode}!`);
+    const handleStartTrip = async () => {
+        try {
+            await updateScheduleStatus(scheduleId, 2); // 2 = Đang chạy
+            toast.success('Đã bắt đầu hành trình!');
+            // Có thể reload lại page hoặc update state
+        } catch (err) {
+            console.error('Error starting trip:', err);
+            toast.error('Không thể bắt đầu hành trình. Vui lòng thử lại.');
+        }
     };
 
     // ===================================
-    // HÀM XỬ LÝ MENU TRẠNG THÁI (Giữ nguyên)
+    // HÀM XỬ LÝ MENU TRẠNG THÁI
     // ===================================
     const handleOpenMenu = (event, student) => {
         setAnchorEl(event.currentTarget);
@@ -122,15 +169,47 @@ const DetailSchedule = (props) => {
         setCurrentStudent(null);
     };
 
-    const handleUpdateStatus = (newStatus) => {
+    const handleUpdateStatus = async (newStatus) => {
         if (!currentStudent) return;
 
-        setStudents(prevStudents =>
-            prevStudents.map(student =>
-                student.StudentId === currentStudent.StudentId ? { ...student, Status: newStatus } : student
-            )
-        );
-        handleCloseMenu();
+        try {
+            await updatePickupStatus(currentStudent.pickupPointId, newStatus);
+            
+            // Cập nhật state local
+            setStudents(prevStudents =>
+                prevStudents.map(student =>
+                    student.pickupPointId === currentStudent.pickupPointId 
+                        ? { ...student, Status: newStatus } 
+                        : student
+                )
+            );
+            
+            toast.success(`Đã cập nhật trạng thái: ${newStatus}`);
+            handleCloseMenu();
+        } catch (err) {
+            console.error('Error updating pickup status:', err);
+            toast.error('Không thể cập nhật trạng thái. Vui lòng thử lại.');
+        }
+    };
+
+    // Hàm cập nhật tất cả học sinh cùng trạng thái
+    const handleMarkAllAs = async (status) => {
+        try {
+            const updatePromises = students.map(student => 
+                updatePickupStatus(student.pickupPointId, status)
+            );
+            
+            await Promise.all(updatePromises);
+            
+            setStudents(prevStudents =>
+                prevStudents.map(student => ({ ...student, Status: status }))
+            );
+            
+            toast.success(`Đã cập nhật tất cả học sinh: ${status}`);
+        } catch (err) {
+            console.error('Error updating all statuses:', err);
+            toast.error('Không thể cập nhật trạng thái. Vui lòng thử lại.');
+        }
     };
 
     const statusOptions = [
@@ -140,6 +219,25 @@ const DetailSchedule = (props) => {
         { label: 'Đã trả', status: 'Đã trả', color: 'primary' },
     ];
 
+    // Hiển thị loading
+    if (loading) {
+        return (
+            <Container maxWidth="lg" sx={{ mt: 4, mb: 4 }}>
+                <Box display="flex" justifyContent="center" alignItems="center" minHeight="400px">
+                    <CircularProgress />
+                </Box>
+            </Container>
+        );
+    }
+
+    // Hiển thị lỗi
+    if (error) {
+        return (
+            <Container maxWidth="lg" sx={{ mt: 4, mb: 4 }}>
+                <Alert severity="error">{error}</Alert>
+            </Container>
+        );
+    }
 
     return (
         <Container maxWidth="lg" sx={{ mt: 4, mb: 4 }}>
@@ -164,7 +262,7 @@ const DetailSchedule = (props) => {
                 </Button>
             </Stack>
 
-            {/* THÔNG TIN TUYẾN (Giữ nguyên) */}
+            {/* THÔNG TIN TUYẾN */}
             <Box sx={{ mb: 4 }}>
                 <Typography
                     variant="h4"
@@ -172,26 +270,22 @@ const DetailSchedule = (props) => {
                     sx={{ display: 'flex', alignItems: 'center', color: 'primary.main', mb: 3 }}
                 >
                     <DirectionsBusIcon sx={{ mr: 1, fontSize: '2rem' }} />
-
-                    {/* KẾT HỢP CHUỖI VÀ BIỂU THỨC JSX ĐÚNG CÁCH */}
-                    Chi tiết lịch trình tuyến: {mockRoute.RouteCode}
-
-                    {/* Loại bỏ các ký tự không cần thiết như /// */}
+                    Chi tiết lịch trình: {routeInfo?.RouteCode || 'N/A'}
                 </Typography>
                 <Grid container spacing={2}>
                     <Grid item xs={12} sm={6}>
                         <Paper elevation={1} sx={{ p: 2, height: '100%' }}>
                             <Typography variant="subtitle2" color="text.secondary">Mã Tuyến / Tên Tuyến</Typography>
-                            <Typography variant="h6">{mockRoute.RouteCode} : {mockRoute.RouteName}</Typography>
+                            <Typography variant="h6">{routeInfo?.RouteCode || 'N/A'} : {routeInfo?.RouteName || 'N/A'}</Typography>
                         </Paper>
                     </Grid>
                     <Grid item xs={12} sm={6}>
                         <Paper elevation={1} sx={{ p: 2, height: '100%' }}>
                             <Typography variant="subtitle2" color="text.secondary">Tài xế / Biển số xe</Typography>
                             <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                                <Typography variant="h6">{mockRoute.DriverName}</Typography>
+                                <Typography variant="h6">{routeInfo?.DriverName || 'N/A'}</Typography>
                             </Box>
-                            <Typography variant="h6">Biển số: {mockRoute.LicensePlate}</Typography>
+                            <Typography variant="h6">Biển số: {routeInfo?.LicensePlate || 'N/A'}</Typography>
                         </Paper>
                     </Grid>
                 </Grid>
@@ -214,6 +308,7 @@ const DetailSchedule = (props) => {
                             color="success"
                             size="small"
                             startIcon={<DoneAllIcon />}
+                            onClick={() => handleMarkAllAs('Đã đón')}
                             sx={{ '&:hover': { boxShadow: '0 4px 10px rgba(76, 175, 80, 0.5)', transform: 'translateY(-1px)' }, transition: 'all 0.2s', }}
                         >
                             Đã đón tất cả
@@ -223,6 +318,7 @@ const DetailSchedule = (props) => {
                             color="primary"
                             size="small"
                             startIcon={<CheckCircleOutlineIcon />}
+                            onClick={() => handleMarkAllAs('Đã trả')}
                             sx={{ '&:hover': { boxShadow: '0 4px 10px rgba(25, 118, 210, 0.5)', transform: 'translateY(-1px)' }, transition: 'all 0.2s', }}
                         >
                             Đã trả tất cả

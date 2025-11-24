@@ -55,29 +55,33 @@ CREATE TABLE `hocsinh` (
   `TinhTrang` enum('Chưa đón','Đã đón','Vắng','Đã trả') NOT NULL DEFAULT 'Chưa đón',
   `Capnhatlinhtrang` tinyint(1) DEFAULT 0,
   `MaPhuHuynh` varchar(20) DEFAULT NULL,
-  `MaDiemDon` int(11) DEFAULT NULL
+  `MaDiemDon` int(11) DEFAULT NULL,
+  `Latitude` decimal(10,8) DEFAULT NULL COMMENT 'Vĩ độ nhà học sinh',
+  `Longitude` decimal(11,8) DEFAULT NULL COMMENT 'Kinh độ nhà học sinh',
+  `Address` text DEFAULT NULL COMMENT 'Địa chỉ nhà học sinh',
+  `RouteId` int(11) DEFAULT NULL COMMENT 'Tuyến được phân bổ tự động'
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 --
 -- Dumping data for table `hocsinh`
 --
 
-INSERT INTO `hocsinh` (`MaHocSinh`, `HoTen`, `Lop`, `TinhTrang`, `Capnhatlinhtrang`, `MaPhuHuynh`, `MaDiemDon`) VALUES
-('HS001', 'Nguyễn Thị An', '6A1', 'Chưa đón', 0, 'PH001', 1),
-('HS002', 'Phạm Văn Bình', '7B2', 'Chưa đón', 0, 'PH001', 2),
-('HS003', 'Hoàng Thị Cúc', '8C3', 'Chưa đón', 0, 'PH002', 3),
-('HS004', 'Trần Văn Dũng', '6A2', 'Chưa đón', 0, 'PH003', 4),
-('HS005', 'Lê Thị Hoa', '7A1', 'Chưa đón', 0, 'PH004', 1),
-('HS006', 'Võ Văn Kiên', '5B1', 'Chưa đón', 0, 'PH004', 5),
-('HS007', 'Đỗ Thị Lan', '6B2', 'Chưa đón', 0, 'PH005', 6),
-('HS008', 'Bùi Văn Minh', '8A1', 'Chưa đón', 0, 'PH006', 7),
-('HS009', 'Phan Thị Ngọc', '7C1', 'Chưa đón', 0, 'PH007', 8),
-('HS010', 'Lý Văn Phong', '6C2', 'Chưa đón', 0, 'PH007', 5),
-('HS011', 'Nguyễn Văn Quang', '5A1', 'Chưa đón', 0, 'PH008', 9),
-('HS012', 'Trần Thị Rạng', '7B1', 'Chưa đón', 0, 'PH009', 10),
-('HS013', 'Lê Văn Sáng', '8B2', 'Chưa đón', 0, 'PH009', 11),
-('HS014', 'Phạm Thị Tuyết', '6A3', 'Chưa đón', 0, 'PH010', 12),
-('HS015', 'Võ Văn Uy', '7A2', 'Chưa đón', 0, 'PH010', 9);
+INSERT INTO `hocsinh` (`MaHocSinh`, `HoTen`, `Lop`, `TinhTrang`, `Capnhatlinhtrang`, `MaPhuHuynh`, `MaDiemDon`, `Latitude`, `Longitude`, `Address`, `RouteId`) VALUES
+('HS001', 'Nguyễn Thị An', '6A1', 'Chưa đón', 0, 'PH001', 1, 10.77688000, 106.70080000, '01 Công xã Paris, Bến Nghé, Quận 1', NULL),
+('HS002', 'Phạm Văn Bình', '7B2', 'Chưa đón', 0, 'PH001', 2, 10.77140000, 106.70420000, '2 Hải Triều, Bến Nghé, Quận 1', NULL),
+('HS003', 'Hoàng Thị Cúc', '8C3', 'Chưa đón', 0, 'PH002', 3, 10.78210000, 106.69340000, 'Trương Định, Quận 1', NULL),
+('HS004', 'Trần Văn Dũng', '6A2', 'Chưa đón', 0, 'PH003', 4, 10.77995000, 106.69968000, '2 Công xã Paris, Quận 1', NULL),
+('HS005', 'Lê Thị Hoa', '7A1', 'Chưa đón', 0, 'PH004', 1, 10.77230000, 106.69810000, 'Lê Lợi, Quận 1', NULL),
+('HS006', 'Võ Văn Kiên', '5B1', 'Chưa đón', 0, 'PH004', 5, 10.77739000, 106.69534000, '135 Nam Kỳ Khởi Nghĩa, Quận 1', NULL),
+('HS007', 'Đỗ Thị Lan', '6B2', 'Chưa đón', 0, 'PH005', 6, 10.76279000, 106.68225000, 'Nguyễn Tất Thành, Quận 4', NULL),
+('HS008', 'Bùi Văn Minh', '8A1', 'Chưa đón', 0, 'PH006', 7, 10.76837000, 106.69210000, '65 Lý Tự Trọng, Quận 1', NULL),
+('HS009', 'Phan Thị Ngọc', '7C1', 'Chưa đón', 0, 'PH007', 8, 10.78547000, 106.70143000, 'Hai Bà Trưng, Quận 1', NULL),
+('HS010', 'Lý Văn Phong', '6C2', 'Chưa đón', 0, 'PH007', 5, 10.79234000, 106.70012000, 'Võ Thị Sáu, Quận 3', NULL),
+('HS011', 'Nguyễn Văn Quang', '5A1', 'Chưa đón', 0, 'PH008', 9, 10.78901000, 106.69543000, 'Lam Sơn, Quận 1', NULL),
+('HS012', 'Trần Thị Rạng', '7B1', 'Chưa đón', 0, 'PH009', 10, 10.78234000, 106.70345000, 'Vinhomes Central Park, Bình Thạnh', NULL),
+('HS013', 'Lê Văn Sáng', '8B2', 'Chưa đón', 0, 'PH009', 11, 10.76234000, 106.70123000, 'Phạm Ngọc Thạch, Quận 3', NULL),
+('HS014', 'Phạm Thị Tuyết', '6A3', 'Chưa đón', 0, 'PH010', 12, 10.76834000, 106.69876000, 'Phạm Ngũ Lão, Quận 1', NULL),
+('HS015', 'Võ Văn Uy', '7A2', 'Chưa đón', 0, 'PH010', 9, 10.77123000, 106.70234000, 'Tôn Đức Thắng, Quận 1', NULL);
 
 -- --------------------------------------------------------
 
@@ -270,22 +274,23 @@ CREATE TABLE `vehicles` (
   `Id` int(11) NOT NULL,
   `LicensePlate` varchar(20) NOT NULL,
   `Model` varchar(100) DEFAULT NULL,
-  `SpeedKmh` int(11) NOT NULL DEFAULT 40
+  `SpeedKmh` int(11) NOT NULL DEFAULT 40,
+  `Capacity` int(11) NOT NULL DEFAULT 16 COMMENT 'Số chỗ ngồi của xe'
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 --
 -- Dumping data for table `vehicles`
 --
 
-INSERT INTO `vehicles` (`Id`, `LicensePlate`, `Model`, `SpeedKmh`) VALUES
-(1, '51A-123.45', 'Hyundai County 16 chỗ', 50),
-(2, '51B-678.90', 'Toyota Coaster 29 chỗ', 45),
-(3, '51C-555.55', 'Ford Transit 16 chỗ', 55),
-(4, '5D-111.22', 'Mercedes Sprinter 16 chỗ', 50),
-(5, '51E-999.88', 'Hyundai Solati 16 chỗ', 45),
-(6, '51F-222.33', 'Thaco Town 29 chỗ', 48),
-(7, '51G-444.55', 'Isuzu Samco 16 chỗ', 52),
-(8, '51H-777.88', 'Peugeot Traveller 16 chỗ', 47);
+INSERT INTO `vehicles` (`Id`, `LicensePlate`, `Model`, `SpeedKmh`, `Capacity`) VALUES
+(1, '51A-123.45', 'Hyundai County 16 chỗ', 50, 16),
+(2, '51B-678.90', 'Toyota Coaster 29 chỗ', 45, 29),
+(3, '51C-555.55', 'Ford Transit 16 chỗ', 55, 16),
+(4, '5D-111.22', 'Mercedes Sprinter 16 chỗ', 50, 16),
+(5, '51E-999.88', 'Hyundai Solati 16 chỗ', 45, 16),
+(6, '51F-222.33', 'Thaco Town 29 chỗ', 48, 29),
+(7, '51G-444.55', 'Isuzu Samco 16 chỗ', 52, 16),
+(8, '51H-777.88', 'Peugeot Traveller 16 chỗ', 47, 16);
 
 -- --------------------------------------------------------
 
@@ -358,7 +363,9 @@ ALTER TABLE `drivers`
 ALTER TABLE `hocsinh`
   ADD PRIMARY KEY (`MaHocSinh`),
   ADD KEY `idx_diemdon_hs` (`MaDiemDon`),
-  ADD KEY `MaPhuHuynh` (`MaPhuHuynh`);
+  ADD KEY `MaPhuHuynh` (`MaPhuHuynh`),
+  ADD KEY `idx_route_hs` (`RouteId`),
+  ADD KEY `idx_location_hs` (`Latitude`, `Longitude`);
 
 --
 -- Indexes for table `phuhuynh`
@@ -429,7 +436,8 @@ ALTER TABLE `drivers`
 --
 ALTER TABLE `hocsinh`
   ADD CONSTRAINT `fk_hocsinh_diemdon` FOREIGN KEY (`MaDiemDon`) REFERENCES `pickuppoints` (`Id`) ON DELETE SET NULL,
-  ADD CONSTRAINT `hocsinh_ibfk_1` FOREIGN KEY (`MaPhuHuynh`) REFERENCES `phuhuynh` (`MaPhuHuynh`) ON DELETE SET NULL;
+  ADD CONSTRAINT `hocsinh_ibfk_1` FOREIGN KEY (`MaPhuHuynh`) REFERENCES `phuhuynh` (`MaPhuHuynh`) ON DELETE SET NULL,
+  ADD CONSTRAINT `fk_hocsinh_route` FOREIGN KEY (`RouteId`) REFERENCES `routes` (`Id`) ON DELETE SET NULL;
 
 --
 -- Constraints for table `phuhuynh`

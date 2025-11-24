@@ -4,7 +4,10 @@ import {
   createRoute,
   getRouteDetail,
   updateRoute,
-  deleteRoute
+  deleteRoute,
+  autoOptimizeRoutes,
+  getStudentsByRoute,
+  getAutoRoutes
 } from "../controller/routeController.js";
 import verifyToken from "../middleWare/authMiddleware.js";
 import requireRole from "../middleWare/requireRole.js";
@@ -17,6 +20,9 @@ router.use(verifyToken, requireRole('admin'));
 
 router.get("/", getAllRoutes);
 router.post("/", createRoute);
+router.get("/students-by-route", getStudentsByRoute);
+router.get("/auto-routes", getAutoRoutes); // Endpoint mới: Lấy routes tự động
+router.post("/auto-optimize", autoOptimizeRoutes);
 router.get("/:id", getRouteDetail);
 router.put("/:id", updateRoute);
 router.delete("/:id", deleteRoute);

@@ -27,6 +27,7 @@ const columns = [
 const TableBus = () => {
   const navigate = useNavigate();
   const [vehicles, setVehicles] = useState([]);
+  const [totalCount, setTotalCount] = useState(0);
   const [loading, setLoading] = useState(false);
   const [search, setSearch] = useState('');
   const [localSearch, setLocalSearch] = useState('');
@@ -40,18 +41,20 @@ const TableBus = () => {
     const fetch = async () => {
       setLoading(true);
       try {
-        const res = await getAllVehicles(search);
-        const list = res?.data || res || [];
+        const res = await getAllVehicles(search, page + 1, rowsPerPage);
+        const list = res?.data || [];
         setVehicles(list);
+        setTotalCount(res?.meta?.totalItems || 0);
       } catch (err) {
         console.error('Lấy vehicles lỗi', err);
         setVehicles([]);
+        setTotalCount(0);
       } finally {
         setLoading(false);
       }
     };
     fetch();
-  }, [search]);
+  }, [search, page, rowsPerPage]);
 
   useEffect(() => {
     const t = setTimeout(() => setSearch(localSearch), 350);
@@ -77,9 +80,10 @@ const TableBus = () => {
       await deleteVehicle(id);
       toast.success('Xóa xe thành công!');
       setLoading(true);
-      const res = await getAllVehicles(search);
-      const list = res?.data || res || [];
+      const res = await getAllVehicles(search, page + 1, rowsPerPage);
+      const list = res?.data || [];
       setVehicles(list);
+      setTotalCount(res?.meta?.totalItems || 0);
     } catch (err) {
       console.error('Xóa xe thất bại', err);
       toast.error(err?.response?.data?.message || 'Xóa xe thất bại!');
@@ -88,7 +92,7 @@ const TableBus = () => {
     }
   };
 
-  const displayed = vehicles.slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage);
+  const displayed = vehicles;
 
   return (
     <Paper className="custom-table-container">
@@ -100,7 +104,7 @@ const TableBus = () => {
           className="global-search-input"
           style={{ flex: 1, padding: '8px 10px', borderRadius: 6, border: '1px solid #ddd' }}
         />
-        <div style={{ minWidth: 140, textAlign: 'right', color: '#666' }}>{vehicles.length} {t('results')}</div>
+        <div style={{ minWidth: 140, textAlign: 'right', color: '#666' }}>{totalCount} {t('results')}</div>
       </div>
       <TableContainer>
         <Table className="custom-table">
@@ -144,7 +148,7 @@ const TableBus = () => {
           <option value={20}>20 {t('perPage')}</option>
           <option value={50}>50 {t('perPage')}</option>
         </select>
-        <PaginationControls count={vehicles.length} page={page} rowsPerPage={rowsPerPage} onPageChange={(p) => setPage(p)} />
+        <PaginationControls count={totalCount} page={page} rowsPerPage={rowsPerPage} onPageChange={(p) => setPage(p)} />
       </div>
       <ConfirmDialog open={confirmOpen} title={t('confirmTitle')} message={t('confirmDeleteMessage')} onClose={handleConfirmResult} />
     </Paper>

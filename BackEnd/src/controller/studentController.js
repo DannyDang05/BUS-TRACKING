@@ -24,7 +24,7 @@ const getAllStudents = async (req, res) => {
     const totalItems = countRows[0].total || 0;
 
     // data with limit/offset
-    const dataSql = `SELECT MaHocSinh, HoTen, Lop, TinhTrang, MaPhuHuynh, MaDiemDon FROM hocsinh ${where} ORDER BY MaHocSinh LIMIT ? OFFSET ?`;
+    const dataSql = `SELECT MaHocSinh, HoTen, Lop, TrangThaiHocTap, MaPhuHuynh, DiaChi, Latitude, Longitude FROM hocsinh ${where} ORDER BY MaHocSinh LIMIT ? OFFSET ?`;
     const dataParams = params.concat([limit, offset]);
     const [rows] = await pool.query(dataSql, dataParams);
 
@@ -51,18 +51,17 @@ const getAllStudents = async (req, res) => {
 // Tạo học sinh mới trong bảng `hocsinh`
 const createStudent = async (req, res) => {
   // Lấy các trường từ DB mới
-  const { MaHocSinh, HoTen, Lop, MaPhuHuynh, MaDiemDon } = req.body;
+  const { MaHocSinh, HoTen, Lop, MaPhuHuynh, DiaChi, Latitude, Longitude, TrangThaiHocTap } = req.body;
   
-  if (!MaHocSinh || !HoTen || !Lop) {
-    return res.status(400).json({ errorCode: 1, message: 'Thiếu thông tin (Mã HS, Tên, Lớp).' });
+  if (!MaHocSinh || !HoTen || !Lop || !DiaChi || !Latitude || !Longitude) {
+    return res.status(400).json({ errorCode: 1, message: 'Thiếu thông tin (Mã HS, Tên, Lớp, Địa chỉ, Tọa độ).' });
   }
   
   try {
     const [result] = await pool.query(
-      'INSERT INTO hocsinh (MaHocSinh, HoTen, Lop, MaPhuHuynh, MaDiemDon) VALUES (?, ?, ?, ?, ?)',
-      [MaHocSinh, HoTen, Lop, MaPhuHuynh, MaDiemDon]
+      'INSERT INTO hocsinh (MaHocSinh, HoTen, Lop, MaPhuHuynh, DiaChi, Latitude, Longitude, TrangThaiHocTap) VALUES (?, ?, ?, ?, ?, ?, ?, ?)',
+      [MaHocSinh, HoTen, Lop, MaPhuHuynh, DiaChi, Latitude, Longitude, TrangThaiHocTap || 'Đang học']
     );
-    // TinhTrang sẽ dùng giá trị DEFAULT 'Chưa đón'
     return res.status(201).json({ errorCode: 0, message: 'Tạo học sinh mới thành công!', studentId: MaHocSinh });
   } catch (e) {
     if (e.code === 'ER_DUP_ENTRY') {
@@ -77,7 +76,7 @@ const createStudent = async (req, res) => {
 // Cập nhật học sinh. Lưu ý: route đang dùng /:id, nên chúng ta sẽ dùng req.params.id làm MaHocSinh
 const updateStudent = async (req, res) => {
   const maHocSinh = req.params.id;
-  const { HoTen, Lop, TinhTrang, MaPhuHuynh, MaDiemDon } = req.body;
+  const { HoTen, Lop, TrangThaiHocTap, MaPhuHuynh, DiaChi, Latitude, Longitude } = req.body;
   
   if (!HoTen || !Lop) {
     return res.status(400).json({ errorCode: 1, message: 'Thiếu thông tin (Tên, Lớp).' });
@@ -85,8 +84,8 @@ const updateStudent = async (req, res) => {
 
   try {
     const [result] = await pool.query(
-      'UPDATE hocsinh SET HoTen = ?, Lop = ?, TinhTrang = ?, MaPhuHuynh = ?, MaDiemDon = ? WHERE MaHocSinh = ?',
-      [HoTen, Lop, TinhTrang, MaPhuHuynh, MaDiemDon, maHocSinh]
+      'UPDATE hocsinh SET HoTen = ?, Lop = ?, TrangThaiHocTap = ?, MaPhuHuynh = ?, DiaChi = ?, Latitude = ?, Longitude = ? WHERE MaHocSinh = ?',
+      [HoTen, Lop, TrangThaiHocTap, MaPhuHuynh, DiaChi, Latitude, Longitude, maHocSinh]
     );
     if (result.affectedRows === 0) {
       return res.status(404).json({ errorCode: 3, message: 'Không tìm thấy học sinh.' });

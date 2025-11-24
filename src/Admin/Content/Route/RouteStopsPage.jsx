@@ -34,8 +34,8 @@ const RouteStopsPage = () => {
     mapRef.current = new mapboxgl.Map({
       container: containerRef.current,
       style: 'mapbox://styles/mapbox/streets-v11',
-      center: [106.660172, 10.762622],
-      zoom: 12
+      center: [106.7714, 10.8494], // Đại học Sài Gòn
+      zoom: 13
     });
 
     return () => {
@@ -81,28 +81,39 @@ const RouteStopsPage = () => {
 
   const displayedPoints = points.slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage);
 
-  const drawOnMap = (pts) => {
+  const drawOnMap = async (pts) => {
     if (!mapRef.current) return;
     clearMarkers();
     const map = mapRef.current;
     const coords = [];
     
+    // Thêm marker trường học (Đại học Sài Gòn)
+    const schoolEl = document.createElement('div');
+    schoolEl.innerHTML = '🏫';
+    schoolEl.style.fontSize = '30px';
+    schoolEl.style.cursor = 'pointer';
+    const schoolMarker = new mapboxgl.Marker({ element: schoolEl })
+      .setLngLat([106.7714, 10.8494])
+      .setPopup(new mapboxgl.Popup({ offset: 25 }).setHTML('<div style="font-weight:bold;color:#00838f;font-size:14px;">🏫 Đại học Sài Gòn</div>'))
+      .addTo(map);
+    markersRef.current.push(schoolMarker);
+    
     pts.forEach((p, idx) => {
       const lng = parseFloat(p.Longitude);
       const lat = parseFloat(p.Latitude);
       if (Number.isFinite(lng) && Number.isFinite(lat)) {
-        // Create circular numbered marker (match RouteMapViewer blue)
+        // Icon nhỏ gọn 30px
         const el = document.createElement('div');
-        const svgData = `data:image/svg+xml;charset=utf-8,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 40 40%22%3E%3Ccircle cx=%2220%22 cy=%2220%22 r=%2218%22 fill=%22%232196F3%22 stroke=%22white%22 stroke-width=%222%22/%3E%3Ctext x=%2220%22 y=%2226%22 text-anchor=%22middle%22 fill=%22white%22 font-weight=%22bold%22 font-size=%2218%22%3E${idx + 1}%3C/text%3E%3C/svg%3E`;
+        const svgData = `data:image/svg+xml;charset=utf-8,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 30 30%22%3E%3Ccircle cx=%2215%22 cy=%2215%22 r=%2213%22 fill=%22%232196F3%22 stroke=%22white%22 stroke-width=%222%22/%3E%3Ctext x=%2215%22 y=%2220%22 text-anchor=%22middle%22 fill=%22white%22 font-weight=%22bold%22 font-size=%2214%22%3E${idx + 1}%3C/text%3E%3C/svg%3E`;
         el.style.backgroundImage = `url('${svgData}')`;
         el.style.backgroundSize = '100%';
-        el.style.width = '40px';
-        el.style.height = '40px';
+        el.style.width = '30px';
+        el.style.height = '30px';
         el.style.cursor = 'pointer';
 
         const marker = new mapboxgl.Marker({ element: el })
           .setLngLat([lng, lat])
-          .setPopup(new mapboxgl.Popup({ offset: 25 }).setHTML(`<div style="font-weight:bold;color:#2196F3;font-size:14px;">${p.PointName || 'Điểm ' + (idx + 1)}</div><div style="font-size:12px;color:#666;">${p.Address || 'Chưa có địa chỉ'}</div>`))
+          .setPopup(new mapboxgl.Popup({ offset: 20 }).setHTML(`<div style="font-weight:bold;color:#2196F3;font-size:13px;">${p.PointName || 'Điểm ' + (idx + 1)}</div><div style="font-size:11px;color:#666;">${p.Address || 'Chưa có địa chỉ'}</div>`))
           .addTo(map);
         markersRef.current.push(marker);
         coords.push([lng, lat]);
@@ -110,17 +121,46 @@ const RouteStopsPage = () => {
     });
     
     if (coords.length > 0) {
-      if (map.getSource('route-line')) {
-        map.getSource('route-line').setData({ type: 'Feature', geometry: { type: 'LineString', coordinates: coords } });
-      } else {
-        map.addSource('route-line', { type: 'geojson', data: { type: 'Feature', geometry: { type: 'LineString', coordinates: coords } } });
-        map.addLayer({
-          id: 'route-line',
-          type: 'line',
-          source: 'route-line',
-          layout: { 'line-join': 'round', 'line-cap': 'round' },
-          paint: { 'line-color': '#2196F3', 'line-width': 4, 'line-opacity': 0.8 }
-        });
+      // Gọi OSRM API để lấy đường đi thực tế
+      try {
+        const coordsStr = coords.map(c => `${c[0]},${c[1]}`).join(';');
+        const osrmUrl = `https://router.project-osrm.org/route/v1/driving/${coordsStr}?overview=full&geometries=geojson`;
+        const response = await fetch(osrmUrl);
+        const data = await response.json();
+        
+        if (data.code === 'Ok' && data.routes && data.routes[0]) {
+          const routeGeometry = data.routes[0].geometry;
+          
+          if (map.getSource('route-line')) {
+            map.getSource('route-line').setData({ type: 'Feature', geometry: routeGeometry });
+          } else {
+            map.addSource('route-line', { type: 'geojson', data: { type: 'Feature', geometry: routeGeometry } });
+            map.addLayer({
+              id: 'route-line',
+              type: 'line',
+              source: 'route-line',
+              layout: { 'line-join': 'round', 'line-cap': 'round' },
+              paint: { 'line-color': '#2196F3', 'line-width': 4, 'line-opacity': 0.75 }
+            });
+          }
+        } else {
+          throw new Error('OSRM failed');
+        }
+      } catch (error) {
+        console.warn('OSRM routing failed, using straight lines:', error);
+        // Fallback: vẽ đường thẳng nếu OSRM lỗi
+        if (map.getSource('route-line')) {
+          map.getSource('route-line').setData({ type: 'Feature', geometry: { type: 'LineString', coordinates: coords } });
+        } else {
+          map.addSource('route-line', { type: 'geojson', data: { type: 'Feature', geometry: { type: 'LineString', coordinates: coords } } });
+          map.addLayer({
+            id: 'route-line',
+            type: 'line',
+            source: 'route-line',
+            layout: { 'line-join': 'round', 'line-cap': 'round' },
+            paint: { 'line-color': '#2196F3', 'line-width': 4, 'line-opacity': 0.8 }
+          });
+        }
       }
       
       const bounds = coords.reduce((b, c) => b.extend(c), new mapboxgl.LngLatBounds(coords[0], coords[0]));
@@ -138,7 +178,7 @@ const RouteStopsPage = () => {
 
   const handleEdit = (p) => {
     setEditingPoint(p);
-    setForm({ PointOrder: p.PointOrder, PointName: p.PointName || '', Address: p.Address || '', Latitude: p.Latitude, Longitude: p.Longitude });
+    setForm({ PointOrder: p.PointOrder, PointName: p.MaHocSinh || '', Address: p.DiaChi || '', Latitude: p.Latitude, Longitude: p.Longitude });
     setOpenDialog(true);
   };
 
@@ -227,8 +267,8 @@ const RouteStopsPage = () => {
                         <TableCell sx={{ fontWeight: 'bold', bgcolor: '#fff3f0' }}>
                           <Chip label={page * rowsPerPage + idx + 1} size="small" sx={{ bgcolor: '#00838f', color: 'white', fontWeight: 'bold' }} />
                         </TableCell>
-                        <TableCell sx={{ fontWeight: '500' }}>{p.PointName || '—'}</TableCell>
-                        <TableCell sx={{ fontSize: '0.85rem', color: '#555' }}>{p.Address || t('noPickupPoints')}</TableCell>
+                        <TableCell sx={{ fontWeight: '500' }}>{p.MaHocSinh || '—'}</TableCell>
+                        <TableCell sx={{ fontSize: '0.85rem', color: '#555' }}>{p.DiaChi || t('noPickupPoints')}</TableCell>
                         <TableCell sx={{ fontSize: '0.8rem', fontFamily: 'monospace', color: '#666' }}>{Number(p.Latitude).toFixed(4)}<br/>{Number(p.Longitude).toFixed(4)}</TableCell>
                         <TableCell align="center">
                           <IconButton size="small" onClick={() => handleEdit(p)} color="primary" title={t('edit')}><EditIcon fontSize="small" /></IconButton>

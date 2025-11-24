@@ -22,7 +22,7 @@ const getAllDrivers = async (req, res) => {
     const [countRows] = await pool.query(countSql, params);
     const totalItems = countRows[0].total || 0;
 
-    const dataSql = `SELECT Id, FullName, MaBangLai, PhoneNumber, UserId FROM drivers ${where} ORDER BY Id LIMIT ? OFFSET ?`;
+    const dataSql = `SELECT Id, FullName, MaBangLai, PhoneNumber, UserId, IsActive FROM drivers ${where} ORDER BY Id LIMIT ? OFFSET ?`;
     const dataParams = params.concat([limit, offset]);
     const [rows] = await pool.query(dataSql, dataParams);
 
@@ -40,10 +40,10 @@ const getAllDrivers = async (req, res) => {
 };
 
 // POST /api/v1/drivers
-// Tạo tài xế mới (CHƯA XỬ LÝ TẠO TÀI KHOẢN `users`)
+// Tạo tài xế mới (CHƯA XỦ LÝ TẠO TÀI KHOẢN `users`)
 const createNewDriver = async (req, res) => {
   // Lấy các trường từ DB mới
-  const { Id, FullName, MaBangLai, PhoneNumber } = req.body; 
+  const { Id, FullName, MaBangLai, PhoneNumber, IsActive } = req.body; 
   
   if (!Id || !FullName || !MaBangLai || !PhoneNumber) {
     return res.status(400).json({ errorCode: 1, message: 'Thiếu thông tin (Id, Tên, Mã Bằng Lái, SĐT).' });
@@ -52,8 +52,8 @@ const createNewDriver = async (req, res) => {
   try {
     // Không mã hóa mật khẩu ở đây nữa
     const [result] = await pool.query(
-      'INSERT INTO drivers (Id, FullName, MaBangLai, PhoneNumber) VALUES (?, ?, ?, ?)',
-      [Id, FullName, MaBangLai, PhoneNumber]
+      'INSERT INTO drivers (Id, FullName, MaBangLai, PhoneNumber, IsActive) VALUES (?, ?, ?, ?, ?)',
+      [Id, FullName, MaBangLai, PhoneNumber, IsActive !== undefined ? IsActive : 1]
     );
 
     return res.status(201).json({ errorCode: 0, message: 'Tạo tài xế mới thành công!', driverId: Id });
@@ -72,7 +72,7 @@ const getDriverDetail = async (req, res) => {
     const id = req.params.id;
     try {
         const [rows] = await pool.query(
-            'SELECT Id, FullName, MaBangLai, PhoneNumber, UserId FROM drivers WHERE Id = ?', [id]
+            'SELECT Id, FullName, MaBangLai, PhoneNumber, UserId, IsActive FROM drivers WHERE Id = ?', [id]
         );
         if (rows.length === 0) {
             return res.status(404).json({ errorCode: 3, message: 'Không tìm thấy tài xế.' });
@@ -88,7 +88,7 @@ const getDriverDetail = async (req, res) => {
 // Cập nhật thông tin tài xế
 const updateDriver = async (req, res) => {
   const id = req.params.id;
-  const { FullName, MaBangLai, PhoneNumber } = req.body; // Bỏ `email`, `licenseClass`
+  const { FullName, MaBangLai, PhoneNumber, IsActive } = req.body; // Bỏ `email`, `licenseClass`
 
   if (!FullName || !MaBangLai || !PhoneNumber) {
     return res.status(400).json({ errorCode: 1, message: 'Thiếu thông tin bắt buộc.' });
@@ -96,8 +96,8 @@ const updateDriver = async (req, res) => {
   
   try {
     const [result] = await pool.query(
-      'UPDATE drivers SET FullName = ?, MaBangLai = ?, PhoneNumber = ? WHERE Id = ?',
-      [FullName, MaBangLai, PhoneNumber, id]
+      'UPDATE drivers SET FullName = ?, MaBangLai = ?, PhoneNumber = ?, IsActive = ? WHERE Id = ?',
+      [FullName, MaBangLai, PhoneNumber, IsActive, id]
     );
     if (result.affectedRows === 0) {
       return res.status(404).json({ errorCode: 3, message: 'Không tìm thấy tài xế.' });

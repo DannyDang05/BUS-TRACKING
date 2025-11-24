@@ -26,6 +26,7 @@ const columns = [
 const TableCalendar = () => {
   const navigate = useNavigate();
   const [notifications, setNotifications] = useState([]);
+  const [totalCount, setTotalCount] = useState(0);
   const [loading, setLoading] = useState(false);
   const [search, setSearch] = useState('');
   const [localSearch, setLocalSearch] = useState('');
@@ -39,18 +40,20 @@ const TableCalendar = () => {
     const fetch = async () => {
       setLoading(true);
       try {
-        const res = await getAllNotifications(search);
-        const list = res?.data || res || [];
+        const res = await getAllNotifications(search, page + 1, rowsPerPage);
+        const list = res?.data || [];
         setNotifications(list);
+        setTotalCount(res?.meta?.totalItems || 0);
       } catch (err) {
         console.error('Lấy notifications lỗi', err);
         setNotifications([]);
+        setTotalCount(0);
       } finally {
         setLoading(false);
       }
     };
     fetch();
-  }, [search]);
+  }, [search, page, rowsPerPage]);
 
   const handleConfirmResult = async (result) => {
     setConfirmOpen(false);
@@ -61,9 +64,10 @@ const TableCalendar = () => {
       await deleteNotification(id);
       toast.success('Xóa thông báo thành công!');
       setLoading(true);
-      const res = await getAllNotifications(search);
-      const list = res?.data || res || [];
+      const res = await getAllNotifications(search, page + 1, rowsPerPage);
+      const list = res?.data || [];
       setNotifications(list);
+      setTotalCount(res?.meta?.totalItems || 0);
     } catch (err) {
       console.error('Xóa thông báo thất bại', err);
       toast.error(err?.response?.data?.message || 'Xóa thông báo thất bại!');
@@ -82,7 +86,7 @@ const TableCalendar = () => {
     if (notificationID) navigate(`/calendars/update-calendar/${notificationID}`);
   };
 
-  const displayed = notifications.slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage);
+  const displayed = notifications;
 
   return (
     <Paper className="custom-table-container">
@@ -94,7 +98,7 @@ const TableCalendar = () => {
           className="global-search-input"
           style={{ flex: 1, padding: '8px 10px', borderRadius: 6, border: '1px solid #ddd' }}
         />
-        <div style={{ minWidth: 140, textAlign: 'right', color: '#666' }}>{notifications.length} {t('results')}</div>
+        <div style={{ minWidth: 140, textAlign: 'right', color: '#666' }}>{totalCount} {t('results')}</div>
       </div>
       <TableContainer>
         <Table className="custom-table">
@@ -138,7 +142,7 @@ const TableCalendar = () => {
           <option value={20}>20 {t('perPage')}</option>
           <option value={50}>50 {t('perPage')}</option>
         </select>
-        <PaginationControls count={notifications.length} page={page} rowsPerPage={rowsPerPage} onPageChange={(p) => setPage(p)} />
+        <PaginationControls count={totalCount} page={page} rowsPerPage={rowsPerPage} onPageChange={(p) => setPage(p)} />
       </div>
       <ConfirmDialog open={confirmOpen} title={t('confirmTitle')} message={t('confirmDeleteMessage')} onClose={handleConfirmResult} />
     </Paper>

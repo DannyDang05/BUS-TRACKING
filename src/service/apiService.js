@@ -123,4 +123,30 @@ export const deleteNotification = (id) => apiService.delete(`/notifications/${id
 export const getLiveLocations = () => apiService.get('/tracking/live');
 export const getRouteHistory = (busId) => apiService.get(`/tracking/history/${busId}`);
 
+// --- API PHÂN TUYẾN TỰ ĐỘNG (Route Optimization) ---
+export const autoOptimizeRoutes = (schoolLocation, saveToDb = false) => 
+    apiService.post('/routes/auto-optimize', { schoolLocation, saveToDb });
+export const getStudentsByRoute = () => apiService.get('/routes/students-by-route');
+
+// --- API LỊCH TRÌNH (Schedules) - CHO TÀI XẾ ---
+// Lấy lịch làm việc của tài xế theo ngày
+export const getDriverSchedules = (driverId, date) => {
+    const params = new URLSearchParams();
+    if (date) params.append('date', date);
+    const qs = params.toString();
+    return apiService.get(`/schedules/driver/${driverId}${qs ? `?${qs}` : ''}`);
+};
+
+// Lấy danh sách học sinh trên tuyến của schedule
+export const getScheduleStudents = (scheduleId) => apiService.get(`/schedules/${scheduleId}/students`);
+
+// Cập nhật trạng thái schedule (Bắt đầu hành trình/Hoàn thành)
+export const updateScheduleStatus = (scheduleId, status) => apiService.put(`/schedules/${scheduleId}/status`, { status });
+
+// Cập nhật trạng thái đón/trả học sinh
+export const updatePickupStatus = (pickupPointId, status) => apiService.put(`/pickuppoints/${pickupPointId}/status`, { status });
+
+// Báo cáo sự cố từ tài xế
+export const reportIssue = (issueData) => apiService.post('/notifications/report-issue', issueData);
+
 export default apiService;

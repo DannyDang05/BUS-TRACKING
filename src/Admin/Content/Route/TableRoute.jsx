@@ -11,16 +11,17 @@ import TableContainer from '@mui/material/TableContainer';
 import TableHead from '@mui/material/TableHead';
 import TableRow from '@mui/material/TableRow';
 import PaginationControls from '../PaginationControls';
-import { IconButton, Tooltip } from '@mui/material';
+import { IconButton, Tooltip, Chip, Box } from '@mui/material';
 import { MapTwoTone as MapIcon, LocationOn as LocationIcon, Delete as DeleteIcon } from '@mui/icons-material';
 import RouteMapViewer from './RouteMapViewer';
 import ConfirmDialog from '../../Shared/ConfirmDialog';
 import { useLanguage } from '../../Shared/LanguageContext';
 
 const TableRoute = (props) => {
-  const { rowSelected, setRowSelected } = props;
+  const { rowSelected, setRowSelected, refreshTrigger, onAssignDriver } = props;
   const navigate = useNavigate();
   const [routes, setRoutes] = useState([]);
+  const [totalCount, setTotalCount] = useState(0);
   const [loading, setLoading] = useState(false);
   const [mapDialogOpen, setMapDialogOpen] = useState(false);
   const [selectedRouteId, setSelectedRouteId] = useState(null);
@@ -39,6 +40,13 @@ const TableRoute = (props) => {
 
   const handleManagePickupPoints = (routeId) => {
     navigate(`/routes/${routeId}/points`);
+  };
+
+  const handleRowClick = (route) => {
+    // Open assign driver modal when clicking on route
+    if (onAssignDriver) {
+      onAssignDriver(route);
+    }
   };
 
   const columns = [
@@ -79,29 +87,32 @@ const TableRoute = (props) => {
     }
   ];
 
+  // Fetch tất cả routes
   useEffect(() => {
     const fetch = async () => {
       setLoading(true);
       try {
-        const res = await getAllRoutes(search);
-        const list = res?.data || res || [];
+        const res = await getAllRoutes(search, page + 1, rowsPerPage);
+        const list = res?.data || [];
         setRoutes(list);
+        setTotalCount(res?.meta?.totalItems || 0);
       } catch (err) {
         console.error('Lấy routes lỗi', err);
         setRoutes([]);
+        setTotalCount(0);
       } finally {
         setLoading(false);
       }
     };
     fetch();
-  }, [search]);
+  }, [search, refreshTrigger, page, rowsPerPage]);
 
   useEffect(() => {
     const t = setTimeout(() => setSearch(localSearch), 350);
     return () => clearTimeout(t);
   }, [localSearch]);
 
-  const displayed = routes.slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage);
+  const displayed = routes;
 
   return (
     <>
@@ -114,7 +125,9 @@ const TableRoute = (props) => {
             className="global-search-input"
             style={{ flex: 1, padding: '8px 10px', borderRadius: 6, border: '1px solid #ddd' }}
           />
-          <div style={{ minWidth: 140, textAlign: 'right', color: '#666' }}>{routes.length} {t('results')}</div>
+          <div style={{ minWidth: 140, textAlign: 'right', color: '#666' }}>
+            {totalCount} {t('results')}
+          </div>
         </div>
         <TableContainer>
           <Table className="custom-table">
@@ -123,7 +136,7 @@ const TableRoute = (props) => {
                 <TableCell>ID</TableCell>
                 <TableCell>{t('MaTuyen') || 'Mã Tuyến'}</TableCell>
                 <TableCell>{t('Name') || 'Tên Tuyến'}</TableCell>
-                <TableCell>{t('driver') || 'Tài Xế'}</TableCell>
+                <TableCell>{t('Driver') || 'Tài Xế'}</TableCell>
                 <TableCell>{t('vehicle') || 'Xe'}</TableCell>
                 <TableCell>{t('status') || 'Trạng Thái'}</TableCell>
                 <TableCell>{t('action') || 'Hành Động'}</TableCell>
@@ -136,14 +149,75 @@ const TableRoute = (props) => {
                 <TableRow><TableCell colSpan={7} className="table-empty">{t('noData')}</TableCell></TableRow>
               ) : (
                 displayed.map((r) => (
-                  <TableRow key={r.Id}>
+                  <TableRow 
+                    key={r.Id}
+                    onClick={() => handleRowClick(r)}
+                    sx={{
+                      cursor: 'pointer',
+                      '&:hover': {
+                        backgroundColor: 'rgba(0, 151, 167, 0.08)',
+                        transform: 'scale(1.01)',
+                        transition: 'all 0.2s ease'
+                      }
+                    }}
+                  >
                     <TableCell>{r.Id}</TableCell>
-                    <TableCell>{r.MaTuyen}</TableCell>
-                    <TableCell>{r.Name}</TableCell>
-                    <TableCell>{r.DriverId}</TableCell>
-                    <TableCell>{r.VehicleId}</TableCell>
-                    <TableCell>{r.Status}</TableCell>
                     <TableCell>
+                      <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                        {r.MaTuyen}
+                        {r.MaTuyen?.startsWith('AUTO') && (
+                          <Chip 
+                            label="AUTO" 
+                            size="small" 
+                            color="error" 
+                            sx={{ height: 20, fontSize: '0.7rem' }}
+                          />
+                        )}
+                      </Box>
+                    </TableCell>
+                    <TableCell>{r.Name}</TableCell>
+                    <TableCell>
+                      {r.DriverId ? (
+                        <Chip 
+                          label={`ID: ${r.DriverId}`} 
+                          size="small" 
+                          color="primary"
+                          sx={{ fontSize: '0.75rem' }}
+                        />
+                      ) : (
+                        <Chip 
+                          label="Chưa phân công" 
+                          size="small" 
+                          color="warning"
+                          sx={{ fontSize: '0.75rem' }}
+                        />
+                      )}
+                    </TableCell>
+                    <TableCell>
+                      {r.VehicleId ? (
+                        <Chip 
+                          label={`ID: ${r.VehicleId}`} 
+                          size="small" 
+                          color="success"
+                          sx={{ fontSize: '0.75rem' }}
+                        />
+                      ) : (
+                        <Chip 
+                          label="Chưa phân xe" 
+                          size="small" 
+                          color="warning"
+                          sx={{ fontSize: '0.75rem' }}
+                        />
+                      )}
+                    </TableCell>
+                    <TableCell>
+                      <Chip 
+                        label={r.Status} 
+                        size="small"
+                        color={r.Status === 'Đang chạy' ? 'success' : 'default'}
+                      />
+                    </TableCell>
+                    <TableCell onClick={(e) => e.stopPropagation()}>
                       <div className="table-actions">
                         <Tooltip title={t('managePickup') || 'Quản lý điểm đón'}>
                           <IconButton size="small" onClick={() => handleManagePickupPoints(r.Id)} sx={{ color: '#FF5733' }}>
@@ -178,9 +252,10 @@ const TableRoute = (props) => {
             await deleteRoute(id);
             toast.success('Xóa tuyến thành công!');
             setLoading(true);
-            const res = await getAllRoutes(search);
-            const list = res?.data || res || [];
+            const res = await getAllRoutes(search, page + 1, rowsPerPage);
+            const list = res?.data || [];
             setRoutes(list);
+            setTotalCount(res?.meta?.totalItems || 0);
           } catch (err) {
             console.error('Xóa tuyến thất bại', err);
             toast.error(err?.response?.data?.message || 'Xóa tuyến thất bại!');
@@ -196,7 +271,7 @@ const TableRoute = (props) => {
             <option value={20}>20 {t('perPage')}</option>
             <option value={50}>50 {t('perPage')}</option>
           </select>
-          <PaginationControls count={routes.length} page={page} rowsPerPage={rowsPerPage} onPageChange={(p) => setPage(p)} />
+          <PaginationControls count={totalCount} page={page} rowsPerPage={rowsPerPage} onPageChange={(p) => setPage(p)} />
         </div>
       </Paper>
 

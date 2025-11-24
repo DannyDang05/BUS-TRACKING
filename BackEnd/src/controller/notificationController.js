@@ -66,4 +66,43 @@ const deleteNotification = async (req, res) => {
   }
 };
 
-export { getAllNotifications, createNotification, getNotificationDetail, deleteNotification };
+/**
+ * POST /api/v1/notifications/report-issue
+ * Tài xế báo cáo sự cố (tắc đường, xe hỏng, học sinh gây rối...)
+ * Body: { driverId, routeCode, issueType, description }
+ */
+const reportIssue = async (req, res) => {
+  const { driverId, routeCode, issueType, description } = req.body;
+
+  if (!driverId || !issueType || !description) {
+    return res.status(400).json({
+      errorCode: 1,
+      message: 'Thiếu thông tin bắt buộc (driverId, issueType, description).'
+    });
+  }
+
+  try {
+    // Tạo mã thông báo tự động: ISSUE-{timestamp}
+    const maThongBao = `ISSUE-${Date.now()}`;
+    const noiDung = `[SỰ CỐ] Tài xế ${driverId}${routeCode ? ` - Tuyến ${routeCode}` : ''} báo cáo: ${issueType} - ${description}`;
+
+    await pool.query(
+      'INSERT INTO thongbao (MaThongBao, NoiDung, ThoiGian, LoaiThongBao) VALUES (?, ?, NOW(), ?)',
+      [maThongBao, noiDung, 'Sự cố']
+    );
+
+    return res.status(201).json({
+      errorCode: 0,
+      message: 'Báo cáo sự cố thành công. Ban quản lý sẽ xử lý trong thời gian sớm nhất.',
+      notificationId: maThongBao
+    });
+  } catch (e) {
+    console.error('Error reportIssue:', e);
+    return res.status(500).json({
+      errorCode: -1,
+      message: 'Lỗi server khi gửi báo cáo.'
+    });
+  }
+};
+
+export { getAllNotifications, createNotification, getNotificationDetail, deleteNotification, reportIssue };

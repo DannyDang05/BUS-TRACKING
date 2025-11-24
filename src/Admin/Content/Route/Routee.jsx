@@ -8,29 +8,77 @@ import {
   MenuItem,
   Typography,
   Box,
-  Card
+  Card,
+  CircularProgress
 } from "@mui/material"
 import { IoIosSearch } from "react-icons/io";
 import { FaPlus, FaRoute } from "react-icons/fa";
+import { AutoAwesome } from "@mui/icons-material";
 import TableRoute from "./TableRoute";
+import AssignDriverModal from "./AssignDriverModal";
 import { useLanguage } from '../../Shared/LanguageContext';
 import { useNavigate } from "react-router-dom"
 import { useState } from "react";
+import { toast } from 'react-toastify';
 
 const Routee = () => {
     const [search, setSearch] = useState("")
     const [filter, setFilter] = useState("id")
+    const [isOptimizing, setIsOptimizing] = useState(false)
+    const [refreshTrigger, setRefreshTrigger] = useState(0)
+    const [assignModalOpen, setAssignModalOpen] = useState(false)
+    const [selectedRoute, setSelectedRoute] = useState(null)
     const navigate = useNavigate();
     
-    const handleCreate = () => {
-        navigate("/routes/create-route")
-    }
+    const handleOpenAssignModal = (route) => {
+        setSelectedRoute(route);
+        setAssignModalOpen(true);
+    };
+
+    const handleCloseAssignModal = () => {
+        setAssignModalOpen(false);
+        setSelectedRoute(null);
+    };
+
     const handleSearch = (something) => {
         setSearch(something)
     }
     const handleFilter = (something) => {
         setFilter(something)
     }
+    
+    const handleAutoOptimize = async () => {
+        setIsOptimizing(true);
+        try {
+            const token = localStorage.getItem('bus_token'); // FIX: Dùng đúng key
+            const response = await fetch('http://localhost:6969/api/v1/routes/auto-optimize', {
+                method: 'POST',
+                headers: {
+                    'Authorization': `Bearer ${token}`,
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({
+                    saveToDb: true, // FIX: Gửi trong body thay vì query string
+                    schoolLocation: { lat: 10.8494, lon: 106.7714 } // Đại học Sài Gòn
+                })
+            });
+            
+            const result = await response.json();
+            
+            if (result && result.errorCode === 0) {
+                const routeCount = result.data?.routes?.length || result.data?.totalRoutes || 0;
+                toast.success(`✅ Phân tuyến thành công! Đã tạo ${routeCount} tuyến tự động`);
+                setRefreshTrigger(prev => prev + 1); // Trigger refresh table
+            } else {
+                toast.error(result.message || 'Phân tuyến thất bại!');
+            }
+        } catch (error) {
+            console.error('Error optimizing routes:', error);
+            toast.error('⚠️ Lỗi khi phân tuyến: ' + error.message);
+        } finally {
+            setIsOptimizing(false);
+        }
+    };
     
     const { t } = useLanguage();
 
@@ -137,36 +185,62 @@ const Routee = () => {
                 </FormControl>
               </Box> */}
 
-              {/* Create Button */}
-              <Box>
+              {/* Action Buttons */}
+              <Box sx={{ display: 'flex', gap: '12px', flexWrap: 'wrap' }}>
                 <Button 
-                  onClick={() => handleCreate()}
+                  onClick={handleAutoOptimize}
+                  disabled={isOptimizing}
                   sx={{
-                    background: 'linear-gradient(135deg, #0097a7 0%, #00838f 100%)',
+                    background: isOptimizing 
+                      ? 'linear-gradient(135deg, #ccc 0%, #999 100%)' 
+                      : 'linear-gradient(135deg, #ff6b6b 0%, #ee5a6f 100%)',
                     color: '#fff',
                     borderRadius: '20px',
                     padding: '10px 24px',
                     fontWeight: 'bold',
-                    boxShadow: '0 4px 15px rgba(0, 151, 167, 0.3)',
+                    boxShadow: '0 4px 15px rgba(255, 107, 107, 0.3)',
                     transition: 'all 0.3s ease',
                     display: 'flex',
                     alignItems: 'center',
                     gap: '8px',
                     '&:hover': {
-                      transform: 'translateY(-2px)',
-                      boxShadow: '0 6px 20px rgba(0, 151, 167, 0.4)'
+                      transform: isOptimizing ? 'none' : 'translateY(-2px)',
+                      boxShadow: isOptimizing ? '0 4px 15px rgba(255, 107, 107, 0.3)' : '0 6px 20px rgba(255, 107, 107, 0.4)'
+                    },
+                    '&:disabled': {
+                      color: '#fff',
+                      opacity: 0.7
                     }
                   }}
                 >
-                  <FaPlus /> {t('addRoute')}
+                  {isOptimizing ? (
+                    <>
+                      <CircularProgress size={20} sx={{ color: '#fff' }} /> 
+                      Đang phân tuyến...
+                    </>
+                  ) : (
+                    <>
+                      <AutoAwesome /> 
+                      Phân Tuyến Tự Động
+                    </>
+                  )}
                 </Button>
               </Box>
             </Card>
 
             {/* Table */}
-            <TableRoute />
+            <TableRoute 
+              refreshTrigger={refreshTrigger} 
+              onAssignDriver={handleOpenAssignModal}
+            />
 
-            
+            {/* Assign Driver Modal */}
+            <AssignDriverModal
+              open={assignModalOpen}
+              onClose={handleCloseAssignModal}
+              route={selectedRoute}
+              onRefresh={() => setRefreshTrigger(prev => prev + 1)}
+            />
         </Box>
     )
 }

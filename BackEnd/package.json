@@ -16,7 +16,7 @@
   "dependencies": {
     "@babel/core": "^7.28.4",
     "@babel/node": "^7.28.0",
-    "axios": "^1.12.2",
+    "axios": "^1.13.2",
     "babel": "^5.8.38",
     "bcryptjs": "^3.0.3",
     "body-parser": "^2.2.0",

@@ -29,6 +29,7 @@ const columns = [
 const TableStudent = () => {
     const navigate = useNavigate();
     const [students, setStudents] = useState([]);
+    const [totalCount, setTotalCount] = useState(0);
     const [loading, setLoading] = useState(false);
     const [search, setSearch] = useState('');
     const [localSearch, setLocalSearch] = useState('');
@@ -42,18 +43,20 @@ const TableStudent = () => {
         const fetch = async () => {
             setLoading(true);
             try {
-          const res = await getAllStudents(search);
-          const list = res?.data || res || [];
-          setStudents(list);
+                const res = await getAllStudents(search, page + 1, rowsPerPage);
+                const list = res?.data || [];
+                setStudents(list);
+                setTotalCount(res?.meta?.totalItems || 0);
             } catch (err) {
                 console.error('Lấy students lỗi', err);
                 setStudents([]);
+                setTotalCount(0);
             } finally {
                 setLoading(false);
             }
         };
         fetch();
-    }, [search]);
+    }, [search, page, rowsPerPage]);
 
     // debounce localSearch -> search
     useEffect(() => {
@@ -81,9 +84,10 @@ const TableStudent = () => {
         await deleteStudent(id);
         toast.success('Xóa học sinh thành công!');
         setLoading(true);
-        const res = await getAllStudents(search);
-        const list = res?.data || res || [];
+        const res = await getAllStudents(search, page + 1, rowsPerPage);
+        const list = res?.data || [];
         setStudents(list);
+        setTotalCount(res?.meta?.totalItems || 0);
       } catch (err) {
         console.error('Xóa học sinh thất bại', err);
         toast.error(err?.response?.data?.message || 'Xóa học sinh thất bại!');
@@ -92,7 +96,7 @@ const TableStudent = () => {
       }
     }
 
-    const displayed = students.slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage);
+    const displayed = students;
 
     return (
         <Paper className="custom-table-container">
@@ -104,7 +108,7 @@ const TableStudent = () => {
                 className="global-search-input"
                 style={{ flex: 1, padding: '8px 10px', borderRadius: 6, border: '1px solid #ddd' }}
               />
-              <div style={{ minWidth: 140, textAlign: 'right', color: '#666' }}>{students.length} {t('results')}</div>
+              <div style={{ minWidth: 140, textAlign: 'right', color: '#666' }}>{totalCount} {t('results')}</div>
           </div>
           <TableContainer>
             <Table className="custom-table">
@@ -152,7 +156,7 @@ const TableStudent = () => {
                 <option value={20}>20 {t('perPage')}</option>
                 <option value={50}>50 {t('perPage')}</option>
             </select>
-            <PaginationControls count={students.length} page={page} rowsPerPage={rowsPerPage} onPageChange={(p) => setPage(p)} />
+            <PaginationControls count={totalCount} page={page} rowsPerPage={rowsPerPage} onPageChange={(p) => setPage(p)} />
           </div>
             <ConfirmDialog open={confirmOpen} title={t('confirmTitle')} message={t('confirmDeleteMessage')} onClose={handleConfirmResult} />
         </Paper>

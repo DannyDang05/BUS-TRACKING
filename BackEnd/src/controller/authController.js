@@ -33,15 +33,28 @@ const login = async (req, res) => {
       return res.status(401).json({ errorCode: 3, message: 'Sai mật khẩu.' });
     }
 
-    // 3. Tạo Token
+    // 3. Nếu là tài xế, lấy thông tin từ bảng drivers
+    let driverInfo = null;
+    if (user.Role === 'driver') {
+      const [driverRows] = await pool.query(
+        'SELECT Id, FullName, PhoneNumber FROM drivers WHERE UserId = ?',
+        [user.Id]
+      );
+      if (driverRows.length > 0) {
+        driverInfo = driverRows[0];
+      }
+    }
+
+    // 4. Tạo Token
     const payload = {
       id: user.Id,
       username: user.Username,
-      role: user.Role
+      role: user.Role,
+      driverId: driverInfo?.Id || null // Thêm driverId vào token nếu là tài xế
     };
     const token = jwt.sign(payload, process.env.JWT_SECRET, { expiresIn: '1d' });
 
-    // 4. (Optional) Gửi Token qua HttpOnly Cookie nếu muốn hỗ trợ cả cookie-based
+    // 5. (Optional) Gửi Token qua HttpOnly Cookie nếu muốn hỗ trợ cả cookie-based
     res.cookie('jwt_token', token, {
       httpOnly: true,
       secure: process.env.NODE_ENV === 'production',
@@ -49,17 +62,26 @@ const login = async (req, res) => {
       maxAge: 24 * 60 * 60 * 1000 // 1 ngày
     });
 
-    // 5. Trả token và user info về JSON để frontend lưu và sử dụng
+    // 6. Trả token và user info về JSON để frontend lưu và sử dụng
+    const responseUser = {
+      id: user.Id,
+      username: user.Username,
+      role: user.Role,
+      profileId: user.ProfileId
+    };
+
+    // Thêm thông tin tài xế nếu có
+    if (driverInfo) {
+      responseUser.driverId = driverInfo.Id;
+      responseUser.driverName = driverInfo.FullName;
+      responseUser.phoneNumber = driverInfo.PhoneNumber;
+    }
+
     return res.status(200).json({
       errorCode: 0,
       message: 'Đăng nhập thành công!',
       token,
-      user: {
-        id: user.Id,
-        username: user.Username,
-        role: user.Role,
-        profileId: user.ProfileId
-      }
+      user: responseUser
     });
 
   } catch (e) {

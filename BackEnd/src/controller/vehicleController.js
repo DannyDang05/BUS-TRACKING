@@ -20,7 +20,7 @@ const getAllVehicles = async (req, res) => {
     const [countRows] = await pool.query(countSql, params);
     const totalItems = countRows[0].total || 0;
 
-    const dataSql = `SELECT Id, LicensePlate, Model, SpeedKmh FROM vehicles ${where} ORDER BY Id LIMIT ? OFFSET ?`;
+    const dataSql = `SELECT Id, LicensePlate, Model, SpeedKmh, Capacity, IsActive FROM vehicles ${where} ORDER BY Id LIMIT ? OFFSET ?`;
     const dataParams = params.concat([limit, offset]);
     const [rows] = await pool.query(dataSql, dataParams);
 
@@ -39,16 +39,16 @@ const getAllVehicles = async (req, res) => {
 
 // POST /api/v1/vehicles
 const createVehicle = async (req, res) => {
-  const { LicensePlate, Model, SpeedKmh } = req.body;
+  const { LicensePlate, Model, SpeedKmh, Capacity, IsActive } = req.body;
   
-  if (!LicensePlate) {
-    return res.status(400).json({ errorCode: 1, message: 'Thiếu thông tin (LicensePlate).' });
+  if (!LicensePlate || !Capacity) {
+    return res.status(400).json({ errorCode: 1, message: 'Thiếu thông tin (LicensePlate, Capacity).' });
   }
 
   try {
     const [result] = await pool.query(
-      'INSERT INTO vehicles (LicensePlate, Model, SpeedKmh) VALUES (?, ?, ?)',
-      [LicensePlate, Model, SpeedKmh || 40]
+      'INSERT INTO vehicles (LicensePlate, Model, SpeedKmh, Capacity, IsActive) VALUES (?, ?, ?, ?, ?)',
+      [LicensePlate, Model, SpeedKmh || 40, Capacity, IsActive !== undefined ? IsActive : 1]
     );
     return res.status(201).json({ errorCode: 0, message: 'Tạo xe thành công!', vehicleId: result.insertId });
   } catch (e) {
@@ -65,7 +65,7 @@ const getVehicleDetail = async (req, res) => {
   const id = req.params.id;
   try {
     const [rows] = await pool.query(
-      'SELECT Id, LicensePlate, Model, SpeedKmh FROM vehicles WHERE Id = ?', [id]
+      'SELECT Id, LicensePlate, Model, SpeedKmh, Capacity, IsActive FROM vehicles WHERE Id = ?', [id]
     );
     if (rows.length === 0) {
       return res.status(404).json({ errorCode: 3, message: 'Không tìm thấy xe.' });
@@ -80,7 +80,7 @@ const getVehicleDetail = async (req, res) => {
 // PUT /api/v1/vehicles/:id
 const updateVehicle = async (req, res) => {
   const id = req.params.id;
-  const { LicensePlate, Model, SpeedKmh } = req.body;
+  const { LicensePlate, Model, SpeedKmh, Capacity, IsActive } = req.body;
 
   if (!LicensePlate) {
     return res.status(400).json({ errorCode: 1, message: 'Thiếu thông tin bắt buộc.' });
@@ -88,8 +88,8 @@ const updateVehicle = async (req, res) => {
 
   try {
     const [result] = await pool.query(
-      'UPDATE vehicles SET LicensePlate = ?, Model = ?, SpeedKmh = ? WHERE Id = ?',
-      [LicensePlate, Model, SpeedKmh, id]
+      'UPDATE vehicles SET LicensePlate = ?, Model = ?, SpeedKmh = ?, Capacity = ?, IsActive = ? WHERE Id = ?',
+      [LicensePlate, Model, SpeedKmh, Capacity, IsActive, id]
     );
     if (result.affectedRows === 0) {
       return res.status(404).json({ errorCode: 3, message: 'Không tìm thấy xe.' });

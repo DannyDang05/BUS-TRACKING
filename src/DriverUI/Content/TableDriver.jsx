@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useState, useEffect } from "react";
 import {
     Table,
     TableBody,
@@ -8,88 +8,136 @@ import {
     TableRow,
     Paper,
     IconButton,
-    Tooltip
+    Tooltip,
+    CircularProgress,
+    Box,
+    Typography,
+    Chip
 } from "@mui/material";
-import {  useNavigate } from "react-router-dom";
+import { useNavigate } from "react-router-dom";
 import VisibilityIcon from '@mui/icons-material/Visibility';
+import { getDriverSchedules } from '../../service/apiService';
 
 /**
- * routes: mảng object có shape: { RouteCode, StartTime, LicensePlate }
+ * TableRoute - Hiển thị lịch làm việc của tài xế theo ngày
  */
 const TableRoute = () => {
-    const navigate = useNavigate()
-    const handleDetailClick = (routeCode) =>{
-        navigate(`/driver/schedule/${routeCode}`)
+    const navigate = useNavigate();
+    const [schedules, setSchedules] = useState([]);
+    const [loading, setLoading] = useState(true);
+    const [error, setError] = useState(null);
 
+    // Lấy driverId từ localStorage (sau khi login)
+    const driverId = localStorage.getItem('driver_id'); // ID tài xế (TX001, TX002...)
+
+    useEffect(() => {
+        const fetchSchedules = async () => {
+            try {
+                setLoading(true);
+                const today = new Date().toISOString().split('T')[0]; // Format: YYYY-MM-DD
+                const response = await getDriverSchedules(driverId, today);
+                setSchedules(response.data || []);
+            } catch (err) {
+                console.error('Error fetching schedules:', err);
+                setError('Không thể tải lịch làm việc. Vui lòng thử lại.');
+            } finally {
+                setLoading(false);
+            }
+        };
+
+        if (driverId) {
+            fetchSchedules();
+        } else {
+            setError('Không tìm thấy thông tin tài xế. Vui lòng đăng nhập lại.');
+            setLoading(false);
+        }
+    }, [driverId]);
+
+    const handleDetailClick = (scheduleId) => {
+        navigate(`/driver/schedule/${scheduleId}`);
+    };
+
+    const getStatusChip = (statusText) => {
+        const colorMap = {
+            'Sắp diễn ra': 'warning',
+            'Đang chạy': 'info',
+            'Hoàn thành': 'success',
+            'Hủy': 'error'
+        };
+        return <Chip label={statusText} color={colorMap[statusText] || 'default'} size="small" />;
+    };
+
+    if (loading) {
+        return (
+            <Box display="flex" justifyContent="center" alignItems="center" minHeight="300px">
+                <CircularProgress />
+            </Box>
+        );
     }
-    const routes = [
-        {
-            RouteCode: "T01",
-            RouteName: "Bến Thành - Suối Tiên",
-            StartTime: "05:00 AM",
-            LicensePlate: "51B-123.45",
-        },
-        {
-            RouteCode: "T02",
-            RouteName: "Chợ Lớn - Khu Công Nghệ Cao",
-            StartTime: "06:15 AM",
-            LicensePlate: "50F-987.65",
-        },
-        {
-            RouteCode: "T03",
-            RouteName: "KDC Nam - Sân Bay",
-            StartTime: "04:30 AM",
-            LicensePlate: "29A-456.78",
-        },
-    ];
+
+    if (error) {
+        return (
+            <Box display="flex" justifyContent="center" alignItems="center" minHeight="300px">
+                <Typography color="error">{error}</Typography>
+            </Box>
+        );
+    }
     return (
         <div className="driver-table">
-        <TableContainer component={Paper} className="custom-table">
-            <Table aria-label="route table">
-                <TableHead>
-                    <TableRow>
-                        <TableCell>Mã Tuyến</TableCell>
-                        <TableCell>Tên Tuyến</TableCell>
-                        <TableCell>Thời Gian Bắt Đầu</TableCell>
-                        <TableCell>Biển Số Xe</TableCell>
-                        <TableCell>Hành Động</TableCell>
-                    </TableRow>
-                </TableHead>
-
-                <TableBody>
-                    {routes.length === 0 ? (
+            <TableContainer component={Paper} className="custom-table">
+                <Table aria-label="schedule table">
+                    <TableHead>
                         <TableRow>
-                            <TableCell colSpan={3} align="center">
-                                Không có dữ liệu
-                            </TableCell>
+                            <TableCell>Mã Tuyến</TableCell>
+                            <TableCell>Tên Tuyến</TableCell>
+                            <TableCell>Thời Gian Bắt Đầu</TableCell>
+                            <TableCell>Biển Số Xe</TableCell>
+                            <TableCell>Số Học Sinh</TableCell>
+                            <TableCell>Trạng Thái</TableCell>
+                            <TableCell>Hành Động</TableCell>
                         </TableRow>
-                    ) : (
-                        routes.map((r, idx) => (
-                            <TableRow key={r.RouteCode ?? idx}>
-                                <TableCell>{r.RouteCode}</TableCell>
-                                <TableCell>{r.RouteName}</TableCell>
-                                <TableCell>{r.StartTime}</TableCell>
-                                <TableCell>{r.LicensePlate}</TableCell>
-                                <TableCell align="center">
-                                    <Tooltip title="Xem chi tiết tuyến">
-                                        <IconButton
-                                            size="small"
-                                            color="primary"
-                                            onClick={()=>handleDetailClick(r.RouteCode)}
-                                        >
-                                            <VisibilityIcon />
-                                        </IconButton>
-                                    </Tooltip>
+                    </TableHead>
+
+                    <TableBody>
+                        {schedules.length === 0 ? (
+                            <TableRow>
+                                <TableCell colSpan={7} align="center">
+                                    Không có lịch làm việc hôm nay
                                 </TableCell>
                             </TableRow>
-                        ))
-                    )}
-                </TableBody>
-            </Table>
-        </TableContainer>
+                        ) : (
+                            schedules.map((schedule, idx) => (
+                                <TableRow key={schedule.scheduleId ?? idx}>
+                                    <TableCell>{schedule.routeCode}</TableCell>
+                                    <TableCell>{schedule.routeName}</TableCell>
+                                    <TableCell>{schedule.startTime}</TableCell>
+                                    <TableCell>{schedule.LicensePlate || 'N/A'}</TableCell>
+                                    <TableCell>
+                                        {schedule.totalStudents} HS
+                                        <Typography variant="caption" display="block" color="textSecondary">
+                                            Đã đón: {schedule.pickedUpCount}/{schedule.totalStudents}
+                                        </Typography>
+                                    </TableCell>
+                                    <TableCell>{getStatusChip(schedule.statusText)}</TableCell>
+                                    <TableCell align="center">
+                                        <Tooltip title="Xem chi tiết lịch trình">
+                                            <IconButton
+                                                size="small"
+                                                color="primary"
+                                                onClick={() => handleDetailClick(schedule.scheduleId)}
+                                            >
+                                                <VisibilityIcon />
+                                            </IconButton>
+                                        </Tooltip>
+                                    </TableCell>
+                                </TableRow>
+                            ))
+                        )}
+                    </TableBody>
+                </Table>
+            </TableContainer>
         </div>
     );
-    
 };
 
 export default TableRoute;
