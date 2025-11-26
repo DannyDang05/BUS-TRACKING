@@ -1,4 +1,4 @@
-import React from 'react';
+import { useState, useEffect } from 'react';
 import {
     Menu,
     MenuItem,
@@ -10,52 +10,34 @@ import {
 } from '@mui/material';
 // Thêm import bindMenu
 import { bindMenu } from 'material-ui-popup-state'; // <--- Cần import này
-
+import { getNotificationsByParent } from '../../service/apiService';
 // DỮ LIỆU THÔNG BÁO TĨNH (Giữ nguyên)
-const mockNotifications = [
-    {
-        id: 1,
-        type: 'Chuyến đi',
-        message: 'Tuyến "Tuyến 1 - Sáng" đã hoàn thành chuyến đi. Cảm ơn quý phụ huynh đã tin tưởng!',
-        timeString: '5 phút trước', 
-        isRead: false
-    },
-    {
-        id: 2,
-        type: 'Vị trí',
-        message: 'Xe buýt đang ở gần điểm đón "Tòa nhà B" (cách 100m). Vui lòng chuẩn bị cho con...',
-        timeString: '15 phút trước', 
-        isRead: false
-    },
-    {
-        id: 3,
-        type: 'Cảnh báo',
-        message: 'Xe buýt đang ở gần điểm đón "Nhà Thờ Đức Bà" (cách 45m). Vui lòng chuẩn bị cho con Nguyễn Văn Hùng!',
-        timeString: '30 phút trước', 
-        isRead: true 
-    },
-    {
-        id: 4,
-        type: 'Quản trị',
-        message: 'Hệ thống đã được nâng cấp với nhiều tính năng mới.',
-        timeString: '1 giờ trước', 
-        isRead: false
-    },
-    {
-        id: 5,
-        type: 'Sự cố',
-        message: 'Lịch trình có thể bị trễ 10 phút do tắc đường tại khu vực cầu Sài Gòn.',
-        timeString: '2 giờ trước', 
-        isRead: true
-    },
-];
-
 // Giá trị tĩnh (Hardcoded) cho mục đích hiển thị giao diện
 const STATIC_UNREAD_COUNT = 3;
 
 
 const ParentNotification = ({ popupState }) => {
-    
+    const [notifiList, setNotifiList] = useState([]);
+    const [loading, setLoading] = useState(false);
+    useEffect(() => {
+        const fetchNotifications = async () => {
+            setLoading(true);
+            try {
+                const parentId = localStorage.getItem('parent_profile');
+                if (!parentId) return;
+                const res = await getNotificationsByParent(parentId);
+                // Backend trả về: { errorCode, message, data: [...] }
+                const list = res?.data || [];
+                setNotifiList(list);
+            } catch (err) {
+                console.error('Lấy thông báo lỗi', err);
+            } finally {
+                setLoading(false);
+            }
+        };
+        fetchNotifications();
+
+    }, [popupState.isOpen]);
     // Hàm giả định cho các hành động (chỉ log ra console)
     const handleActionClick = (action) => {
         console.log(`Action clicked: ${action}`);
@@ -91,12 +73,12 @@ const ParentNotification = ({ popupState }) => {
                 <Typography variant="h6" sx={{ fontWeight: 'bold' }}>
                     Thông báo
                 </Typography>
-                <Button 
-                    variant="contained" 
-                    color="primary" 
+                <Button
+                    variant="contained"
+                    color="primary"
                     size="small"
-                    onClick={() => handleActionClick('Mark All Read')} 
-                    disabled={STATIC_UNREAD_COUNT === 0} 
+                    onClick={() => handleActionClick('Mark All Read')}
+                    disabled={STATIC_UNREAD_COUNT === 0}
                     sx={{
                         borderRadius: '20px',
                         minWidth: '70px',
@@ -111,56 +93,56 @@ const ParentNotification = ({ popupState }) => {
             <Divider sx={{ mb: 1 }} />
 
             {/* Danh sách các thông báo */}
-            {mockNotifications.length === 0 ? (
+            {notifiList.length === 0 ? (
                 <Typography sx={{ px: 2, py: 1, color: 'text.secondary' }}>
                     Không có thông báo mới nào.
                 </Typography>
             ) : (
-                mockNotifications.map((notification) => (
-                    <MenuItem 
-                        key={notification.id} 
-                        onClick={() => handleActionClick(`View ${notification.id}`)}
+                notifiList.map((notification) => (
+                    <MenuItem
+                        key={notification.Id}
+                        onClick={() => handleActionClick(`View ${notification.Id}`)}
                         sx={{
                             borderRadius: '8px',
                             mb: 1,
                             p: 1.5,
-                            backgroundColor: notification.isRead ? 'background.paper' : '#e0f7fa',
+                            backgroundColor: notification.DaDoc ? 'background.paper' : '#e0f7fa',
                             '&:hover': {
-                                backgroundColor: notification.isRead ? 'action.hover' : '#00bcd4',
-                                color: notification.isRead ? 'text.primary' : 'black',
+                                backgroundColor: notification.DaDoc ? 'action.hover' : '#00bcd4',
+                                color: notification.DaDoc ? 'text.primary' : 'black',
                             },
                             whiteSpace: 'normal',
                             flexDirection: 'column',
                             alignItems: 'flex-start'
                         }}
                     >
-                        <Typography 
-                            variant="body2" 
-                            sx={{ fontWeight: 'bold', color: notification.isRead ? 'text.primary' : 'primary.dark' }}
+                        <Typography
+                            variant="body2"
+                            sx={{ fontWeight: 'bold', color: notification.DaDoc ? 'text.primary' : 'primary.dark' }}
                         >
-                            {notification.type}
+                            {notification.LoaiThongBao}
                         </Typography>
-                        <Typography 
-                            variant="body2" 
-                            sx={{ 
-                                color: notification.isRead ? 'text.secondary' : 'text.primary', 
-                                mt: 0.5, 
-                                lineHeight: 1.3 
+                        <Typography
+                            variant="body2"
+                            sx={{
+                                color: notification.DaDoc ? 'text.secondary' : 'text.primary',
+                                mt: 0.5,
+                                lineHeight: 1.3
                             }}
                         >
-                            {notification.message}
+                            {notification.NoiDung}
                         </Typography>
-                        <Typography 
-                            variant="caption" 
-                            color={notification.isRead ? 'text.disabled' : 'text.secondary'} 
+                        <Typography
+                            variant="caption"
+                            color={notification.DaDoc ? 'text.disabled' : 'text.secondary'}
                             sx={{ mt: 1, alignSelf: 'flex-end' }}
                         >
-                            {notification.timeString}
+                            {notification.ThoiGian}
                         </Typography>
                     </MenuItem>
                 ))
             )}
-             <Divider sx={{ mt: 1 }} />
+            <Divider sx={{ mt: 1 }} />
             <Box sx={{ p: 1, textAlign: 'center' }}>
                 <Button variant="text" size="small" onClick={() => handleActionClick('View All')}>
                     Xem tất cả

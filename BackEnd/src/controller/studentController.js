@@ -46,17 +46,16 @@ const getAllStudents = async (req, res) => {
     return res.status(500).json({ errorCode: -1, message: 'Lỗi server.' });
   }
 };
-
 // POST /api/v1/students
 // Tạo học sinh mới trong bảng `hocsinh`
 const createStudent = async (req, res) => {
   // Lấy các trường từ DB mới
   const { MaHocSinh, HoTen, Lop, MaPhuHuynh, DiaChi, Latitude, Longitude, TrangThaiHocTap } = req.body;
-  
+
   if (!MaHocSinh || !HoTen || !Lop || !DiaChi || !Latitude || !Longitude) {
     return res.status(400).json({ errorCode: 1, message: 'Thiếu thông tin (Mã HS, Tên, Lớp, Địa chỉ, Tọa độ).' });
   }
-  
+
   try {
     const [result] = await pool.query(
       'INSERT INTO hocsinh (MaHocSinh, HoTen, Lop, MaPhuHuynh, DiaChi, Latitude, Longitude, TrangThaiHocTap) VALUES (?, ?, ?, ?, ?, ?, ?, ?)',
@@ -77,7 +76,7 @@ const createStudent = async (req, res) => {
 const updateStudent = async (req, res) => {
   const maHocSinh = req.params.id;
   const { HoTen, Lop, TrangThaiHocTap, MaPhuHuynh, DiaChi, Latitude, Longitude } = req.body;
-  
+
   if (!HoTen || !Lop) {
     return res.status(400).json({ errorCode: 1, message: 'Thiếu thông tin (Tên, Lớp).' });
   }

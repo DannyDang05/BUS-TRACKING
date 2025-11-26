@@ -29,13 +29,17 @@ const Login = () => {
             if (res && res.token && res.user) {
                 localStorage.setItem('bus_token', res.token);
                 localStorage.setItem('bus_user', JSON.stringify(res.user));
-                
+
                 // Lưu thông tin riêng cho tài xế
                 if (res.user.role === 'driver' && res.user.driverId) {
                     localStorage.setItem('driver_id', res.user.driverId);
                     localStorage.setItem('driver_name', res.user.driverName || '');
                 }
-                
+                if (res.user.role === 'parent' && res.user.Id) {
+                    localStorage.setItem('parent_id', res.user.Id);
+                    localStorage.setItem('parent_name', res.user.name || '');
+                    localStorage.setItem('parent_profile', res.user.profileId || '');
+                }
                 toast.success('Đăng nhập thành công!');
                 // Điều hướng theo role
                 if (res.user.role === 'admin' || res.user.Role === 'admin') {
@@ -43,7 +47,7 @@ const Login = () => {
                 } else if (res.user.role === 'driver' || res.user.Role === 'driver') {
                     setTimeout(() => navigate('/driver'), 800);
                 } else {
-                    setTimeout(() => navigate('/'), 800);
+                    setTimeout(() => navigate('/parent'), 800);
                 }
                 return { ok: true };
             } else {

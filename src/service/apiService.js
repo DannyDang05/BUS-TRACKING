@@ -29,7 +29,7 @@ apiService.interceptors.response.use(
         console.error('Lỗi API:', error.response?.data || error.message);
         // Bạn có thể xử lý việc tự động logout ở đây nếu gặp lỗi 401
         if (error.response?.status === 401) {
-             // Xử lý logout hoặc refresh token
+            // Xử lý logout hoặc refresh token
         }
         return Promise.reject(error.response?.data || error);
     }
@@ -85,8 +85,8 @@ export const deleteRoute = (id) => apiService.delete(`/routes/${id}`);
 
 // Pickup points
 export const getPickupPoints = (routeId) => {
-  if (!routeId) return apiService.get('/pickuppoints');
-  return apiService.get(`/pickuppoints?routeId=${routeId}`);
+    if (!routeId) return apiService.get('/pickuppoints');
+    return apiService.get(`/pickuppoints?routeId=${routeId}`);
 };
 export const getPickupPointById = (id) => apiService.get(`/pickuppoints/${id}`);
 export const createPickupPoint = (data) => apiService.post('/pickuppoints', data);
@@ -124,7 +124,7 @@ export const getLiveLocations = () => apiService.get('/tracking/live');
 export const getRouteHistory = (busId) => apiService.get(`/tracking/history/${busId}`);
 
 // --- API PHÂN TUYẾN TỰ ĐỘNG (Route Optimization) ---
-export const autoOptimizeRoutes = (schoolLocation, saveToDb = false) => 
+export const autoOptimizeRoutes = (schoolLocation, saveToDb = false) =>
     apiService.post('/routes/auto-optimize', { schoolLocation, saveToDb });
 export const getStudentsByRoute = () => apiService.get('/routes/students-by-route');
 
@@ -148,5 +148,20 @@ export const updatePickupStatus = (pickupPointId, status) => apiService.put(`/pi
 
 // Báo cáo sự cố từ tài xế
 export const reportIssue = (issueData) => apiService.post('/notifications/report-issue', issueData);
+// --- API PHỤ HUYNH (Parents) ---
 
+
+// Lấy danh sách học sinh của phụ huynh
+export const getStudentByParent = (parentId) => apiService.get(`/parents/${parentId}/students`);
+// Lấy thông tin phụ huynh
+export const getParentInformation = (parentId) => apiService.get(`/parents/${parentId}`);
+// Lấy thông báo của phụ huynh
+export const getNotificationsByParent = (parentId, q, page, limit) => {
+    const params = new URLSearchParams();
+    if (q != null && String(q).trim() !== '') params.append('q', String(q).trim());
+    if (page != null) params.append('page', page);
+    if (limit != null) params.append('limit', limit);
+    const qs = params.toString();
+    return apiService.get(`/parents/${parentId}/notifications${qs ? `?${qs}` : ''}`);
+};
 export default apiService;

@@ -17,9 +17,7 @@ const HeaderParent = (props) => {
     // Chỉ giữ state cho Dialog (sử dụng truyền props)
     const [infoModal, setInfoModal] = useState(false);
     // ĐÃ LOẠI BỎ const [notificationModal, setNotificationModal] = useState(false) vì không cần thiết
-
-    let userName = 'Nguyễn Thị Lan';
-
+    let parentInfor = props.props || {};
     // Hàm giả định cho Refresh
     const handleRefresh = () => {
         // Thực hiện logic làm mới dữ liệu
@@ -34,10 +32,10 @@ const HeaderParent = (props) => {
                 <div className="header-right">
 
                     {/* Refresh Button */}
-                    <div 
-                        className="header-action-item" 
-                        role="button" 
-                        title="Refresh" 
+                    <div
+                        className="header-action-item"
+                        role="button"
+                        title="Refresh"
                         onClick={handleRefresh} // Gắn hàm refresh
                         style={{ cursor: 'pointer' }}
                     >
@@ -73,7 +71,7 @@ const HeaderParent = (props) => {
                                     {...bindTrigger(popupState)}
                                 >
                                     <FaUserCircle className="user-avatar-icon" />
-                                    <span className="user-name">{userName}</span>
+                                    <span className="user-name">{parentInfor.HoTen || 'Phụ huynh'}</span>
                                 </div>
                                 <Menu {...bindMenu(popupState)}>
                                     <MenuItem onClick={() => { setInfoModal(true); popupState.close(); }}>
@@ -89,7 +87,7 @@ const HeaderParent = (props) => {
                 </div>
             </div>
             {/* Dialog thông tin (Vẫn dùng truyền props truyền thống) */}
-            <ParentDialogInfo infoModal={infoModal} setInfoModal={setInfoModal} />
+            <ParentDialogInfo infor={parentInfor} infoModal={infoModal} setInfoModal={setInfoModal} />
         </div>
     );
 };
