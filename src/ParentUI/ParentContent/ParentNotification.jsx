@@ -46,7 +46,7 @@ const ParentNotification = ({ popupState }) => {
 
     return (
         <Menu
-            {...bindMenu(popupState)} // ✅ SỬA: Gọi bindMenu (đã import ở đầu)
+            {...bindMenu(popupState)}
             anchorOrigin={{
                 vertical: 'bottom',
                 horizontal: 'right',
