@@ -1,5 +1,4 @@
 import mysql from "mysql2/promise"; // Sử dụng promise-based
-
 // Tạo một "pool" thay vì "connection"
 const pool = mysql.createPool({
   host: process.env.DB_HOST || 'localhost',

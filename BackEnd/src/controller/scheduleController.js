@@ -1,5 +1,4 @@
-gitimport { pool } from "../config/connectDB.js";
-
+import { pool } from "../config/connectDB.js";
 /**
  * GET /api/v1/schedules/driver/:driverId
  * Lấy danh sách lịch làm việc của tài xế theo ngày
@@ -8,7 +7,6 @@ gitimport { pool } from "../config/connectDB.js";
 const getDriverSchedules = async (req, res) => {
   const driverId = req.params.driverId;
   const date = req.query.date || new Date().toISOString().split('T')[0]; // Format: YYYY-MM-DD
-
   try {
     // Lấy schedules của tài xế join với routes và vehicles
     const [schedules] = await pool.query(`
@@ -56,9 +54,9 @@ const getDriverSchedules = async (req, res) => {
     });
   } catch (error) {
     console.error('Error in getDriverSchedules:', error);
-    return res.status(500).json({ 
-      errorCode: -1, 
-      message: 'Lỗi server khi lấy lịch làm việc.' 
+    return res.status(500).json({
+      errorCode: -1,
+      message: 'Lỗi server khi lấy lịch làm việc.'
     });
   }
 };
@@ -162,8 +160,8 @@ const updateScheduleStatus = async (req, res) => {
   }
 };
 
-export { 
-  getDriverSchedules, 
+export {
+  getDriverSchedules,
   getScheduleStudents,
   updateScheduleStatus
 };
