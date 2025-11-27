@@ -92,6 +92,9 @@ export const getPickupPointById = (id) => apiService.get(`/pickuppoints/${id}`);
 export const createPickupPoint = (data) => apiService.post('/pickuppoints', data);
 export const updatePickupPoint = (id, data) => apiService.put(`/pickuppoints/${id}`, data);
 export const deletePickupPoint = (id) => apiService.delete(`/pickuppoints/${id}`);
+
+// Get all routes with pickup points (for map - includes non-running routes)
+export const getAllRoutesWithPoints = () => apiService.get('/routes/all-with-points');
 // --- API VEHICLES/BUSES (Xe) ---
 export const getAllVehicles = (q, page, limit) => {
     const params = new URLSearchParams();
@@ -117,6 +120,7 @@ export const getAllNotifications = (q, page, limit) => {
 };
 export const getNotificationById = (id) => apiService.get(`/notifications/${id}`);
 export const createNotification = (notificationData) => apiService.post('/notifications', notificationData);
+export const updateNotification = (id, notificationData) => apiService.put(`/notifications/${id}`, notificationData);
 export const deleteNotification = (id) => apiService.delete(`/notifications/${id}`);
 
 // --- API THEO DÕI (Tracking) ---
@@ -128,8 +132,22 @@ export const autoOptimizeRoutes = (schoolLocation, saveToDb = false) =>
     apiService.post('/routes/auto-optimize', { schoolLocation, saveToDb });
 export const getStudentsByRoute = () => apiService.get('/routes/students-by-route');
 
-// --- API LỊCH TRÌNH (Schedules) - CHO TÀI XẾ ---
-// Lấy lịch làm việc của tài xế theo ngày
+// --- API LỊCH TRÌNH (Schedules) ---
+// Admin - Quản lý schedules
+export const getAllSchedules = (q, page, limit) => {
+    const params = new URLSearchParams();
+    if (q != null && String(q).trim() !== '') params.append('q', String(q).trim());
+    if (page != null) params.append('page', page);
+    if (limit != null) params.append('limit', limit);
+    const qs = params.toString();
+    return apiService.get(`/schedules${qs ? `?${qs}` : ''}`);
+};
+export const getScheduleById = (id) => apiService.get(`/schedules/${id}`);
+export const createSchedule = (scheduleData) => apiService.post('/schedules', scheduleData);
+export const updateSchedule = (id, scheduleData) => apiService.put(`/schedules/${id}`, scheduleData);
+export const deleteSchedule = (id) => apiService.delete(`/schedules/${id}`);
+
+// Driver - Lấy lịch làm việc của tài xế theo ngày
 export const getDriverSchedules = (driverId, date) => {
     const params = new URLSearchParams();
     if (date) params.append('date', date);
@@ -148,5 +166,23 @@ export const updatePickupStatus = (pickupPointId, status) => apiService.put(`/pi
 
 // Báo cáo sự cố từ tài xế
 export const reportIssue = (issueData) => apiService.post('/notifications/report-issue', issueData);
+
+// Simulation APIs
+export const startTripSimulation = (scheduleId) => apiService.post('/simulation/start', { scheduleId });
+export const stopTripSimulation = (scheduleId) => apiService.post('/simulation/stop', { scheduleId });
+export const getActiveSimulations = () => apiService.get('/simulation/active');
+
+// --- API PHỤ HUYNH (Parent) ---
+export const getChildrenRoutes = (parentId) => apiService.get(`/parent/children/${parentId}`);
+export const getParentNotifications = (parentId, page, limit) => {
+    const params = new URLSearchParams();
+    if (page) params.append('page', page);
+    if (limit) params.append('limit', limit);
+    const qs = params.toString();
+    return apiService.get(`/parent/notifications/${parentId}${qs ? `?${qs}` : ''}`);
+};
+export const markNotificationRead = (notificationId) => apiService.post(`/parent/notifications/${notificationId}/mark-read`);
+export const markAllNotificationsRead = (parentId) => apiService.post(`/parent/notifications/mark-all-read/${parentId}`);
+export const getVehicleTracking = (studentId) => apiService.get(`/parent/vehicle-tracking/${studentId}`);
 
 export default apiService;

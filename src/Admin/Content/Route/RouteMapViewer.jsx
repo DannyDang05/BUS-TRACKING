@@ -58,7 +58,7 @@ const RouteMapViewer = ({ open, onClose, routeId }) => {
         mapRef.current = new mapboxgl.Map({
           container: containerRef.current,
           style: 'mapbox://styles/mapbox/streets-v11',
-          center: [106.7714, 10.8494], // Đại học Sài Gòn
+          center: [106.6297, 10.8231], // Trường ĐH Sài Gòn Quận 5
           zoom: 13
         });
 
@@ -206,24 +206,37 @@ const RouteMapViewer = ({ open, onClose, routeId }) => {
 
     clearMarkers();
 
-    // Thêm marker trường học (Đại học Sài Gòn)
+    // Thêm marker trường học (Đại học Sài Gòn Quận 5)
     const schoolEl = document.createElement('div');
     schoolEl.innerHTML = '🏫';
-    schoolEl.style.fontSize = '30px';
+    schoolEl.style.fontSize = '32px';
     schoolEl.style.cursor = 'pointer';
+    schoolEl.style.filter = 'drop-shadow(0 2px 4px rgba(0,0,0,0.3))';
     const schoolMarker = new mapboxgl.Marker({ element: schoolEl })
-      .setLngLat([106.7714, 10.8494])
-      .setPopup(new mapboxgl.Popup({ offset: 25 }).setHTML('<div style="font-weight:bold;color:#00838f;font-size:14px;">🏫 Đại học Sài Gòn</div>'))
+      .setLngLat([106.6297, 10.8231])
+      .setPopup(new mapboxgl.Popup({ offset: 25 }).setHTML(`
+        <div style="padding: 10px; min-width: 200px; text-align: center;">
+          <h4 style="margin: 0 0 5px 0; font-size: 16px; color: #f44336; font-weight: bold;">
+            🏫 Trường ĐH Sài Gòn, Quận 5
+          </h4>
+          <p style="margin: 0; font-size: 12px; color: #666;">Điểm xuất phát & về</p>
+        </div>
+      `))
       .addTo(map);
     markersRef.current.push(schoolMarker);
 
     // Calculate or use existing optimized order
     const order = optimizedOrder.length > 0 ? optimizedOrder : findShortestPath(pts);
     
-    const coords = order.map(idx => {
+    // Tọa độ điểm đón học sinh
+    const studentCoords = order.map(idx => {
       const p = pts[idx];
       return [parseFloat(p.Longitude), parseFloat(p.Latitude)];
     }).filter(c => Number.isFinite(c[0]) && Number.isFinite(c[1]));
+
+    // Tạo route hoàn chỉnh: Trường -> Học sinh -> Trường
+    const schoolCoord = [106.6297, 10.8231];
+    const coords = [schoolCoord, ...studentCoords, schoolCoord];
 
     console.log('Drawing map with coords:', coords, 'Order:', order);
 
@@ -411,9 +424,9 @@ const RouteMapViewer = ({ open, onClose, routeId }) => {
                       <Table size="small" stickyHeader>
                         <TableHead>
                           <TableRow sx={{ background: 'linear-gradient(135deg, #0097a7 0%, #00838f 100%)' }}>
-                            <TableCell sx={{ color: 'white', fontWeight: 'bold', width: 50 }}>{t('index')}</TableCell>
-                              <TableCell sx={{ color: 'white', fontWeight: 'bold' }}>{t('pointName')}</TableCell>
-                              <TableCell sx={{ color: 'white', fontWeight: 'bold' }}>{t('address')}</TableCell>
+                            <TableCell sx={{ color: 'black', fontWeight: 'bold', width: 50 }}>{t('index')}</TableCell>
+                              <TableCell sx={{ color: 'black', fontWeight: 'bold' }}>{t('pointName')}</TableCell>
+                              <TableCell sx={{ color: 'black', fontWeight: 'bold' }}>{t('address')}</TableCell>
                           </TableRow>
                         </TableHead>
                         <TableBody>
@@ -433,8 +446,8 @@ const RouteMapViewer = ({ open, onClose, routeId }) => {
                                       sx={{ bgcolor: '#0097a7', color: 'white' }} 
                                     />
                                   </TableCell>
-                                  <TableCell sx={{ fontWeight: '500', fontSize: '0.9rem', color: '#00838f' }}>{p.PointName || '—'}</TableCell>
-                                  <TableCell sx={{ fontSize: '0.8rem', color: '#666' }}>{p.Address || t('noPickupPoints')}</TableCell>
+                                  <TableCell sx={{ fontWeight: '500', fontSize: '0.9rem', color: '#00838f' }}>{p.MaHocSinh || '—'}</TableCell>
+                                  <TableCell sx={{ fontSize: '0.8rem', color: '#666' }}>{p.DiaChi || t('noPickupPoints')}</TableCell>
                                 </TableRow>
                               );
                             })

@@ -1,7 +1,7 @@
 import * as React from 'react';
 import { useNavigate } from "react-router-dom"
 import { useState, useEffect } from 'react';
-import { getAllSchedules, deleteSchedule } from '../../../service/apiService';
+import { getAllNotifications, deleteNotification } from '../../../service/apiService';
 import { toast } from 'react-toastify';
 import { IconButton } from '@mui/material';
 import { Delete as DeleteIcon } from '@mui/icons-material';
@@ -16,20 +16,9 @@ import TableHead from '@mui/material/TableHead';
 import TableRow from '@mui/material/TableRow';
 import PaginationControls from '../PaginationControls';
 
-const columns = [
-  { field: 'id', headerName: 'ID', width: 80 },
-  { field: 'routeCode', headerName: 'Mã Tuyến', width: 150 },
-  { field: 'routeName', headerName: 'Tên Tuyến', width: 200 },
-  { field: 'date', headerName: 'Ngày', width: 150 },
-  { field: 'start_time', headerName: 'Giờ Bắt Đầu', width: 150 },
-  { field: 'status', headerName: 'Trạng Thái', width: 150 },
-  { field: 'driverName', headerName: 'Tài Xế', width: 180 },
-  { field: 'licensePlate', headerName: 'Biển Số Xe', width: 150 },
-];
-
-const TableCalendar = () => {
+const TableNotification = () => {
   const navigate = useNavigate();
-  const [schedules, setSchedules] = useState([]);
+  const [notifications, setNotifications] = useState([]);
   const [totalCount, setTotalCount] = useState(0);
   const [loading, setLoading] = useState(false);
   const [search, setSearch] = useState('');
@@ -44,13 +33,13 @@ const TableCalendar = () => {
     const fetch = async () => {
       setLoading(true);
       try {
-        const res = await getAllSchedules(search, page + 1, rowsPerPage);
+        const res = await getAllNotifications(search, page + 1, rowsPerPage);
         const list = res?.data || [];
-        setSchedules(list);
+        setNotifications(list);
         setTotalCount(res?.meta?.totalItems || 0);
       } catch (err) {
-        console.error('Lấy schedules lỗi', err);
-        setSchedules([]);
+        console.error('Lấy notifications lỗi', err);
+        setNotifications([]);
         setTotalCount(0);
       } finally {
         setLoading(false);
@@ -65,16 +54,16 @@ const TableCalendar = () => {
     setConfirmTarget(null);
     if (!result || !id) return;
     try {
-      await deleteSchedule(id);
-      toast.success('Xóa lịch trình thành công!');
+      await deleteNotification(id);
+      toast.success('Xóa thông báo thành công!');
       setLoading(true);
-      const res = await getAllSchedules(search, page + 1, rowsPerPage);
+      const res = await getAllNotifications(search, page + 1, rowsPerPage);
       const list = res?.data || [];
-      setSchedules(list);
+      setNotifications(list);
       setTotalCount(res?.meta?.totalItems || 0);
     } catch (err) {
-      console.error('Xóa lịch trình thất bại', err);
-      toast.error(err?.response?.data?.message || 'Xóa lịch trình thất bại!');
+      console.error('Xóa thông báo thất bại', err);
+      toast.error(err?.response?.data?.message || 'Xóa thông báo thất bại!');
     } finally {
       setLoading(false);
     }
@@ -86,11 +75,11 @@ const TableCalendar = () => {
   }, [localSearch]);
 
   const handleClickOnRow = (params) => {
-    const scheduleId = params.row?.id;
-    if (scheduleId) navigate(`/calendars/update-calendar/${scheduleId}`);
+    const notificationId = params.row?.id;
+    if (notificationId) navigate(`/notifications/update-notification/${notificationId}`);
   };
 
-  const displayed = schedules;
+  const displayed = notifications;
 
   return (
     <Paper className="custom-table-container">
@@ -109,34 +98,28 @@ const TableCalendar = () => {
           <TableHead>
             <TableRow>
               <TableCell>ID</TableCell>
-              <TableCell>Mã Tuyến</TableCell>
-              <TableCell>Tên Tuyến</TableCell>
-              <TableCell>Ngày</TableCell>
-              <TableCell>Giờ Bắt Đầu</TableCell>
-              <TableCell>Trạng Thái</TableCell>
-              <TableCell>Tài Xế</TableCell>
-              <TableCell>Biển Số Xe</TableCell>
+              <TableCell>Mã Thông Báo</TableCell>
+              <TableCell>Nội Dung</TableCell>
+              <TableCell>Thời Gian</TableCell>
+              <TableCell>Loại Thông Báo</TableCell>
               <TableCell>Hành Động</TableCell>
             </TableRow>
           </TableHead>
           <TableBody>
               {loading ? (
-              <TableRow><TableCell colSpan={9} className="table-empty">⏳ {t('loading')}</TableCell></TableRow>
+              <TableRow><TableCell colSpan={6} className="table-empty">⏳ {t('loading')}</TableCell></TableRow>
             ) : displayed.length === 0 ? (
-              <TableRow><TableCell colSpan={9} className="table-empty">{t('noData')}</TableCell></TableRow>
+              <TableRow><TableCell colSpan={6} className="table-empty">{t('noData')}</TableCell></TableRow>
             ) : (
-              displayed.map((s) => (
-                <TableRow key={s.id} onClick={() => handleClickOnRow({ row: s })}>
-                  <TableCell>{s.id}</TableCell>
-                  <TableCell>{s.routeCode}</TableCell>
-                  <TableCell>{s.routeName}</TableCell>
-                  <TableCell>{s.date}</TableCell>
-                  <TableCell>{s.start_time}</TableCell>
-                  <TableCell>{s.status}</TableCell>
-                  <TableCell>{s.driverName || 'N/A'}</TableCell>
-                  <TableCell>{s.licensePlate || 'N/A'}</TableCell>
+              displayed.map((n) => (
+                <TableRow key={n.id} onClick={() => handleClickOnRow({ row: n })}>
+                  <TableCell>{n.id}</TableCell>
+                  <TableCell>{n.MaThongBao}</TableCell>
+                  <TableCell>{n.NoiDung}</TableCell>
+                  <TableCell>{n.ThoiGian}</TableCell>
+                  <TableCell>{n.LoaiThongBao}</TableCell>
                   <TableCell align="center">
-                    <IconButton size="small" onClick={(e) => { e.stopPropagation(); setConfirmTarget(s.id); setConfirmOpen(true); }} title={t('delete')} color="error">
+                    <IconButton size="small" onClick={(e) => { e.stopPropagation(); setConfirmTarget(n.id); setConfirmOpen(true); }} title={t('delete')} color="error">
                       <DeleteIcon fontSize="small" />
                     </IconButton>
                   </TableCell>
@@ -161,4 +144,4 @@ const TableCalendar = () => {
   );
 }
 
-export default TableCalendar;
+export default TableNotification;

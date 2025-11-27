@@ -1,33 +1,20 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { toast } from 'react-toastify';
-import { Dialog, DialogTitle, DialogContent, DialogActions, TextField, Button, Box, MenuItem } from '@mui/material';
+import { Dialog, DialogTitle, DialogContent, DialogActions, TextField, Button, Box } from '@mui/material';
 import { useNavigate } from 'react-router-dom';
-import { createSchedule, getAllRoutes } from '../../../service/apiService';
+import { createNotification } from '../../../service/apiService';
 import { useLanguage } from '../../Shared/LanguageContext';
 
-const CreateCalendarModal = ({ open, onClose, onRefresh } = {}) => {
+const CreateNotificationModal = ({ open, onClose, onRefresh } = {}) => {
   const navigate = useNavigate();
   const [formData, setFormData] = useState({
-    route_id: '',
-    date: '',
-    start_time: '',
-    status: 'Sắp diễn ra'
+    MaThongBao: '',
+    NoiDung: '',
+    ThoiGian: '',
+    LoaiThongBao: ''
   });
-  const [routes, setRoutes] = useState([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
-
-  useEffect(() => {
-    const fetchRoutes = async () => {
-      try {
-        const res = await getAllRoutes('', 1, 1000);
-        setRoutes(res?.data || []);
-      } catch (err) {
-        console.error('Failed to load routes', err);
-      }
-    };
-    if (open) fetchRoutes();
-  }, [open]);
 
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -38,7 +25,7 @@ const CreateCalendarModal = ({ open, onClose, onRefresh } = {}) => {
   };
 
   const isValid = () => {
-    return formData.route_id && formData.date && formData.start_time;
+    return formData.MaThongBao && formData.NoiDung && formData.ThoiGian && formData.LoaiThongBao;
   };
 
   const handleSubmit = async () => {
@@ -49,21 +36,21 @@ const CreateCalendarModal = ({ open, onClose, onRefresh } = {}) => {
     setLoading(true);
     setError('');
     try {
-      await createSchedule(formData);
+      await createNotification(formData);
       setFormData({
-        route_id: '',
-        date: '',
-        start_time: '',
-        status: 'Sắp diễn ra'
+        MaThongBao: '',
+        NoiDung: '',
+        ThoiGian: '',
+        LoaiThongBao: ''
       });
       onRefresh?.();
       onClose?.();
-      toast.success('Tạo lịch trình thành công!');
-      navigate('/calendars');
+      toast.success('Tạo thông báo thành công!');
+      navigate('/notifications');
     } catch (err) {
-      setError(err.response?.data?.message || 'Tạo lịch trình lỗi');
-      toast.error(err.response?.data?.message || 'Tạo lịch trình lỗi');
-      console.error('Error creating schedule:', err);
+      setError(err.response?.data?.message || 'Tạo thông báo lỗi');
+      toast.error(err.response?.data?.message || 'Tạo thông báo lỗi');
+      console.error('Error creating notification:', err);
     } finally {
       setLoading(false);
     }
@@ -71,7 +58,7 @@ const CreateCalendarModal = ({ open, onClose, onRefresh } = {}) => {
 
   const { t } = useLanguage();
   const isOpen = open !== undefined ? open : true;
-  const closeHandler = onClose || (() => navigate('/calendars'));
+  const closeHandler = onClose || (() => navigate('/notifications'));
 
   return (
     <Dialog 
@@ -92,15 +79,14 @@ const CreateCalendarModal = ({ open, onClose, onRefresh } = {}) => {
         color: 'white',
         fontWeight: 'bold',
         textShadow: '0 2px 4px rgba(0, 0, 0, 0.2)'
-      }}>❄️ {t('create')} Lịch Trình</DialogTitle>
+      }}>❄️ {t('create')} {t('notification')}</DialogTitle>
       <DialogContent>
         <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2, pt: 2 }}>
           {error && <Box sx={{ color: '#d32f2f' }}>{error}</Box>}
           <TextField
-            select
-            label="Tuyến"
-            name="route_id"
-            value={formData.route_id}
+            label="Mã Thông Báo"
+            name="MaThongBao"
+            value={formData.MaThongBao}
             onChange={handleChange}
             fullWidth
             disabled={loading}
@@ -112,18 +98,30 @@ const CreateCalendarModal = ({ open, onClose, onRefresh } = {}) => {
               },
               '& .MuiInputBase-input': { color: '#00838f' }
             }}
-          >
-            {routes.map((route) => (
-              <MenuItem key={route.Id} value={route.Id}>
-                {route.MaTuyen} - {route.Name}
-              </MenuItem>
-            ))}
-          </TextField>
+          />
           <TextField
-            label="Ngày"
-            name="date"
-            type="date"
-            value={formData.date}
+            label="Nội Dung"
+            name="NoiDung"
+            value={formData.NoiDung}
+            onChange={handleChange}
+            fullWidth
+            multiline
+            rows={3}
+            disabled={loading}
+            sx={{
+              '& .MuiOutlinedInput-root': {
+                '& fieldset': { borderColor: '#0097a7' },
+                '&:hover fieldset': { borderColor: '#00838f' },
+                '&.Mui-focused fieldset': { borderColor: '#0097a7' }
+              },
+              '& .MuiInputBase-input': { color: '#00838f' }
+            }}
+          />
+          <TextField
+            label="Thời Gian"
+            name="ThoiGian"
+            type="datetime-local"
+            value={formData.ThoiGian}
             onChange={handleChange}
             fullWidth
             InputLabelProps={{ shrink: true }}
@@ -138,13 +136,11 @@ const CreateCalendarModal = ({ open, onClose, onRefresh } = {}) => {
             }}
           />
           <TextField
-            label="Giờ Bắt Đầu"
-            name="start_time"
-            type="time"
-            value={formData.start_time}
+            label="Loại Thông Báo"
+            name="LoaiThongBao"
+            value={formData.LoaiThongBao}
             onChange={handleChange}
             fullWidth
-            InputLabelProps={{ shrink: true }}
             disabled={loading}
             sx={{
               '& .MuiOutlinedInput-root': {
@@ -155,28 +151,6 @@ const CreateCalendarModal = ({ open, onClose, onRefresh } = {}) => {
               '& .MuiInputBase-input': { color: '#00838f' }
             }}
           />
-          <TextField
-            select
-            label="Trạng Thái"
-            name="status"
-            value={formData.status}
-            onChange={handleChange}
-            fullWidth
-            disabled={loading}
-            sx={{
-              '& .MuiOutlinedInput-root': {
-                '& fieldset': { borderColor: '#0097a7' },
-                '&:hover fieldset': { borderColor: '#00838f' },
-                '&.Mui-focused fieldset': { borderColor: '#0097a7' }
-              },
-              '& .MuiInputBase-input': { color: '#00838f' }
-            }}
-          >
-            <MenuItem value="Sắp diễn ra">Sắp diễn ra</MenuItem>
-            <MenuItem value="Đang chạy">Đang chạy</MenuItem>
-            <MenuItem value="Hoàn thành">Hoàn thành</MenuItem>
-            <MenuItem value="Hủy">Hủy</MenuItem>
-          </TextField>
         </Box>
       </DialogContent>
       <DialogActions sx={{
@@ -217,4 +191,4 @@ const CreateCalendarModal = ({ open, onClose, onRefresh } = {}) => {
   );
 };
 
-export default CreateCalendarModal;
+export default CreateNotificationModal;

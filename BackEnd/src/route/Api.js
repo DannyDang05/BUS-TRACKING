@@ -8,6 +8,8 @@ import vehicleRoute from "./vehicleRoute.js";
 import notificationRoute from "./notificationRoute.js";
 import pickuppointRoute from "./pickuppointRoute.js";
 import scheduleRoute from "./scheduleRoute.js";
+import simulationRoute from "./simulationRoute.js";
+import parentRoute from "./parentRoute.js";
 
 const router = express.Router();
 
@@ -23,6 +25,8 @@ const initAPIRouter = (app) => {
   router.use("/v1/pickuppoints", pickuppointRoute);
   router.use("/v1/notifications", notificationRoute);
   router.use("/v1/schedules", scheduleRoute);
+  router.use("/v1/simulation", simulationRoute);
+  router.use("/v1/parent", parentRoute);
 
   // Gắn Router tổng vào Express app với prefix /api
   return app.use("/api", router);

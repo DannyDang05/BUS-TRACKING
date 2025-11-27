@@ -35,6 +35,9 @@ import DriverDashboard from './DriverUI/Content/DriverDashBoard.jsx';
 import ParentUI from './ParentUI/ParentUI.jsx';
 import TableChild from './ParentUI/ParentContent/TableChild.jsx';
 import ParentMap from './ParentUI/ParentContent/ParentMap.jsx';
+import Notification from './Admin/Content/Notification/Notification.jsx';
+import CreateNotificationModal from './Admin/Content/Notification/CreateNotificationModal.jsx';
+import UpdateNotificationModal from './Admin/Content/Notification/UpdateNotificationModal.jsx';
 createRoot(document.getElementById('root')).render(
   <StrictMode>
     <LanguageProvider>
@@ -63,6 +66,9 @@ createRoot(document.getElementById('root')).render(
               <Route path='buses' element={<Bus />} />
               <Route path="buses/create-bus" element={<CreateBusModal />} />
               <Route path="buses/update-bus/:id" element={<UpdateBusModal />} />
+              <Route path='notifications' element={<Notification />} />
+              <Route path="notifications/create-notification" element={<CreateNotificationModal />} />
+              <Route path="notifications/update-notification/:id" element={<UpdateNotificationModal />} />
             </Route>
           </Route>
           {/* Public routes */}

@@ -1,44 +1,63 @@
 import React, { useState, useEffect } from 'react';
 import { toast } from 'react-toastify';
 import { useParams } from 'react-router-dom';
-import { getNotificationById } from '../../../service/apiService';
-import { Dialog, DialogTitle, DialogContent, DialogActions, TextField, Button, Box } from '@mui/material';
+import { getScheduleById, updateSchedule, getAllRoutes } from '../../../service/apiService';
+import { Dialog, DialogTitle, DialogContent, DialogActions, TextField, Button, Box, MenuItem } from '@mui/material';
 import { useLanguage } from '../../Shared/LanguageContext';
 
-const UpdateCalendarModal = ({ open, onClose, notification }) => {
+const UpdateCalendarModal = ({ open, onClose, schedule }) => {
   const [formData, setFormData] = useState({
-    MaThongBao: '',
-    NoiDung: '',
-    ThoiGian: '',
-    LoaiThongBao: ''
+    route_id: '',
+    date: '',
+    start_time: '',
+    end_time: '',
+    status: 'Sắp diễn ra'
   });
+  const [routes, setRoutes] = useState([]);
+  const [scheduleId, setScheduleId] = useState(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
 
   useEffect(() => {
+    const fetchRoutes = async () => {
+      try {
+        const res = await getAllRoutes('', 1, 1000);
+        setRoutes(res?.data || []);
+      } catch (err) {
+        console.error('Failed to load routes', err);
+      }
+    };
+    if (open) fetchRoutes();
+  }, [open]);
+
+  useEffect(() => {
     const { id } = useParams();
-    if (notification) {
+    if (schedule) {
+      setScheduleId(schedule.id);
       setFormData({
-        MaThongBao: notification.MaThongBao || '',
-        NoiDung: notification.NoiDung || '',
-        ThoiGian: notification.ThoiGian || '',
-        LoaiThongBao: notification.LoaiThongBao || ''
+        route_id: schedule.route_id || '',
+        date: schedule.date || '',
+        start_time: schedule.start_time || '',
+        end_time: schedule.end_time || '',
+        status: schedule.status || 'Sắp diễn ra'
       });
       return;
     }
 
-    if (id) {
-      getNotificationById(id).then(res => {
-        const n = res?.data || res;
+    if (id && open) {
+      setScheduleId(id);
+      getScheduleById(id).then(res => {
+        const s = res?.data || res;
         setFormData({
-          MaThongBao: n.MaThongBao || '',
-          NoiDung: n.NoiDung || '',
-          ThoiGian: n.ThoiGian || '',
-          LoaiThongBao: n.LoaiThongBao || ''
+          route_id: s.route_id || '',
+          date: s.date || '',
+          start_time: s.start_time || '',
+          end_time: s.end_time || '',
+          status: s.status || 'Sắp diễn ra'
         });
-      }).catch(err => console.error('Failed to load notification', err));
+      }).catch(err => console.error('Failed to load schedule', err));
     }
-  }, [notification, open]);
+  }, [schedule, open]);
 
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -49,7 +68,7 @@ const UpdateCalendarModal = ({ open, onClose, notification }) => {
   };
 
   const isValid = () => {
-    return formData.MaThongBao && formData.NoiDung && formData.ThoiGian && formData.LoaiThongBao;
+    return formData.route_id && formData.date && formData.start_time;
   };
 
   const handleSubmit = async () => {
@@ -57,16 +76,20 @@ const UpdateCalendarModal = ({ open, onClose, notification }) => {
       toast.error('Vui lòng điền đầy đủ thông tin bắt buộc!');
       return;
     }
+    if (!scheduleId) {
+      toast.error('Không tìm thấy ID lịch trình!');
+      return;
+    }
     setLoading(true);
     setError('');
     try {
-      // TODO: Gọi API updateNotification nếu có
+      await updateSchedule(scheduleId, formData);
       onClose();
-      toast.success('Cập nhật thông báo thành công!');
+      toast.success('Cập nhật lịch trình thành công!');
     } catch (err) {
-      setError('Cập nhật thông báo lỗi');
-      toast.error('Cập nhật thông báo lỗi');
-      console.error('Error updating notification:', err);
+      setError(err.response?.data?.message || 'Cập nhật lịch trình lỗi');
+      toast.error(err.response?.data?.message || 'Cập nhật lịch trình lỗi');
+      console.error('Error updating schedule:', err);
     } finally {
       setLoading(false);
     }
@@ -93,14 +116,15 @@ const UpdateCalendarModal = ({ open, onClose, notification }) => {
         color: 'white',
         fontWeight: 'bold',
         textShadow: '0 2px 4px rgba(0, 0, 0, 0.2)'
-      }}>❄️ {t('update')} {t('notification')}</DialogTitle>
+      }}>❄️ {t('update')} Lịch Trình</DialogTitle>
       <DialogContent>
         <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2, pt: 2 }}>
           {error && <Box sx={{ color: '#d32f2f' }}>{error}</Box>}
           <TextField
-            label="Mã Thông Báo"
-            name="MaThongBao"
-            value={formData.MaThongBao}
+            select
+            label="Tuyến"
+            name="route_id"
+            value={formData.route_id}
             onChange={handleChange}
             fullWidth
             disabled={loading}
@@ -112,30 +136,18 @@ const UpdateCalendarModal = ({ open, onClose, notification }) => {
               },
               '& .MuiInputBase-input': { color: '#00838f' }
             }}
-          />
+          >
+            {routes.map((route) => (
+              <MenuItem key={route.Id} value={route.Id}>
+                {route.MaTuyen} - {route.Name}
+              </MenuItem>
+            ))}
+          </TextField>
           <TextField
-            label="Nội Dung"
-            name="NoiDung"
-            value={formData.NoiDung}
-            onChange={handleChange}
-            fullWidth
-            multiline
-            rows={3}
-            disabled={loading}
-            sx={{
-              '& .MuiOutlinedInput-root': {
-                '& fieldset': { borderColor: '#0097a7' },
-                '&:hover fieldset': { borderColor: '#00838f' },
-                '&.Mui-focused fieldset': { borderColor: '#0097a7' }
-              },
-              '& .MuiInputBase-input': { color: '#00838f' }
-            }}
-          />
-          <TextField
-            label="Thời Gian"
-            name="ThoiGian"
-            type="datetime-local"
-            value={formData.ThoiGian}
+            label="Ngày"
+            name="date"
+            type="date"
+            value={formData.date}
             onChange={handleChange}
             fullWidth
             InputLabelProps={{ shrink: true }}
@@ -150,9 +162,46 @@ const UpdateCalendarModal = ({ open, onClose, notification }) => {
             }}
           />
           <TextField
-            label="Loại Thông Báo"
-            name="LoaiThongBao"
-            value={formData.LoaiThongBao}
+            label="Giờ Bắt Đầu"
+            name="start_time"
+            type="time"
+            value={formData.start_time}
+            onChange={handleChange}
+            fullWidth
+            InputLabelProps={{ shrink: true }}
+            disabled={loading}
+            sx={{
+              '& .MuiOutlinedInput-root': {
+                '& fieldset': { borderColor: '#0097a7' },
+                '&:hover fieldset': { borderColor: '#00838f' },
+                '&.Mui-focused fieldset': { borderColor: '#0097a7' }
+              },
+              '& .MuiInputBase-input': { color: '#00838f' }
+            }}
+          />
+          <TextField
+            label="Giờ Kết Thúc"
+            name="end_time"
+            type="time"
+            value={formData.end_time}
+            onChange={handleChange}
+            fullWidth
+            InputLabelProps={{ shrink: true }}
+            disabled={loading}
+            sx={{
+              '& .MuiOutlinedInput-root': {
+                '& fieldset': { borderColor: '#0097a7' },
+                '&:hover fieldset': { borderColor: '#00838f' },
+                '&.Mui-focused fieldset': { borderColor: '#0097a7' }
+              },
+              '& .MuiInputBase-input': { color: '#00838f' }
+            }}
+          />
+          <TextField
+            select
+            label="Trạng Thái"
+            name="status"
+            value={formData.status}
             onChange={handleChange}
             fullWidth
             disabled={loading}
@@ -164,7 +213,12 @@ const UpdateCalendarModal = ({ open, onClose, notification }) => {
               },
               '& .MuiInputBase-input': { color: '#00838f' }
             }}
-          />
+          >
+            <MenuItem value="Sắp diễn ra">Sắp diễn ra</MenuItem>
+            <MenuItem value="Đang chạy">Đang chạy</MenuItem>
+            <MenuItem value="Hoàn thành">Hoàn thành</MenuItem>
+            <MenuItem value="Hủy">Hủy</MenuItem>
+          </TextField>
         </Box>
       </DialogContent>
       <DialogActions sx={{

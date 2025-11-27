@@ -189,6 +189,193 @@ class RouteOptimizationService {
     }
 
     /**
+     * Tạo các nhóm tuyến tối ưu với giới hạn khoảng cách
+     * @param {Array} students - Danh sách học sinh có distanceFromSchool
+     * @param {Array} vehicles - Danh sách xe
+     * @param {Object} schoolLocation - Vị trí trường
+     * @param {number} maxDistance - Khoảng cách tối đa (km)
+     * @returns {Array} Các nhóm tuyến
+     */
+    async createOptimizedGroups(students, vehicles, schoolLocation, maxDistance) {
+        const minStudentsPerRoute = 10; // Tối thiểu 10 học sinh mỗi xe
+        const groups = [];
+        let vehicleIdx = 0;
+        let remainingStudents = [...students].sort((a, b) => a.distanceFromSchool - b.distanceFromSchool);
+
+        while (remainingStudents.length > 0 && vehicleIdx < vehicles.length) {
+            const vehicle = vehicles[vehicleIdx];
+            const group = [];
+            let currentDistance = 0;
+
+            // Chọn học sinh gần nhất làm điểm bắt đầu
+            const firstStudent = remainingStudents.shift();
+            group.push(firstStudent);
+            let currentLocation = { lat: firstStudent.Latitude, lon: firstStudent.Longitude };
+
+            // Thêm học sinh gần nhất cho đến khi đầy xe hoặc vượt quá khoảng cách
+            while (remainingStudents.length > 0 && group.length < vehicle.Capacity) {
+                let nearestIdx = -1;
+                let nearestDist = Infinity;
+
+                // Tìm học sinh gần nhất với vị trí hiện tại
+                for (let i = 0; i < remainingStudents.length; i++) {
+                    const student = remainingStudents[i];
+                    const dist = this.calculateDistance(
+                        currentLocation.lat, currentLocation.lon,
+                        student.Latitude, student.Longitude
+                    );
+
+                    // Kiểm tra nếu thêm học sinh này có vượt quá maxDistance không
+                    const estimatedTotalDist = currentDistance + dist + student.distanceFromSchool;
+                    
+                    if (dist < nearestDist && estimatedTotalDist <= maxDistance) {
+                        nearestDist = dist;
+                        nearestIdx = i;
+                    }
+                }
+
+                // Nếu đã đủ minStudents và không tìm được học sinh phù hợp nữa, dừng
+                if (nearestIdx === -1) {
+                    if (group.length >= minStudentsPerRoute) {
+                        break;
+                    } else {
+                        // Chưa đủ 10 người, bắt buộc phải thêm học sinh gần nhất dù vượt quá 20km
+                        nearestIdx = 0;
+                        nearestDist = this.calculateDistance(
+                            currentLocation.lat, currentLocation.lon,
+                            remainingStudents[0].Latitude, remainingStudents[0].Longitude
+                        );
+                        for (let i = 1; i < remainingStudents.length; i++) {
+                            const dist = this.calculateDistance(
+                                currentLocation.lat, currentLocation.lon,
+                                remainingStudents[i].Latitude, remainingStudents[i].Longitude
+                            );
+                            if (dist < nearestDist) {
+                                nearestDist = dist;
+                                nearestIdx = i;
+                            }
+                        }
+                    }
+                }
+
+                const nearest = remainingStudents.splice(nearestIdx, 1)[0];
+                group.push(nearest);
+                currentDistance += nearestDist;
+                currentLocation = { lat: nearest.Latitude, lon: nearest.Longitude };
+            }
+
+            // Chỉ thêm nhóm nếu đủ minStudents
+            if (group.length >= minStudentsPerRoute) {
+                // Tính centroid
+                const avgLat = group.reduce((sum, s) => sum + parseFloat(s.Latitude), 0) / group.length;
+                const avgLon = group.reduce((sum, s) => sum + parseFloat(s.Longitude), 0) / group.length;
+
+                groups.push({
+                    clusterId: vehicleIdx,
+                    students: group,
+                    vehicle: vehicle,
+                    centroid: { lat: avgLat, lon: avgLon }
+                });
+                vehicleIdx++;
+            } else if (groups.length > 0) {
+                // Nếu không đủ 10 người, gộp vào nhóm cuối cùng
+                groups[groups.length - 1].students.push(...group);
+            } else {
+                // Nếu không có nhóm nào và không đủ 10 người, vẫn tạo nhóm
+                const avgLat = group.reduce((sum, s) => sum + parseFloat(s.Latitude), 0) / group.length;
+                const avgLon = group.reduce((sum, s) => sum + parseFloat(s.Longitude), 0) / group.length;
+
+                groups.push({
+                    clusterId: vehicleIdx,
+                    students: group,
+                    vehicle: vehicle,
+                    centroid: { lat: avgLat, lon: avgLon }
+                });
+                vehicleIdx++;
+            }
+        }
+
+        return groups;
+    }
+
+    /**
+     * Tối ưu thứ tự đón với xuất phát và về trường
+     * Trường -> Điểm 1 -> Điểm 2 -> ... -> Điểm cuối -> Trường
+     * @param {Array} students - Students in a route
+     * @param {Object} schoolLocation - School location {lat, lon}
+     * @returns {Promise<Object>} Ordered students with total distance including return
+     */
+    async optimizeRouteWithSchoolReturn(students, schoolLocation) {
+        if (students.length === 0) return { orderedStudents: [], totalDistance: 0, totalDuration: 0 };
+        if (students.length === 1) {
+            // Chỉ 1 học sinh: trường -> học sinh -> trường
+            const toStudent = await this.getRealDistance(
+                schoolLocation.lat, schoolLocation.lon,
+                students[0].Latitude, students[0].Longitude
+            );
+            const backToSchool = await this.getRealDistance(
+                students[0].Latitude, students[0].Longitude,
+                schoolLocation.lat, schoolLocation.lon
+            );
+            
+            return {
+                orderedStudents: students,
+                totalDistance: parseFloat((toStudent.distance + backToSchool.distance).toFixed(2)),
+                totalDuration: parseFloat((toStudent.duration + backToSchool.duration).toFixed(2))
+            };
+        }
+
+        // Tối ưu thứ tự đón (từ trường)
+        const unvisited = [...students];
+        const ordered = [];
+        let currentLocation = schoolLocation;
+        let totalDistance = 0;
+        let totalDuration = 0;
+
+        while (unvisited.length > 0) {
+            let nearestIdx = 0;
+            let nearestResult = await this.getRealDistance(
+                currentLocation.lat, currentLocation.lon,
+                unvisited[0].Latitude, unvisited[0].Longitude
+            );
+
+            for (let i = 1; i < unvisited.length; i++) {
+                const result = await this.getRealDistance(
+                    currentLocation.lat, currentLocation.lon,
+                    unvisited[i].Latitude, unvisited[i].Longitude
+                );
+                
+                if (result.distance < nearestResult.distance) {
+                    nearestResult = result;
+                    nearestIdx = i;
+                }
+            }
+
+            const nearest = unvisited.splice(nearestIdx, 1)[0];
+            ordered.push(nearest);
+            totalDistance += nearestResult.distance;
+            totalDuration += nearestResult.duration;
+            currentLocation = { lat: nearest.Latitude, lon: nearest.Longitude };
+        }
+
+        // Thêm khoảng cách về trường từ điểm cuối
+        const lastStudent = ordered[ordered.length - 1];
+        const returnTrip = await this.getRealDistance(
+            lastStudent.Latitude, lastStudent.Longitude,
+            schoolLocation.lat, schoolLocation.lon
+        );
+        
+        totalDistance += returnTrip.distance;
+        totalDuration += returnTrip.duration;
+
+        return { 
+            orderedStudents: ordered, 
+            totalDistance: parseFloat(totalDistance.toFixed(2)), 
+            totalDuration: parseFloat(totalDuration.toFixed(2))
+        };
+    }
+
+    /**
      * Tối ưu thứ tự đón học sinh sử dụng Nearest Neighbor với khoảng cách THỰC
      * @param {Array} students - Students in a cluster
      * @param {Object} schoolLocation - School location {lat, lon}
@@ -245,10 +432,12 @@ class RouteOptimizationService {
     /**
      * Automatically assign students to routes using KNN with REAL DISTANCE (như Grab)
      * CHỈ phân tuyến cho học sinh có TrangThaiHocTap = 'Đang học'
+     * Xuất phát và kết thúc tại Trường ĐH Sài Gòn Quận 5
+     * Mỗi tuyến không vượt quá 20km
      * @param {Object} schoolLocation - School location {lat, lon}
      * @returns {Object} Result with routes and statistics
      */
-    async autoAssignRoutes(schoolLocation = { lat: 10.7769, lon: 106.7009 }) {
+    async autoAssignRoutes(schoolLocation = { lat: 10.76143060, lon: 106.68216890 }) {
         try {
             console.log('🚀 Bắt đầu phân tuyến tự động với KNN + khoảng cách thực tế...');
             
@@ -282,46 +471,35 @@ class RouteOptimizationService {
 
             console.log(`✅ Tìm thấy ${vehicles.length} xe khả dụng`);
 
-            // Calculate number of routes needed
-            const totalStudents = students.length;
-            let totalCapacity = 0;
-            let routesNeeded = 0;
-            
-            for (const vehicle of vehicles) {
-                totalCapacity += vehicle.Capacity;
-                routesNeeded++;
-                if (totalCapacity >= totalStudents) break;
+            // Bước 1: Tính khoảng cách từ trường đến từng học sinh
+            console.log('🔄 Đang tính khoảng cách từ trường đến học sinh...');
+            const studentsWithDistance = [];
+            for (const student of students) {
+                const result = await this.getRealDistance(
+                    schoolLocation.lat, schoolLocation.lon,
+                    student.Latitude, student.Longitude
+                );
+                studentsWithDistance.push({
+                    ...student,
+                    distanceFromSchool: result.distance
+                });
             }
+            console.log('✅ Hoàn thành tính khoảng cách từ trường');
 
-            if (totalCapacity < totalStudents) {
-                return {
-                    success: false,
-                    message: `Không đủ xe. Cần ${totalStudents} chỗ nhưng chỉ có ${totalCapacity} chỗ`
-                };
-            }
+            // Bước 2: Phân nhóm học sinh theo khoảng cách và giới hạn 20km
+            console.log('🔄 Đang phân nhóm học sinh theo tuyến (max 20km)...');
+            const routeGroups = await this.createOptimizedGroups(studentsWithDistance, vehicles, schoolLocation, 40);
+            console.log(`✅ Tạo được ${routeGroups.length} tuyến`);
 
-            console.log(`📊 Cần ${routesNeeded} tuyến để chở ${totalStudents} học sinh`);
+            const balancedClusters = routeGroups;
 
-            // Bước 1: Tính ma trận khoảng cách THỰC TẾ
-            console.log('🔄 Đang tính ma trận khoảng cách thực tế...');
-            const { distanceMatrix, durationMatrix } = await this.calculateRealDistanceMatrix(students);
-            console.log('✅ Hoàn thành tính ma trận khoảng cách');
-
-            // Bước 2: KNN Clustering với khoảng cách thực
-            console.log('🔄 Đang phân cụm KNN...');
-            const clusters = await this.knnClustering(students, distanceMatrix, routesNeeded);
-            console.log('✅ Hoàn thành phân cụm KNN');
-
-            // Bước 3: Cân bằng clusters theo sức chứa xe
-            const balancedClusters = this.balanceClusters(clusters, vehicles);
-
-            // Bước 4: Tối ưu thứ tự đón cho từng tuyến
-            console.log('🔄 Đang tối ưu thứ tự đón...');
+            // Bước 3: Tối ưu thứ tự đón cho từng tuyến (trường -> điểm đón -> trường)
+            console.log('🔄 Đang tối ưu thứ tự đón (xuất phát và về trường)...');
             const optimizedRoutes = [];
             
             for (let i = 0; i < balancedClusters.length; i++) {
                 const cluster = balancedClusters[i];
-                const result = await this.optimizeRouteOrder(cluster.students, schoolLocation);
+                const result = await this.optimizeRouteWithSchoolReturn(cluster.students, schoolLocation);
                 
                 optimizedRoutes.push({
                     clusterId: i,
@@ -330,20 +508,23 @@ class RouteOptimizationService {
                     studentCount: result.orderedStudents.length,
                     totalDistance: result.totalDistance,
                     totalDuration: result.totalDuration,
-                    centroid: cluster.centroid
+                    centroid: cluster.centroid,
+                    schoolLocation: schoolLocation  // Lưu vị trí trường
                 });
                 
-                console.log(`  ✅ Tuyến ${i + 1}: ${result.orderedStudents.length} HS, ${result.totalDistance} km, ${result.totalDuration} phút`);
+                console.log(`  ✅ Tuyến ${i + 1}: Trường → ${result.orderedStudents.length} điểm đón → Trường (${result.totalDistance} km, ${result.totalDuration} phút)`);
             }
 
             console.log('✅ Hoàn thành phân tuyến!');
+
+            const totalStudents = students.length;
 
             return {
                 success: true,
                 routes: optimizedRoutes,
                 totalStudents,
-                totalRoutes: routesNeeded,
-                message: `Đã phân tuyến thành công ${totalStudents} học sinh vào ${routesNeeded} tuyến với khoảng cách thực tế`
+                totalRoutes: optimizedRoutes.length,
+                message: `Đã phân tuyến thành công ${totalStudents} học sinh vào ${optimizedRoutes.length} tuyến (xuất phát từ Trường ĐH Sài Gòn, mỗi tuyến ≥10 học sinh và ≤20km)`
             };
 
         } catch (error) {
@@ -432,11 +613,21 @@ class RouteOptimizationService {
                 const routeId = routeResult.insertId;
                 createdRouteIds.push(routeId);  // Save route ID for schedule creation
 
+                // Lưu điểm TRƯỜNG (xuất phát) - PointOrder = 0
+                const schoolLocation = route.schoolLocation || { lat: 10.76143060, lon: 106.68216890 };
+                await connection.query(`
+                    INSERT INTO pickuppoints (
+                        RouteId, MaHocSinh, Latitude, Longitude, DiaChi, 
+                        PointOrder, TinhTrangDon
+                    )
+                    VALUES (?, NULL, ?, ?, 'Trường ĐH Sài Gòn, Quận 5', 0, 'Xuất phát')
+                `, [routeId, schoolLocation.lat, schoolLocation.lon]);
+
                 // Tạo pickuppoints cho từng học sinh trên tuyến
                 for (let j = 0; j < route.students.length; j++) {
                     const student = route.students[j];
                     
-                    // Insert pickup point (điểm đón chính là địa chỉ học sinh)
+                    // Insert pickup point (điểm đón học sinh)
                     await connection.query(`
                         INSERT INTO pickuppoints (
                             RouteId, MaHocSinh, Latitude, Longitude, DiaChi, 
@@ -449,11 +640,20 @@ class RouteOptimizationService {
                         student.Latitude,
                         student.Longitude,
                         student.DiaChi,
-                        j + 1
+                        j + 1  // PointOrder bắt đầu từ 1
                     ]);
                 }
+
+                // Lưu điểm TRƯỜNG (về) - PointOrder = students.length + 1
+                await connection.query(`
+                    INSERT INTO pickuppoints (
+                        RouteId, MaHocSinh, Latitude, Longitude, DiaChi, 
+                        PointOrder, TinhTrangDon
+                    )
+                    VALUES (?, NULL, ?, ?, 'Trường ĐH Sài Gòn, Quận 5 (Điểm về)', ?, 'Điểm cuối')
+                `, [routeId, schoolLocation.lat, schoolLocation.lon, route.students.length + 1]);
                 
-                console.log(`  ✅ Lưu tuyến ${routeCode}: ${route.students.length} HS, ${route.totalDistance}km, ${route.totalDuration}phút`);
+                console.log(`  ✅ Lưu tuyến ${routeCode}: ${route.students.length} HS + 2 điểm trường, ${route.totalDistance}km, ${route.totalDuration}phút`);
             }
 
             await connection.commit();

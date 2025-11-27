@@ -8,6 +8,7 @@ import Menu from '@mui/material/Menu';
 import MenuItem from '@mui/material/MenuItem';
 import PopupState, { bindTrigger, bindMenu } from 'material-ui-popup-state';
 import React, { useState, useEffect, useCallback } from 'react';
+import { useNavigate } from 'react-router-dom';
 import './Driver.scss'
 import DialogInfo from './DialogInfo';
 
@@ -15,6 +16,8 @@ import { IoIosRefresh } from "react-icons/io";
 
 const HeaderDriver = (props) => {
     const [infoModal, setInfoModal] = useState(false);
+    const navigate = useNavigate();
+    
     // Lấy tên user từ localStorage
     let userName = 'Jane Doe';
     try {
@@ -22,6 +25,19 @@ const HeaderDriver = (props) => {
       if (user && user.fullName) userName = user.fullName;
       else if (user && user.username) userName = user.username;
     } catch {}
+
+    const handleLogout = (popupState) => {
+        // Clear localStorage
+        localStorage.removeItem('bus_user');
+        localStorage.removeItem('bus_token');
+        
+        // Close menu
+        popupState.close();
+        
+        // Redirect to login
+        navigate('/login');
+    };
+
     return (
         <div className="header-container">
             <div className="header-right">
@@ -39,10 +55,10 @@ const HeaderDriver = (props) => {
                                 <span className="user-name">{userName}</span>
                             </div>
                             <Menu {...bindMenu(popupState)}>
-                                <MenuItem onClick={() => setInfoModal(true)}>
+                                <MenuItem onClick={() => { setInfoModal(true); popupState.close(); }}>
                                     <FaInfo size="1.2em" className="power-off" /> Thông tin
                                 </MenuItem>
-                                <MenuItem /* onClick={() => handleLogout(popupState)} */>
+                                <MenuItem onClick={() => handleLogout(popupState)}>
                                     <FaPowerOff size="1.2em" className="power-off" /> Đăng xuất
                                 </MenuItem>
                             </Menu>

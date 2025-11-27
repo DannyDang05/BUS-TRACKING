@@ -222,7 +222,7 @@ const getStudentsByRoute = async (req, res) => {
           ph.HoTen as TenPhuHuynh,
           ph.SoDienThoai as SDTPhuHuynh
         FROM pickuppoints p
-        INNER JOIN hocsinh h ON p.MaHocSinh = h.MaHocSinh
+        LEFT JOIN hocsinh h ON p.MaHocSinh = h.MaHocSinh
         LEFT JOIN phuhuynh ph ON h.MaPhuHuynh = ph.MaPhuHuynh
         WHERE p.RouteId = ?
         ORDER BY p.PointOrder
@@ -295,7 +295,7 @@ const getAutoRoutes = async (req, res) => {
           h.Lop,
           h.MaPhuHuynh
         FROM pickuppoints p
-        INNER JOIN hocsinh h ON p.MaHocSinh = h.MaHocSinh
+        LEFT JOIN hocsinh h ON p.MaHocSinh = h.MaHocSinh
         WHERE p.RouteId = ?
         ORDER BY p.PointOrder
       `, [route.RouteId]);
@@ -323,6 +323,107 @@ const getAutoRoutes = async (req, res) => {
   }
 };
 
+// GET /api/v1/routes/all-with-points - Lấy TẤT CẢ các tuyến kèm điểm đón (cho map)
+const getAllRoutesWithPoints = async (req, res) => {
+  try {
+    console.log('🗺️ Đang lấy tất cả routes với pickup points...');
+    
+    // Lấy tất cả routes - Try with currentLatitude/currentLongitude first
+    let routes;
+    try {
+      const [routesData] = await pool.query(`
+        SELECT 
+          r.Id as routeId,
+          r.MaTuyen as routeCode,
+          r.Name as routeName,
+          r.Status as status,
+          r.currentLatitude as latitude,
+          r.currentLongitude as longitude,
+          v.Id as vehicleId,
+          v.LicensePlate as licensePlate,
+          v.Model,
+          v.Capacity,
+          d.Id as driverId,
+          d.FullName as driverName,
+          d.PhoneNumber as driverPhone,
+          COUNT(DISTINCT p.Id) as totalStudents
+        FROM routes r
+        LEFT JOIN vehicles v ON r.VehicleId = v.Id
+        LEFT JOIN drivers d ON r.DriverId = d.Id
+        LEFT JOIN pickuppoints p ON p.RouteId = r.Id
+        GROUP BY r.Id
+        ORDER BY r.Id
+      `);
+      routes = routesData;
+    } catch (err) {
+      // If currentLatitude/currentLongitude columns don't exist, use fallback query
+      console.log('⚠️ currentLatitude/currentLongitude columns not found, using fallback query');
+      const [routesData] = await pool.query(`
+        SELECT 
+          r.Id as routeId,
+          r.MaTuyen as routeCode,
+          r.Name as routeName,
+          r.Status as status,
+          NULL as latitude,
+          NULL as longitude,
+          v.Id as vehicleId,
+          v.LicensePlate as licensePlate,
+          v.Model,
+          v.Capacity,
+          d.Id as driverId,
+          d.FullName as driverName,
+          d.PhoneNumber as driverPhone,
+          COUNT(DISTINCT p.Id) as totalStudents
+        FROM routes r
+        LEFT JOIN vehicles v ON r.VehicleId = v.Id
+        LEFT JOIN drivers d ON r.DriverId = d.Id
+        LEFT JOIN pickuppoints p ON p.RouteId = r.Id
+        GROUP BY r.Id
+        ORDER BY r.Id
+      `);
+      routes = routesData;
+    }
+
+    console.log(`✅ Tìm thấy ${routes.length} routes`);
+
+    // Lấy pickup points cho từng route (bao gồm cả điểm trường)
+    for (let route of routes) {
+      const [pickupPoints] = await pool.query(`
+        SELECT 
+          p.Id as id,
+          p.MaHocSinh,
+          p.PointOrder,
+          p.DiaChi as address,
+          p.Latitude as latitude,
+          p.Longitude as longitude,
+          p.TinhTrangDon as status,
+          h.HoTen as studentName,
+          h.Lop as class
+        FROM pickuppoints p
+        LEFT JOIN hocsinh h ON p.MaHocSinh = h.MaHocSinh
+        WHERE p.RouteId = ?
+        ORDER BY p.PointOrder
+      `, [route.routeId]);
+      
+      route.pickupPoints = pickupPoints;
+      
+      // Calculate students picked up (chỉ đếm học sinh, không đếm điểm trường)
+      route.pickedUp = pickupPoints.filter(p => p.status === 'Đã đón' && p.MaHocSinh !== null).length;
+      route.droppedOff = pickupPoints.filter(p => p.status === 'Đã trả' && p.MaHocSinh !== null).length;
+    }
+
+    return res.status(200).json({
+      errorCode: 0,
+      message: 'OK',
+      data: routes,
+      totalRoutes: routes.length
+    });
+  } catch (e) {
+    console.error('❌ Error in getAllRoutesWithPoints:', e);
+    return res.status(500).json({ errorCode: -1, message: 'Lỗi server.' });
+  }
+};
+
 export { 
   getAllRoutes, 
   createRoute, 
@@ -331,5 +432,6 @@ export {
   deleteRoute,
   autoOptimizeRoutes,
   getStudentsByRoute,
-  getAutoRoutes
+  getAutoRoutes,
+  getAllRoutesWithPoints
 };

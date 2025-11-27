@@ -1,61 +1,233 @@
-import React from "react";
-import { Dialog, DialogTitle, DialogContent, DialogActions, Button, Typography, Box } from "@mui/material";
-// Import thêm Icon để tăng tính thẩm mỹ
-import LocalShippingIcon from '@mui/icons-material/LocalShipping'; 
+import React, { useEffect, useState } from "react";
+import { 
+  Dialog, DialogTitle, DialogContent, DialogActions, Button, 
+  Typography, Box, Divider, Stack, Chip, CircularProgress, Avatar 
+} from "@mui/material";
+import PersonIcon from '@mui/icons-material/Person';
+import PhoneIcon from '@mui/icons-material/Phone';
+import EmailIcon from '@mui/icons-material/Email';
+import HomeIcon from '@mui/icons-material/Home';
+import ChildCareIcon from '@mui/icons-material/ChildCare';
+import { getChildrenRoutes } from '../../service/apiService';
 
-const ParentDialogInfo = ({ infoModal, setInfoModal}) => {
+const ParentDialogInfo = ({ infoModal, setInfoModal }) => {
   const handleClose = () => setInfoModal(false);
-  const selectedParent = {
-    Id: "PH001",
-    FullName: "NGUYEN VAN A",
-    PhoneNumber: "0987 654 321",
+  
+  const [parentData, setParentData] = useState(null);
+  const [loading, setLoading] = useState(false);
+  
+  // Giả sử parentId từ localStorage hoặc auth
+  const parentId = 'PH001';
+
+  useEffect(() => {
+    if (infoModal) {
+      fetchParentData();
+    }
+  }, [infoModal]);
+
+  const fetchParentData = async () => {
+    try {
+      setLoading(true);
+      const response = await getChildrenRoutes(parentId);
+      const children = response.data || [];
+      
+      // Get unique children list
+      const uniqueChildren = children.reduce((acc, curr) => {
+        if (!acc.find(c => c.MaHocSinh === curr.MaHocSinh)) {
+          acc.push(curr);
+        }
+        return acc;
+      }, []);
+
+      setParentData({
+        Id: parentId,
+        FullName: "Nguyễn Thị Lan",
+        PhoneNumber: "0987 654 321",
+        Email: "lanthi@gmail.com",
+        Address: "123 Nguyễn Văn Linh, Q5, TP.HCM",
+        Children: uniqueChildren
+      });
+    } catch (err) {
+      console.error('❌ Error fetching parent data:', err);
+    } finally {
+      setLoading(false);
+    }
   };
   return (
     <Dialog
       open={infoModal}
       onClose={handleClose}
-      aria-labelledby="driver-info-dialog"
-      // Thêm maxWidth để dialog không quá rộng
-      maxWidth="sm" 
-      fullWidth 
+      aria-labelledby="parent-info-dialog"
+      maxWidth="md" 
+      fullWidth
+      PaperProps={{
+        sx: {
+          borderRadius: 3,
+          background: 'linear-gradient(135deg, #ffffff 0%, #f5f9ff 100%)'
+        }
+      }}
     >
-      {/* Thêm icon, căn chỉnh giữa và dùng màu Primary cho tiêu đề */}
-      <DialogTitle id="driver-info-dialog" sx={{ 
-        display: 'flex', 
-        alignItems: 'center', 
-        gap: 1, // Khoảng cách giữa icon và chữ
-        color: 'primary.main' // Dùng màu chủ đạo của theme
-      }}>
-        <LocalShippingIcon fontSize="medium" />
-        Thông tin phụ huynh
+      <DialogTitle 
+        id="parent-info-dialog" 
+        sx={{ 
+          background: 'linear-gradient(135deg, #43cea2 0%, #185a9d 100%)',
+          color: 'white',
+          display: 'flex',
+          alignItems: 'center',
+          gap: 1.5,
+          py: 2.5
+        }}
+      >
+        <Avatar sx={{ bgcolor: 'rgba(255,255,255,0.3)' }}>
+          <PersonIcon />
+        </Avatar>
+        <Typography variant="h6" fontWeight="600">
+          Thông tin phụ huynh
+        </Typography>
       </DialogTitle>
 
-      <DialogContent dividers>
-        {selectedParent ? (
-          <>
-            {/* Sử dụng sx prop để thêm Margin-Bottom (mb) tạo khoảng cách giữa các dòng */}
-            <Typography variant="body1" sx={{ mb: 1.5 }}>
-                {/* Dùng Box để căn chỉnh nhãn (ID, Họ tên) và tạo khoảng cách đẹp hơn */}
-                <Box component="span" sx={{ fontWeight: 'bold', color: 'text.secondary', minWidth: '120px', display: 'inline-block' }}>ID:</Box>
-                {selectedParent.Id}
-            </Typography>
-            <Typography variant="body1" sx={{ mb: 1.5 }}>
-                <Box component="span" sx={{ fontWeight: 'bold', color: 'text.secondary', minWidth: '120px', display: 'inline-block' }}>Họ tên:</Box>
-                {selectedParent.FullName}
-            </Typography>
-            <Typography variant="body1" sx={{ mb: 1.5 }}>
-                <Box component="span" sx={{ fontWeight: 'bold', color: 'text.secondary', minWidth: '120px', display: 'inline-block' }}>Số điện thoại:</Box>
-                {selectedParent.PhoneNumber}
-            </Typography>
-          </>
+      <DialogContent dividers sx={{ p: 3 }}>
+        {loading ? (
+          <Box sx={{ display: 'flex', justifyContent: 'center', py: 4 }}>
+            <CircularProgress />
+          </Box>
+        ) : parentData ? (
+          <Stack spacing={3}>
+            {/* Basic Info */}
+            <Box>
+              <Typography variant="h6" color="primary" gutterBottom>
+                Thông tin cá nhân
+              </Typography>
+              <Stack spacing={2}>
+                <Stack direction="row" spacing={2} alignItems="center">
+                  <PersonIcon color="action" />
+                  <Box>
+                    <Typography variant="caption" color="text.secondary">
+                      Họ và tên
+                    </Typography>
+                    <Typography variant="body1" fontWeight="500">
+                      {parentData.FullName}
+                    </Typography>
+                  </Box>
+                </Stack>
+                
+                <Stack direction="row" spacing={2} alignItems="center">
+                  <PhoneIcon color="action" />
+                  <Box>
+                    <Typography variant="caption" color="text.secondary">
+                      Số điện thoại
+                    </Typography>
+                    <Typography variant="body1" fontWeight="500">
+                      {parentData.PhoneNumber}
+                    </Typography>
+                  </Box>
+                </Stack>
+
+                <Stack direction="row" spacing={2} alignItems="center">
+                  <EmailIcon color="action" />
+                  <Box>
+                    <Typography variant="caption" color="text.secondary">
+                      Email
+                    </Typography>
+                    <Typography variant="body1" fontWeight="500">
+                      {parentData.Email}
+                    </Typography>
+                  </Box>
+                </Stack>
+
+                <Stack direction="row" spacing={2} alignItems="center">
+                  <HomeIcon color="action" />
+                  <Box>
+                    <Typography variant="caption" color="text.secondary">
+                      Địa chỉ
+                    </Typography>
+                    <Typography variant="body1" fontWeight="500">
+                      {parentData.Address}
+                    </Typography>
+                  </Box>
+                </Stack>
+              </Stack>
+            </Box>
+
+            <Divider />
+
+            {/* Children Info */}
+            <Box>
+              <Stack direction="row" spacing={1} alignItems="center" sx={{ mb: 2 }}>
+                <ChildCareIcon color="primary" />
+                <Typography variant="h6" color="primary">
+                  Danh sách con
+                </Typography>
+                <Chip 
+                  label={`${parentData.Children?.length || 0} con`}
+                  size="small"
+                  color="primary"
+                />
+              </Stack>
+
+              {parentData.Children && parentData.Children.length > 0 ? (
+                <Stack spacing={2}>
+                  {parentData.Children.map((child) => (
+                    <Box 
+                      key={child.MaHocSinh}
+                      sx={{
+                        p: 2,
+                        borderRadius: 2,
+                        background: 'white',
+                        boxShadow: '0 2px 8px rgba(0,0,0,0.08)',
+                        border: '1px solid #E3F2FD'
+                      }}
+                    >
+                      <Stack direction="row" justifyContent="space-between" alignItems="center">
+                        <Box>
+                          <Typography variant="body1" fontWeight="600" color="primary.dark">
+                            {child.StudentName}
+                          </Typography>
+                          <Typography variant="caption" color="text.secondary">
+                            Mã HS: {child.MaHocSinh} | Lớp: {child.Class}
+                          </Typography>
+                        </Box>
+                        <Stack direction="row" spacing={1}>
+                          {child.RouteName && (
+                            <Chip 
+                              label={child.RouteName}
+                              size="small"
+                              color="info"
+                              variant="outlined"
+                            />
+                          )}
+                          {child.VehicleNumber && (
+                            <Chip 
+                              label={child.VehicleNumber}
+                              size="small"
+                              color="success"
+                              variant="outlined"
+                            />
+                          )}
+                        </Stack>
+                      </Stack>
+                    </Box>
+                  ))}
+                </Stack>
+              ) : (
+                <Typography variant="body2" color="text.secondary" sx={{ fontStyle: 'italic' }}>
+                  Chưa có thông tin con
+                </Typography>
+              )}
+            </Box>
+          </Stack>
         ) : (
           <Typography>Không có dữ liệu</Typography>
         )}
       </DialogContent>
 
-      <DialogActions>
-        {/* Dùng variant="outlined" và color="error" để nút Đóng nổi bật hơn */}
-        <Button onClick={handleClose} color="error" variant="outlined">
+      <DialogActions sx={{ p: 2 }}>
+        <Button 
+          onClick={handleClose} 
+          variant="contained"
+          color="primary"
+          sx={{ borderRadius: 2, px: 3 }}
+        >
           Đóng
         </Button>
       </DialogActions>

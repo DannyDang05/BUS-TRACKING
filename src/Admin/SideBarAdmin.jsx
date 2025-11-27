@@ -73,7 +73,7 @@ const SideBarAdmin = (props) => {
                     </Menu>
                     <Menu>
                             <MenuItem className="notification-container" icon={<IoMdNotifications color="#00838f" size={"24px"} />}>
-                                <Link to="/notification">{t('notification')}</Link>
+                                <Link to="/notifications">{t('notification')}</Link>
                             </MenuItem>
                     </Menu>
                 </SidebarContent>

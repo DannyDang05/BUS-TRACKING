@@ -59,19 +59,63 @@ const updateLocation = async (req, res) => {
 
 // GET /api/v1/tracking/live
 const getLiveLocations = async (req, res) => {
-    // Trả về vị trí hiện tại (currentLatitude/currentLongitude) từ bảng `routes`.
-    // Đây là định nghĩa "live" trong schema hiện tại.
+    // Trả về vị trí hiện tại của tất cả xe đang chạy với thông tin chi tiết
     try {
         const [rows] = await pool.query(
-            `SELECT Id AS routeId, MaTuyen, Name, DriverId, VehicleId AS busId, Status,
-                    currentLatitude AS latitude, currentLongitude AS longitude
-             FROM routes
-             WHERE currentLatitude IS NOT NULL AND currentLongitude IS NOT NULL`
+            `SELECT 
+                r.Id AS routeId,
+                r.MaTuyen AS routeCode,
+                r.Name AS routeName,
+                r.Status AS routeStatus,
+                r.currentLatitude AS latitude,
+                r.currentLongitude AS longitude,
+                r.VehicleId AS vehicleId,
+                r.DriverId AS driverId,
+                v.LicensePlate AS licensePlate,
+                v.Model AS vehicleModel,
+                v.SpeedKmh AS speed,
+                d.FullName AS driverName,
+                d.PhoneNumber AS driverPhone,
+                COUNT(DISTINCT pp.Id) AS totalStudents,
+                SUM(CASE WHEN pp.TinhTrangDon = 'Đã đón' THEN 1 ELSE 0 END) AS pickedUp,
+                SUM(CASE WHEN pp.TinhTrangDon = 'Đã trả' THEN 1 ELSE 0 END) AS droppedOff,
+                s.status AS scheduleStatus,
+                s.start_time AS startTime,
+                NOW() AS timestamp
+             FROM routes r
+             LEFT JOIN vehicles v ON r.VehicleId = v.Id
+             LEFT JOIN drivers d ON r.DriverId = d.Id
+             LEFT JOIN pickuppoints pp ON r.Id = pp.RouteId
+             LEFT JOIN schedules s ON r.Id = s.route_id AND s.date = CURDATE()
+             WHERE r.currentLatitude IS NOT NULL 
+               AND r.currentLongitude IS NOT NULL
+               AND (r.Status = 'Đang chạy' OR s.status = 2)
+             GROUP BY r.Id, r.MaTuyen, r.Name, r.Status, r.currentLatitude, r.currentLongitude,
+                      r.VehicleId, r.DriverId, v.LicensePlate, v.Model, v.SpeedKmh,
+                      d.FullName, d.PhoneNumber, s.status, s.start_time
+             ORDER BY r.Name ASC`
         );
-        return res.status(200).json({ errorCode: 0, message: 'OK', data: rows });
+
+        // Map schedule status to readable status
+        const formattedData = rows.map(row => ({
+            ...row,
+            status: row.scheduleStatus === 2 ? 'Đang chạy' : row.routeStatus || 'Không xác định',
+            pickedUp: row.pickedUp || 0,
+            droppedOff: row.droppedOff || 0,
+            totalStudents: row.totalStudents || 0
+        }));
+
+        return res.status(200).json({ 
+            errorCode: 0, 
+            message: 'OK', 
+            data: formattedData 
+        });
     } catch (e) {
-        console.log(e);
-        return res.status(500).json({ errorCode: -1, message: 'Lỗi server.' });
+        console.error('Error in getLiveLocations:', e);
+        return res.status(500).json({ 
+            errorCode: -1, 
+            message: 'Lỗi server khi lấy vị trí xe.' 
+        });
     }
 };
 const getRouteHistory = async (req, res) => {

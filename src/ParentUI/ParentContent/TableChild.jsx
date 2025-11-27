@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import {
     Table,
     TableBody,
@@ -12,48 +12,14 @@ import {
     Typography,
     Button,
     Tooltip,
-    IconButton
+    IconButton,
+    CircularProgress,
+    Alert,
+    Chip
 } from '@mui/material';
-
-
 import { MdVisibility } from "react-icons/md";
-
 import { useNavigate } from 'react-router-dom';
-// DỮ LIỆU MOCK MỚI
-const mockStudents = [
-    { 
-        StudentId: 'HS001', 
-        Name: 'Trần Thị Mai', 
-        Class: '12A1', 
-        Status: 'Đã lên xe', 
-        PickupPoint: 'Cổng KTX A', 
-        Address: '123 Đường Nguyễn Văn Linh' 
-    },
-    { 
-        StudentId: 'HS002', 
-        Name: 'Nguyễn Văn Hùng', 
-        Class: '10B2', 
-        Status: 'Chưa đón', 
-        PickupPoint: 'Tòa nhà B', 
-        Address: '456 Phố Điện Biên Phủ' 
-    },
-    { 
-        StudentId: 'HS003', 
-        Name: 'Phạm Thanh Thảo', 
-        Class: '11C3', 
-        Status: 'Vắng mặt', 
-        PickupPoint: 'Nhà sách X', 
-        Address: '789 Đại lộ Thống Nhất' 
-    },
-    { 
-        StudentId: 'HS004', 
-        Name: 'Lê Văn Khỏe', 
-        Class: '9D4', 
-        Status: 'Đã trả', 
-        PickupPoint: 'Trường A', 
-        Address: '101 Đường Trần Hưng Đạo' 
-    },
-]
+import { getChildrenRoutes } from '../../service/apiService';
 
 
 // Hàm Helper cho màu trạng thái (Chỉ dùng để hiển thị màu tĩnh)
@@ -72,16 +38,68 @@ const getStatusColor = (status) => {
 };
 
 
-// Component Giao Diện Tĩnh (Không có props logic)
+// Component hiển thị danh sách con với dữ liệu thật từ API
 const TableChild = () => {
-    const navigate = useNavigate()
-    const handleClick = (studentCode) =>{
-        navigate(`/parent/map/${studentCode}`)
-    }
-    // Hàm giả (dummy handlers) cho giao diện tĩnh
-    const handleActionClick = () => {
-        console.log('Action button clicked (Static UI)');
+    const navigate = useNavigate();
+    const [students, setStudents] = useState([]);
+    const [loading, setLoading] = useState(true);
+    const [error, setError] = useState(null);
+
+    // Giả sử parentId được lấy từ localStorage hoặc context
+    const parentId = 'PH001'; // Thay bằng giá trị thật từ auth
+
+    useEffect(() => {
+        fetchChildrenData();
+    }, []);
+
+    const fetchChildrenData = async () => {
+        try {
+            setLoading(true);
+            const response = await getChildrenRoutes(parentId);
+            setStudents(response.data || []);
+            setError(null);
+        } catch (err) {
+            console.error('❌ Error fetching children:', err);
+            setError('Không thể tải danh sách con');
+        } finally {
+            setLoading(false);
+        }
     };
+
+    const handleViewMap = (studentId) => {
+        navigate(`/parent/map/${studentId}`);
+    };
+
+    const getScheduleStatus = (scheduleStatus, shift) => {
+        if (!scheduleStatus) return { text: 'Chưa có lịch', color: 'default' };
+        
+        switch (scheduleStatus) {
+            case 'Đã phân công':
+                return { text: `Ca ${shift || 'Sáng'}`, color: 'info' };
+            case 'Đang chạy':
+                return { text: 'Đang đi đón', color: 'warning' };
+            case 'Hoàn thành':
+                return { text: 'Đã hoàn thành', color: 'success' };
+            default:
+                return { text: scheduleStatus, color: 'default' };
+        }
+    };
+
+    if (loading) {
+        return (
+            <Box sx={{ display: 'flex', justifyContent: 'center', p: 4 }}>
+                <CircularProgress />
+            </Box>
+        );
+    }
+
+    if (error) {
+        return (
+            <Alert severity="error" sx={{ m: 2 }}>
+                {error}
+            </Alert>
+        );
+    }
 
     return (
         <div className='parent-table'>
@@ -91,54 +109,84 @@ const TableChild = () => {
                         <TableRow sx={{ backgroundColor: 'grey.100' }}>
                             <TableCell sx={{ fontWeight: 'bold' }}>Mã HS</TableCell>
                             <TableCell sx={{ fontWeight: 'bold' }}>Tên Học sinh</TableCell>
-                            <TableCell sx={{ fontWeight: 'bold' }}>Lớp</TableCell> {/* CỘT MỚI */}
+                            <TableCell sx={{ fontWeight: 'bold' }}>Lớp</TableCell>
+                            <TableCell sx={{ fontWeight: 'bold' }}>Tuyến xe</TableCell>
                             <TableCell sx={{ fontWeight: 'bold' }}>Điểm Đón</TableCell>
-                            <TableCell sx={{ fontWeight: 'bold' }}>Địa chỉ Đón</TableCell> {/* CỘT MỚI */}
+                            <TableCell sx={{ fontWeight: 'bold' }}>Thời gian</TableCell>
                             <TableCell sx={{ fontWeight: 'bold' }}>Trạng Thái</TableCell>
                             <TableCell sx={{ fontWeight: 'bold' }}>Hành Động</TableCell>
                         </TableRow>
                     </TableHead>
                     <TableBody>
-                        {mockStudents.length === 0 ? (
+                        {students.length === 0 ? (
                             <TableRow>
-                                <TableCell colSpan={7} align="center"> {/* COLSPAN ĐÃ TĂNG LÊN 7 */}
-                                    Không có học sinh nào trên tuyến này
+                                <TableCell colSpan={8} align="center">
+                                    Không có thông tin con
                                 </TableCell>
                             </TableRow>
                         ) : (
-                            mockStudents.map((student) => (
-                                <TableRow
-                                    key={student.StudentId}
-                                    sx={{
-                                        '&:nth-of-type(odd)': { backgroundColor: 'action.hover' },
-                                    }}
-                                >
-                                    <TableCell component="th" scope="row">{student.StudentId}</TableCell>
-                                    <TableCell>{student.Name}</TableCell>
-                                    <TableCell>{student.Class}</TableCell> {/* DỮ LIỆU LỚP */}
-                                    <TableCell>{student.PickupPoint}</TableCell>
-                                    <TableCell sx={{ fontSize: '0.85rem' }}>{student.Address}</TableCell> {/* DỮ LIỆU ĐỊA CHỈ */}
-                                    <TableCell
+                            students.map((student) => {
+                                const status = getScheduleStatus(student.ScheduleStatus, student.Shift);
+                                return (
+                                    <TableRow
+                                        key={student.MaHocSinh}
                                         sx={{
-                                            color: getStatusColor(student.Status),
-                                            fontWeight: 'bold'
+                                            '&:nth-of-type(odd)': { backgroundColor: 'action.hover' },
                                         }}
                                     >
-                                        {student.Status}
-                                    </TableCell>
-                                    <TableCell>
-                                        <Tooltip title="Xem chi tiết">
-                                            <IconButton
+                                        <TableCell component="th" scope="row">
+                                            {student.MaHocSinh}
+                                        </TableCell>
+                                        <TableCell>
+                                            <Typography variant="body2" fontWeight="medium">
+                                                {student.StudentName}
+                                            </Typography>
+                                        </TableCell>
+                                        <TableCell>{student.Class}</TableCell>
+                                        <TableCell>
+                                            <Typography variant="body2" color="primary">
+                                                {student.RouteName || 'Chưa có tuyến'}
+                                            </Typography>
+                                            <Typography variant="caption" color="text.secondary">
+                                                {student.VehicleNumber || ''}
+                                            </Typography>
+                                        </TableCell>
+                                        <TableCell sx={{ fontSize: '0.85rem' }}>
+                                            {student.PickupAddress || student.StudentAddress || 'N/A'}
+                                        </TableCell>
+                                        <TableCell>
+                                            {student.StartTime ? (
+                                                <Typography variant="body2">
+                                                    {student.StartTime}
+                                                </Typography>
+                                            ) : (
+                                                <Typography variant="caption" color="text.disabled">
+                                                    Chưa có lịch
+                                                </Typography>
+                                            )}
+                                        </TableCell>
+                                        <TableCell>
+                                            <Chip 
+                                                label={status.text}
+                                                color={status.color}
                                                 size="small"
-                                                color="primary"
-                                                onClick={()=>handleClick(student.StudentId)} 
-                                            >
-                                            <MdVisibility/>
-                                            </IconButton>
-                                        </Tooltip>
-                                    </TableCell>
-                                </TableRow>
-                            ))
+                                            />
+                                        </TableCell>
+                                        <TableCell>
+                                            <Tooltip title="Xem vị trí xe">
+                                                <IconButton
+                                                    size="small"
+                                                    color="primary"
+                                                    onClick={() => handleViewMap(student.MaHocSinh)}
+                                                    disabled={!student.RouteId}
+                                                >
+                                                    <MdVisibility />
+                                                </IconButton>
+                                            </Tooltip>
+                                        </TableCell>
+                                    </TableRow>
+                                );
+                            })
                         )}
                     </TableBody>
                 </Table>

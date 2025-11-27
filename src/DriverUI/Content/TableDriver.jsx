@@ -90,6 +90,8 @@ const TableRoute = () => {
                         <TableRow>
                             <TableCell>Mã Tuyến</TableCell>
                             <TableCell>Tên Tuyến</TableCell>
+                            <TableCell>Ngày</TableCell>
+                            <TableCell>Ca</TableCell>
                             <TableCell>Thời Gian Bắt Đầu</TableCell>
                             <TableCell>Biển Số Xe</TableCell>
                             <TableCell>Số Học Sinh</TableCell>
@@ -101,37 +103,57 @@ const TableRoute = () => {
                     <TableBody>
                         {schedules.length === 0 ? (
                             <TableRow>
-                                <TableCell colSpan={7} align="center">
-                                    Không có lịch làm việc hôm nay
+                                <TableCell colSpan={9} align="center">
+                                    Không có lịch làm việc
                                 </TableCell>
                             </TableRow>
                         ) : (
-                            schedules.map((schedule, idx) => (
-                                <TableRow key={schedule.scheduleId ?? idx}>
-                                    <TableCell>{schedule.routeCode}</TableCell>
-                                    <TableCell>{schedule.routeName}</TableCell>
-                                    <TableCell>{schedule.startTime}</TableCell>
-                                    <TableCell>{schedule.LicensePlate || 'N/A'}</TableCell>
-                                    <TableCell>
-                                        {schedule.totalStudents} HS
-                                        <Typography variant="caption" display="block" color="textSecondary">
-                                            Đã đón: {schedule.pickedUpCount}/{schedule.totalStudents}
-                                        </Typography>
-                                    </TableCell>
-                                    <TableCell>{getStatusChip(schedule.statusText)}</TableCell>
-                                    <TableCell align="center">
-                                        <Tooltip title="Xem chi tiết lịch trình">
-                                            <IconButton
+                            schedules.map((schedule, idx) => {
+                                // Format ngày: DD/MM/YYYY
+                                const formatDate = (dateStr) => {
+                                    if (!dateStr) return 'N/A';
+                                    const d = new Date(dateStr);
+                                    const day = String(d.getDate()).padStart(2, '0');
+                                    const month = String(d.getMonth() + 1).padStart(2, '0');
+                                    const year = d.getFullYear();
+                                    return `${day}/${month}/${year}`;
+                                };
+
+                                return (
+                                    <TableRow key={schedule.scheduleId ?? idx}>
+                                        <TableCell>{schedule.routeCode}</TableCell>
+                                        <TableCell>{schedule.routeName}</TableCell>
+                                        <TableCell>{formatDate(schedule.date)}</TableCell>
+                                        <TableCell>
+                                            <Chip 
+                                                label={schedule.shift === 'Sáng' ? '🌅 Sáng' : '🌆 Chiều'}
                                                 size="small"
-                                                color="primary"
-                                                onClick={() => handleDetailClick(schedule.scheduleId)}
-                                            >
-                                                <VisibilityIcon />
-                                            </IconButton>
-                                        </Tooltip>
-                                    </TableCell>
-                                </TableRow>
-                            ))
+                                                color={schedule.shift === 'Sáng' ? 'success' : 'warning'}
+                                            />
+                                        </TableCell>
+                                        <TableCell>{schedule.startTime}</TableCell>
+                                        <TableCell>{schedule.LicensePlate || 'N/A'}</TableCell>
+                                        <TableCell>
+                                            {schedule.totalStudents} HS
+                                            <Typography variant="caption" display="block" color="textSecondary">
+                                                Đã đón: {schedule.pickedUpCount}/{schedule.totalStudents}
+                                            </Typography>
+                                        </TableCell>
+                                        <TableCell>{getStatusChip(schedule.statusText)}</TableCell>
+                                        <TableCell align="center">
+                                            <Tooltip title="Xem chi tiết lịch trình">
+                                                <IconButton
+                                                    size="small"
+                                                    color="primary"
+                                                    onClick={() => handleDetailClick(schedule.scheduleId)}
+                                                >
+                                                    <VisibilityIcon />
+                                                </IconButton>
+                                            </Tooltip>
+                                        </TableCell>
+                                    </TableRow>
+                                );
+                            })
                         )}
                     </TableBody>
                 </Table>

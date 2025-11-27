@@ -184,6 +184,9 @@ CREATE TABLE `routes` (
   `Status` enum('Chưa chạy','Đang chạy','Đã hoàn thành','Đã hủy') NOT NULL DEFAULT 'Chưa chạy',
   `TotalDistance` decimal(10,2) DEFAULT NULL COMMENT 'Tổng quãng đường (km)',
   `EstimatedTime` int(11) DEFAULT NULL COMMENT 'Thời gian ước tính (phút)',
+  `currentLatitude` decimal(10,8) DEFAULT NULL COMMENT 'Vĩ độ hiện tại của xe (real-time tracking)',
+  `currentLongitude` decimal(11,8) DEFAULT NULL COMMENT 'Kinh độ hiện tại của xe (real-time tracking)',
+  `lastUpdated` timestamp NULL DEFAULT NULL COMMENT 'Thời gian cập nhật vị trí cuối cùng',
   `CreatedAt` timestamp DEFAULT CURRENT_TIMESTAMP,
   `UpdatedAt` timestamp DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
   PRIMARY KEY (`Id`),
@@ -191,6 +194,7 @@ CREATE TABLE `routes` (
   KEY `DriverId` (`DriverId`),
   KEY `VehicleId` (`VehicleId`),
   KEY `idx_status` (`Status`),
+  KEY `idx_location` (`currentLatitude`, `currentLongitude`),
   CONSTRAINT `routes_ibfk_1` FOREIGN KEY (`DriverId`) REFERENCES `drivers` (`Id`) ON DELETE SET NULL,
   CONSTRAINT `routes_ibfk_2` FOREIGN KEY (`VehicleId`) REFERENCES `vehicles` (`Id`) ON DELETE SET NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;

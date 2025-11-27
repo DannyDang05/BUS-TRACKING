@@ -19,7 +19,8 @@ import {
     Menu,
     MenuItem,
     CircularProgress,
-    Alert
+    Alert,
+    Divider
 } from "@mui/material";
 
 // Icons
@@ -29,8 +30,10 @@ import WarningIcon from '@mui/icons-material/Warning';
 import PlayArrowIcon from '@mui/icons-material/PlayArrow';
 import CheckCircleOutlineIcon from '@mui/icons-material/CheckCircleOutline';
 import EditCalendarIcon from '@mui/icons-material/EditCalendar';
+import MapIcon from '@mui/icons-material/Map';
 import DialogReport from './DialogReport';
-import { getScheduleStudents, updatePickupStatus, updateScheduleStatus, reportIssue } from '../../service/apiService';
+import DriverMap from './DriverMap';
+import { getScheduleStudents, updatePickupStatus, updateScheduleStatus, reportIssue, startTripSimulation } from '../../service/apiService';
 import { toast } from 'react-toastify';
 
 const getStatusColor = (status) => {
@@ -55,6 +58,7 @@ const DetailSchedule = () => {
     const [routeInfo, setRouteInfo] = useState(null);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
+    const [showMap, setShowMap] = useState(false);
 
     // STATE CHO MENU CẬP NHẬT TRẠNG THÁI
     const [anchorEl, setAnchorEl] = useState(null);
@@ -90,13 +94,24 @@ const DetailSchedule = () => {
                     parentPhone: s.parentPhone
                 })));
 
-                // Mock route info (có thể lấy từ API khác nếu cần)
-                setRouteInfo({
-                    RouteCode: `SCHEDULE-${scheduleId}`,
-                    RouteName: 'Tuyến đang tải...',
-                    DriverName: localStorage.getItem('driver_name') || 'Tài xế',
-                    LicensePlate: 'N/A'
-                });
+                // Get route info from first student or make additional API call
+                if (studentData.length > 0) {
+                    const firstStudent = studentData[0];
+                    setRouteInfo({
+                        routeId: firstStudent.routeId,
+                        RouteCode: firstStudent.routeCode || `SCHEDULE-${scheduleId}`,
+                        RouteName: firstStudent.routeName || 'Tuyến đang tải...',
+                        DriverName: localStorage.getItem('driver_name') || 'Tài xế',
+                        LicensePlate: firstStudent.licensePlate || 'N/A'
+                    });
+                } else {
+                    setRouteInfo({
+                        RouteCode: `SCHEDULE-${scheduleId}`,
+                        RouteName: 'Tuyến đang tải...',
+                        DriverName: localStorage.getItem('driver_name') || 'Tài xế',
+                        LicensePlate: 'N/A'
+                    });
+                }
             } catch (err) {
                 console.error('Error fetching schedule details:', err);
                 setError('Không thể tải thông tin lịch trình. Vui lòng thử lại.');
@@ -147,8 +162,13 @@ const DetailSchedule = () => {
 
     const handleStartTrip = async () => {
         try {
+            // Update schedule status
             await updateScheduleStatus(scheduleId, 2); // 2 = Đang chạy
-            toast.success('Đã bắt đầu hành trình!');
+            
+            // Start simulation (xe sẽ tự động di chuyển theo route)
+            await startTripSimulation(scheduleId);
+            
+            toast.success('Đã bắt đầu hành trình! Xe đang di chuyển theo tuyến đường.');
             // Có thể reload lại page hoặc update state
         } catch (err) {
             console.error('Error starting trip:', err);
@@ -240,10 +260,25 @@ const DetailSchedule = () => {
     }
 
     return (
-        <Container maxWidth="lg" sx={{ mt: 4, mb: 4 }}>
+        <Container maxWidth="xl" sx={{ mt: 4, mb: 4 }}>
 
             {/* CÁC NÚT HÀNH ĐỘNG CHUNG */}
             <Stack direction="row" spacing={2} justifyContent="flex-end" sx={{ mb: 3 }}>
+                <Button
+                    variant={showMap ? "outlined" : "contained"}
+                    startIcon={<MapIcon />}
+                    onClick={() => setShowMap(!showMap)}
+                    sx={{
+                        background: !showMap ? 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)' : 'transparent',
+                        color: !showMap ? 'white' : '#667eea',
+                        borderColor: '#667eea',
+                        '&:hover': {
+                            background: !showMap ? 'linear-gradient(135deg, #764ba2 0%, #667eea 100%)' : 'rgba(102, 126, 234, 0.1)',
+                        }
+                    }}
+                >
+                    {showMap ? 'Ẩn Bản đồ' : 'Xem Bản đồ'}
+                </Button>
                 <Button
                     variant="contained"
                     color="success"
@@ -261,6 +296,34 @@ const DetailSchedule = () => {
                     Báo cáo Sự cố
                 </Button>
             </Stack>
+
+            {/* BẢN ĐỒ REALTIME */}
+            {showMap && routeInfo && (
+                <Paper 
+                    elevation={3} 
+                    sx={{ 
+                        mb: 4, 
+                        p: 2,
+                        borderRadius: 3,
+                        background: 'linear-gradient(135deg, rgba(102, 126, 234, 0.05) 0%, rgba(118, 75, 162, 0.05) 100%)'
+                    }}
+                >
+                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 2 }}>
+                        <MapIcon sx={{ color: '#667eea' }} />
+                        <Typography variant="h6" sx={{ color: '#667eea', fontWeight: 'bold' }}>
+                            Bản đồ Theo dõi Hành trình
+                        </Typography>
+                    </Box>
+                    <Divider sx={{ mb: 2 }} />
+                    <Box sx={{ height: '500px', borderRadius: 2, overflow: 'hidden' }}>
+                        <DriverMap 
+                            scheduleId={scheduleId} 
+                            routeId={routeInfo?.routeId || parseInt(scheduleId)}
+                        />
+                    </Box>
+                </Paper>
+            )}
+            
 
             {/* THÔNG TIN TUYẾN */}
             <Box sx={{ mb: 4 }}>

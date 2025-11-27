@@ -1,0 +1,52 @@
+.notification-page {
+  padding: 20px;
+  background: linear-gradient(135deg, #e8f4f8 0%, #d4e8f0 100%);
+  min-height: calc(100vh - 100px);
+
+  .notification-content {
+    max-width: 1400px;
+    margin: 0 auto;
+
+    .table-notifications-content {
+      background: white;
+      border-radius: 12px;
+      box-shadow: 0 4px 12px rgba(0, 151, 167, 0.15);
+      overflow: hidden;
+
+      .btn-notification {
+        padding: 20px;
+        background: linear-gradient(135deg, #0097a7 0%, #00838f 100%);
+
+        button {
+          padding: 12px 28px;
+          background: white;
+          color: #00838f;
+          border: 2px solid white;
+          border-radius: 8px;
+          font-weight: 600;
+          font-size: 16px;
+          cursor: pointer;
+          transition: all 0.3s ease;
+          text-transform: uppercase;
+          letter-spacing: 0.5px;
+          box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+
+          &:hover {
+            background: #00838f;
+            color: white;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(0, 151, 167, 0.3);
+          }
+
+          &:active {
+            transform: translateY(0);
+          }
+        }
+      }
+
+      .table-notifications {
+        padding: 0;
+      }
+    }
+  }
+}

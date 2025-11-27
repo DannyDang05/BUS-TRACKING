@@ -14,7 +14,7 @@ const DialogInfo = ({ infoModal, setInfoModal}) => {
   return (
     <Dialog
       open={infoModal}
-      onClose={infoModal}
+      onClose={handleClose}
       aria-labelledby="driver-info-dialog"
       // Thêm maxWidth để dialog không quá rộng
       maxWidth="sm" 

@@ -7,13 +7,16 @@ import {
   deleteRoute,
   autoOptimizeRoutes,
   getStudentsByRoute,
-  getAutoRoutes
+  getAutoRoutes,
+  getAllRoutesWithPoints
 } from "../controller/routeController.js";
 import verifyToken from "../middleWare/authMiddleware.js";
 import requireRole from "../middleWare/requireRole.js";
 
 const router = express.Router();
 
+// Endpoint công khai cho cả admin và driver (chỉ cần xác thực)
+router.get("/all-with-points", verifyToken, getAllRoutesWithPoints); // Endpoint mới: Lấy tất cả routes với pickup points
 
 // Chỉ cho phép role admin
 router.use(verifyToken, requireRole('admin'));
