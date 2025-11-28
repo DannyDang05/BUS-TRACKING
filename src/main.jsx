@@ -33,8 +33,9 @@ import AdminRoute from './Admin/Shared/AdminRoute';
 import DetailSchedule from './DriverUI/Content/DetailSchedule.jsx';
 import DriverDashboard from './DriverUI/Content/DriverDashBoard.jsx';
 import ParentUI from './ParentUI/ParentUI.jsx';
-import TableChild from './ParentUI/ParentContent/TableChild.jsx';
+import ParentDashboard from './ParentUI/ParentContent/ParentDashboard.jsx';
 import ParentMap from './ParentUI/ParentContent/ParentMap.jsx';
+import ParentNotification from './ParentUI/ParentContent/ParentNotification.jsx';
 import Notification from './Admin/Content/Notification/Notification.jsx';
 import CreateNotificationModal from './Admin/Content/Notification/CreateNotificationModal.jsx';
 import UpdateNotificationModal from './Admin/Content/Notification/UpdateNotificationModal.jsx';
@@ -81,8 +82,9 @@ createRoot(document.getElementById('root')).render(
             </Route>
           </Route>
           <Route path="parent" element={<ParentUI />}>
-              <Route index element={<TableChild/>}></Route>
-              <Route path="map/:id" element={<ParentMap/>}/>
+              <Route index element={<ParentDashboard/>}></Route>
+              <Route path="map/:studentId" element={<ParentMap/>}/>
+              <Route path="notifications" element={<ParentNotification/>}/>
           </Route>
         </Routes>
       </BrowserRouter>

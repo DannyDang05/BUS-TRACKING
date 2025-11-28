@@ -1,0 +1,1753 @@
+-- phpMyAdmin SQL Dump
+-- version 5.2.1
+-- https://www.phpmyadmin.net/
+--
+-- Host: 127.0.0.1
+-- Generation Time: Nov 27, 2025 at 01:56 PM
+-- Server version: 10.4.32-MariaDB
+-- PHP Version: 8.2.12
+
+SET SQL_MODE = "NO_AUTO_VALUE_ON_ZERO";
+START TRANSACTION;
+SET time_zone = "+00:00";
+
+
+/*!40101 SET @OLD_CHARACTER_SET_CLIENT=@@CHARACTER_SET_CLIENT */;
+/*!40101 SET @OLD_CHARACTER_SET_RESULTS=@@CHARACTER_SET_RESULTS */;
+/*!40101 SET @OLD_COLLATION_CONNECTION=@@COLLATION_CONNECTION */;
+/*!40101 SET NAMES utf8mb4 */;
+
+--
+-- Database: `bustracking`
+--
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `drivers`
+--
+
+CREATE TABLE `drivers` (
+  `Id` varchar(20) NOT NULL,
+  `FullName` varchar(255) NOT NULL,
+  `MaBangLai` varchar(20) NOT NULL,
+  `PhoneNumber` varchar(15) DEFAULT NULL,
+  `UserId` int(11) DEFAULT NULL,
+  `IsActive` tinyint(1) DEFAULT 1 COMMENT 'Tài xế có đang hoạt động không'
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+--
+-- Dumping data for table `drivers`
+--
+
+INSERT INTO `drivers` (`Id`, `FullName`, `MaBangLai`, `PhoneNumber`, `UserId`, `IsActive`) VALUES
+('TX_1', 'Nguyễn Kim Nhi', 'DL-88861-1-', '0906332966', 11, 1),
+('TX_10', 'Võ Minh Hùng', 'DL-79101-10-', '0986933920', 20, 1),
+('TX_11', 'Huỳnh Quốc Trang', 'DL-90917-11-', '0908007495', 21, 1),
+('TX_12', 'Vũ Minh Giang', 'DL-61856-12-', '0958424503', 22, 1),
+('TX_13', 'Dương Xuân An', 'DL-20064-13-', '0939919313', 23, 1),
+('TX_14', 'Lê Quốc Trung', 'DL-65029-14-', '0979414805', 24, 1),
+('TX_15', 'Dương Đức Vân', 'DL-26658-15-', '0995241132', 25, 1),
+('TX_16', 'Trần Gia Khánh', 'DL-57071-16-', '0966619959', 26, 1),
+('TX_17', 'Nguyễn Thị Yến', 'DL-24425-17-', '0959506302', 27, 1),
+('TX_18', 'Đỗ Hữu Long', 'DL-42388-18-', '0983633363', 28, 1),
+('TX_19', 'Võ Minh Mai', 'DL-62385-19-', '0947898889', 29, 1),
+('TX_2', 'Dương Gia Thảo', 'DL-43789-2-', '0903930239', 12, 1),
+('TX_20', 'Phạm Hữu Minh', 'DL-21268-20-', '0927092174', 30, 1),
+('TX_3', 'Ngô Kim Việt', 'DL-47389-3-', '0924706259', 13, 1),
+('TX_4', 'Lê Quốc Quỳnh', 'DL-14000-4-', '0938328997', 14, 1),
+('TX_5', 'Đỗ Xuân Tuấn', 'DL-68189-5-', '0901031649', 15, 1),
+('TX_6', 'Bùi Thị Nam', 'DL-34156-6-', '0946674132', 16, 1),
+('TX_7', 'Dương Đức An', 'DL-75798-7-', '0908421450', 17, 1),
+('TX_8', 'Phan Thị Vy', 'DL-43801-8-', '0910017166', 18, 1),
+('TX_9', 'Đỗ Quốc Phượng', 'DL-65987-9-', '0922731089', 19, 1),
+('TX001', 'Võ Văn Mạnh', 'C1-555123', '0908765432', 3, 1),
+('TX002', 'Đỗ Thị Hương', 'C1-555234', '0902345678', 4, 1),
+('TX003', 'Bùi Văn Dũng', 'B2-555345', '0906789012', 5, 1),
+('TX004', 'Nguyễn Thị Kim', 'B2-555456', '0901111111', 6, 1),
+('TX005', 'Trần Văn Long', 'C1-555567', '0902222222', 7, 1);
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `hocsinh`
+--
+
+CREATE TABLE `hocsinh` (
+  `MaHocSinh` varchar(20) NOT NULL,
+  `HoTen` varchar(100) NOT NULL,
+  `Lop` varchar(20) DEFAULT NULL,
+  `MaPhuHuynh` varchar(20) DEFAULT NULL,
+  `DiaChi` text NOT NULL COMMENT 'Địa chỉ nhà học sinh (dùng cho pickup)',
+  `Latitude` decimal(10,8) NOT NULL COMMENT 'Vĩ độ (tự động từ địa chỉ hoặc nhập)',
+  `Longitude` decimal(11,8) NOT NULL COMMENT 'Kinh độ (tự động từ địa chỉ hoặc nhập)',
+  `TrangThaiHocTap` enum('Đang học','Nghỉ học','Chuyển trường') NOT NULL DEFAULT 'Đang học' COMMENT 'Trạng thái học tập - CHỈ học sinh "Đang học" mới được phân tuyến',
+  `CreatedAt` timestamp NOT NULL DEFAULT current_timestamp(),
+  `UpdatedAt` timestamp NOT NULL DEFAULT current_timestamp() ON UPDATE current_timestamp()
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+--
+-- Dumping data for table `hocsinh`
+--
+
+INSERT INTO `hocsinh` (`MaHocSinh`, `HoTen`, `Lop`, `MaPhuHuynh`, `DiaChi`, `Latitude`, `Longitude`, `TrangThaiHocTap`, `CreatedAt`, `UpdatedAt`) VALUES
+('HS_1', 'Hồ Minh Hùng', '4D1', 'PH_1', '484 Pasteur, Phú Nhuận, TP.HCM', 10.74442427, 106.62295436, 'Đang học', '2025-11-24 12:07:03', '2025-11-24 12:07:03'),
+('HS_10', 'Huỳnh Thanh Nhi', '5A1', 'PH_10', '467 Hai Bà Trưng, Quận 4, TP.HCM', 10.72631259, 106.68178227, 'Đang học', '2025-11-24 12:07:03', '2025-11-24 12:07:03'),
+('HS_100', 'Lê Minh Thắng', '5B2', 'PH_100', '713 Điện Biên Phủ, Quận 1, TP.HCM', 10.80256797, 106.69654150, 'Đang học', '2025-11-24 12:07:03', '2025-11-24 12:07:03'),
+('HS_101', 'Lý Thanh Vy', '3B3', 'PH_101', '291 Pasteur, Quận 10, TP.HCM', 10.78835787, 106.67842059, 'Đang học', '2025-11-24 12:07:03', '2025-11-24 12:07:03'),
+('HS_102', 'Ngô Đức Huy', '2A2', 'PH_102', '625 Cách Mạng Tháng 8, Quận 5, TP.HCM', 10.73200986, 106.66216702, 'Đang học', '2025-11-24 12:07:03', '2025-11-24 12:07:03'),
+('HS_161', 'Nguyễn Mỹ Quân', '1B2', 'PH_161', '879 Nguyễn Thị Minh Khai, Quận 4, TP.HCM', 10.77059660, 106.65718237, 'Đang học', '2025-11-24 12:07:03', '2025-11-24 12:07:03'),
+('HS_162', 'Võ Minh Vân', '1A3', 'PH_162', '838 Võ Thị Sáu, Phú Nhuận, TP.HCM', 10.74896122, 106.67142507, 'Đang học', '2025-11-24 12:07:03', '2025-11-24 12:07:03'),
+('HS_163', 'Đỗ Mỹ Linh', '3D3', 'PH_163', '698 Lê Lợi, Phú Nhuận, TP.HCM', 10.79156543, 106.68164766, 'Đang học', '2025-11-24 12:07:03', '2025-11-24 12:07:03'),
+('HS_164', 'Võ Hữu Huy', '2B1', 'PH_164', '502 Hai Bà Trưng, Quận 1, TP.HCM', 10.72062152, 106.65376340, 'Đang học', '2025-11-24 12:07:03', '2025-11-24 12:07:03'),
+('HS_165', 'Nguyễn Thanh Nhi', '1A3', 'PH_165', '598 Nguyễn Huệ, Phú Nhuận, TP.HCM', 10.71299507, 106.61523516, 'Đang học', '2025-11-24 12:07:03', '2025-11-24 12:07:03'),
+('HS_166', 'Lê Mỹ Long', '4B3', 'PH_166', '320 Nguyễn Trãi, Quận 3, TP.HCM', 10.73612177, 106.68908332, 'Đang học', '2025-11-24 12:07:03', '2025-11-24 12:07:03'),
+('HS_167', 'Phan Thanh Giang', '3D2', 'PH_167', '479 Võ Thị Sáu, Bình Thạnh, TP.HCM', 10.78573979, 106.66025711, 'Đang học', '2025-11-24 12:07:03', '2025-11-24 12:07:03'),
+('HS_168', 'Võ Hữu Tùng', '2A3', 'PH_168', '609 Đồng Khởi, Quận 1, TP.HCM', 10.81169918, 106.65679595, 'Đang học', '2025-11-24 12:07:03', '2025-11-24 12:07:03'),
+('HS_169', 'Nguyễn Quốc Nhi', '2B1', 'PH_169', '983 Điện Biên Phủ, Quận 5, TP.HCM', 10.78161098, 106.70284771, 'Đang học', '2025-11-24 12:07:03', '2025-11-24 12:07:03'),
+('HS_177', 'Đỗ Quốc Quang', '2C1', 'PH_177', '213 Nguyễn Trãi, Quận 5, TP.HCM', 10.74136798, 106.66203877, 'Đang học', '2025-11-24 12:07:03', '2025-11-24 12:07:03'),
+('HS_178', 'Phan Mỹ Vy', '4A2', 'PH_178', '646 Nam Kỳ Khởi Nghĩa, Quận 1, TP.HCM', 10.72681088, 106.66123742, 'Đang học', '2025-11-24 12:07:03', '2025-11-24 12:07:03'),
+('HS_179', 'Trần Kim Lan', '2B1', 'PH_179', '649 Hai Bà Trưng, Quận 4, TP.HCM', 10.71702157, 106.62314769, 'Đang học', '2025-11-24 12:07:03', '2025-11-24 12:07:03'),
+('HS_18', 'Lê Mỹ Huy', '3B3', 'PH_18', '340 Nam Kỳ Khởi Nghĩa, Quận 5, TP.HCM', 10.80718333, 106.69324441, 'Đang học', '2025-11-24 12:07:03', '2025-11-24 12:07:03'),
+('HS_180', 'Lê Quốc Quân', '5A2', 'PH_180', '217 Nam Kỳ Khởi Nghĩa, Bình Thạnh, TP.HCM', 10.71732863, 106.61499695, 'Đang học', '2025-11-24 12:07:03', '2025-11-24 12:07:03'),
+('HS_181', 'Nguyễn Mỹ An', '1B1', 'PH_181', '807 Đồng Khởi, Phú Nhuận, TP.HCM', 10.72370241, 106.69479622, 'Đang học', '2025-11-24 12:07:03', '2025-11-24 12:07:03'),
+('HS_182', 'Lê Minh Vân', '2C1', 'PH_182', '144 Lý Tự Trọng, Bình Thạnh, TP.HCM', 10.72052414, 106.62346330, 'Đang học', '2025-11-24 12:07:03', '2025-11-24 12:07:03'),
+('HS_183', 'Phạm Quốc Việt', '2B1', 'PH_183', '99 Võ Thị Sáu, Bình Thạnh, TP.HCM', 10.78921898, 106.70969035, 'Đang học', '2025-11-24 12:07:03', '2025-11-24 12:07:03'),
+('HS_184', 'Phan Thị Long', '2D2', 'PH_184', '227 Nguyễn Trãi, Quận 3, TP.HCM', 10.77249961, 106.69230923, 'Đang học', '2025-11-24 12:07:03', '2025-11-24 12:07:03'),
+('HS_185', 'Huỳnh Xuân Yến', '5A3', 'PH_185', '742 Nguyễn Huệ, Quận 1, TP.HCM', 10.77466545, 106.61917993, 'Đang học', '2025-11-24 12:07:03', '2025-11-24 12:07:03'),
+('HS_186', 'Nguyễn Mỹ Dũng', '2D3', 'PH_186', '951 Võ Thị Sáu, Quận 4, TP.HCM', 10.79372615, 106.69328364, 'Đang học', '2025-11-24 12:07:03', '2025-11-24 12:07:03'),
+('HS_187', 'Trần Thu An', '3B1', 'PH_187', '108 Điện Biên Phủ, Phú Nhuận, TP.HCM', 10.72733783, 106.61755834, 'Đang học', '2025-11-24 12:07:03', '2025-11-24 12:07:03'),
+('HS_188', 'Hồ Quốc Uyên', '2D1', 'PH_188', '770 Lê Lợi, Quận 3, TP.HCM', 10.80389946, 106.70635505, 'Đang học', '2025-11-24 12:07:03', '2025-11-24 12:07:03'),
+('HS_189', 'Huỳnh Thị Dũng', '1A3', 'PH_189', '372 Võ Thị Sáu, Quận 10, TP.HCM', 10.77398983, 106.70396031, 'Đang học', '2025-11-24 12:07:03', '2025-11-24 12:07:03'),
+('HS_19', 'Bùi Quốc Vy', '2C1', 'PH_19', '610 Nguyễn Trãi, Quận 4, TP.HCM', 10.76119935, 106.61054879, 'Đang học', '2025-11-24 12:07:03', '2025-11-24 12:07:03'),
+('HS_190', 'Võ Thị Tùng', '4A3', 'PH_190', '477 Cách Mạng Tháng 8, Bình Thạnh, TP.HCM', 10.76895309, 106.63942439, 'Đang học', '2025-11-24 12:07:03', '2025-11-24 12:07:03'),
+('HS_191', 'Phan Văn Sơn', '2A2', 'PH_191', '705 Pasteur, Phú Nhuận, TP.HCM', 10.77001147, 106.69007004, 'Đang học', '2025-11-24 12:07:03', '2025-11-24 12:07:03'),
+('HS_192', 'Bùi Đức An', '1B2', 'PH_192', '963 Hai Bà Trưng, Quận 10, TP.HCM', 10.71279264, 106.69571056, 'Đang học', '2025-11-24 12:07:03', '2025-11-24 12:07:03'),
+('HS_202', 'Trần Quốc Phúc', '4C3', 'PH_202', '680 Hai Bà Trưng, Quận 1, TP.HCM', 10.75398772, 106.70238522, 'Đang học', '2025-11-24 12:07:03', '2025-11-24 12:07:03'),
+('HS_203', 'Hồ Xuân Quỳnh', '3B2', 'PH_203', '275 Nguyễn Huệ, Quận 5, TP.HCM', 10.71757742, 106.61457258, 'Đang học', '2025-11-24 12:07:03', '2025-11-24 12:07:03'),
+('HS_216', 'Bùi Hữu Tùng', '3B2', 'PH_216', '101 Nam Kỳ Khởi Nghĩa, Quận 10, TP.HCM', 10.75597315, 106.63551171, 'Đang học', '2025-11-24 12:07:03', '2025-11-24 12:07:03'),
+('HS_22', 'Vũ Đức Long', '4D3', 'PH_22', '264 Nguyễn Huệ, Phú Nhuận, TP.HCM', 10.78047688, 106.63446220, 'Đang học', '2025-11-24 12:07:03', '2025-11-24 12:07:03'),
+('HS_223', 'Ngô Kim Việt', '2B2', 'PH_223', '359 Đồng Khởi, Quận 3, TP.HCM', 10.72129663, 106.65695248, 'Đang học', '2025-11-24 12:07:03', '2025-11-24 12:07:03'),
+('HS_228', 'Đặng Gia Thảo', '4C3', 'PH_228', '564 Nguyễn Trãi, Quận 10, TP.HCM', 10.71834758, 106.65111484, 'Đang học', '2025-11-24 12:07:03', '2025-11-24 12:07:03'),
+('HS_231', 'Phan Quốc An', '4B1', 'PH_231', '941 Cách Mạng Tháng 8, Quận 1, TP.HCM', 10.80562268, 106.63338171, 'Đang học', '2025-11-24 12:07:03', '2025-11-24 12:07:03'),
+('HS_259', 'Bùi Minh Nam', '2B1', 'PH_259', '31 Lê Duẩn, Quận 3, TP.HCM', 10.76401881, 106.67676423, 'Đang học', '2025-11-24 12:07:03', '2025-11-24 12:07:03'),
+('HS_288', 'Bùi Kim Bình', '1D1', 'PH_288', '174 Lê Duẩn, Phú Nhuận, TP.HCM', 10.74625067, 106.66046404, 'Đang học', '2025-11-24 12:07:03', '2025-11-24 12:07:03'),
+('HS_289', 'Nguyễn Quốc Trang', '2A2', 'PH_289', '679 Tôn Đức Thắng, Quận 10, TP.HCM', 10.73708710, 106.63718700, 'Đang học', '2025-11-24 12:07:03', '2025-11-24 12:07:03'),
+('HS_292', 'Đỗ Văn Quang', '4C1', 'PH_292', '816 Lê Duẩn, Quận 5, TP.HCM', 10.72931981, 106.64036624, 'Đang học', '2025-11-24 12:07:03', '2025-11-24 12:07:03'),
+('HS_34', 'Huỳnh Xuân Cường', '5C2', 'PH_34', '640 Lê Lợi, Quận 5, TP.HCM', 10.72693574, 106.69593086, 'Đang học', '2025-11-24 12:07:03', '2025-11-24 12:07:03'),
+('HS_36', 'Hoàng Đức Vân', '3A3', 'PH_36', '819 Đồng Khởi, Bình Thạnh, TP.HCM', 10.77739372, 106.67705090, 'Đang học', '2025-11-24 12:07:03', '2025-11-24 12:07:03'),
+('HS_4', 'Dương Minh Việt', '5C3', 'PH_4', '860 Cách Mạng Tháng 8, Quận 1, TP.HCM', 10.78434996, 106.61332125, 'Đang học', '2025-11-24 12:07:03', '2025-11-24 12:07:03'),
+('HS_44', 'Hồ Minh Giang', '2C2', 'PH_44', '206 Lê Duẩn, Quận 1, TP.HCM', 10.79465622, 106.63451624, 'Đang học', '2025-11-24 12:07:03', '2025-11-24 12:07:03'),
+('HS_45', 'Trần Thanh Quỳnh', '5B1', 'PH_45', '803 Nguyễn Thị Minh Khai, Quận 3, TP.HCM', 10.77381207, 106.63308015, 'Đang học', '2025-11-24 12:07:03', '2025-11-24 12:07:03'),
+('HS_46', 'Lê Kim Phượng', '3D3', 'PH_46', '105 Nam Kỳ Khởi Nghĩa, Bình Thạnh, TP.HCM', 10.78470888, 106.65276333, 'Đang học', '2025-11-24 12:07:03', '2025-11-24 12:07:03'),
+('HS_47', 'Ngô Xuân Trang', '1C3', 'PH_47', '421 Trần Hưng Đạo, Quận 3, TP.HCM', 10.77466646, 106.61074347, 'Đang học', '2025-11-24 12:07:03', '2025-11-24 12:07:03'),
+('HS_48', 'Phan Quốc An', '5C1', 'PH_48', '473 Pasteur, Quận 10, TP.HCM', 10.72018652, 106.62550558, 'Đang học', '2025-11-24 12:07:03', '2025-11-24 12:07:03'),
+('HS_49', 'Bùi Hữu Long', '3C2', 'PH_49', '571 Nam Kỳ Khởi Nghĩa, Quận 4, TP.HCM', 10.79232365, 106.65874584, 'Đang học', '2025-11-24 12:07:03', '2025-11-24 12:07:03'),
+('HS_5', 'Phan Xuân Lan', '2C2', 'PH_5', '448 Trần Hưng Đạo, Bình Thạnh, TP.HCM', 10.76618573, 106.62210104, 'Đang học', '2025-11-24 12:07:03', '2025-11-24 12:07:03'),
+('HS_50', 'Hoàng Thu Yến', '4D2', 'PH_50', '227 Nguyễn Trãi, Quận 4, TP.HCM', 10.81188961, 106.66668034, 'Đang học', '2025-11-24 12:07:03', '2025-11-24 12:07:03'),
+('HS_51', 'Bùi Minh Giang', '2A1', 'PH_51', '904 Nguyễn Huệ, Quận 1, TP.HCM', 10.75707225, 106.68294009, 'Đang học', '2025-11-24 12:07:03', '2025-11-24 12:07:03');
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `phuhuynh`
+--
+
+CREATE TABLE `phuhuynh` (
+  `MaPhuHuynh` varchar(20) NOT NULL,
+  `HoTen` varchar(100) NOT NULL,
+  `SoDienThoai` varchar(15) DEFAULT NULL,
+  `Nhanthongbao` tinyint(1) DEFAULT 1,
+  `UserId` int(11) DEFAULT NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+--
+-- Dumping data for table `phuhuynh`
+--
+
+INSERT INTO `phuhuynh` (`MaPhuHuynh`, `HoTen`, `SoDienThoai`, `Nhanthongbao`, `UserId`) VALUES
+('PH_1', 'Võ Xuân Tùng', '0975774404', 1, 31),
+('PH_10', 'Phan Mỹ Nam', '0990678322', 1, 40),
+('PH_100', 'Phan Thị Trung', '0984940996', 1, 130),
+('PH_101', 'Bùi Minh Trang', '0957852709', 1, 131),
+('PH_102', 'Lý Minh Dũng', '0978102587', 1, 132),
+('PH_103', 'Võ Văn Vy', '0910072766', 1, 133),
+('PH_104', 'Phan Mỹ Quang', '0922534074', 1, 134),
+('PH_105', 'Bùi Thị Trung', '0922946808', 1, 135),
+('PH_106', 'Phạm Kim Nam', '0925933143', 1, 136),
+('PH_107', 'Lê Thị Lan', '0991255447', 1, 137),
+('PH_108', 'Vũ Đức Việt', '0983343558', 1, 138),
+('PH_109', 'Phan Thanh Thảo', '0989077294', 1, 139),
+('PH_11', 'Đặng Kim Linh', '0991816675', 1, 41),
+('PH_110', 'Huỳnh Thu Thủy', '0918317930', 1, 140),
+('PH_111', 'Đỗ Thanh Yến', '0952320173', 1, 141),
+('PH_112', 'Võ Hữu Quỳnh', '0959858446', 1, 142),
+('PH_113', 'Đỗ Hữu Vy', '0981385282', 1, 143),
+('PH_114', 'Võ Văn Bình', '0924803723', 1, 144),
+('PH_115', 'Phan Thanh Nam', '0944411806', 1, 145),
+('PH_116', 'Hồ Văn Linh', '0960995278', 1, 146),
+('PH_117', 'Đặng Kim Trang', '0990513175', 1, 147),
+('PH_118', 'Hoàng Văn Nam', '0921149782', 1, 148),
+('PH_119', 'Ngô Kim Nam', '0958466009', 1, 149),
+('PH_12', 'Ngô Kim Tuấn', '0911433188', 1, 42),
+('PH_120', 'Trần Thu Nga', '0906201929', 1, 150),
+('PH_121', 'Hoàng Xuân Thảo', '0955292403', 1, 151),
+('PH_122', 'Ngô Văn Trang', '0954094817', 1, 152),
+('PH_123', 'Ngô Đức Phúc', '0992866077', 1, 153),
+('PH_124', 'Bùi Thị Việt', '0963921610', 1, 154),
+('PH_125', 'Hồ Đức Thắng', '0977882351', 1, 155),
+('PH_126', 'Dương Minh Long', '0912824848', 1, 156),
+('PH_127', 'Phan Thu Việt', '0905517602', 1, 157),
+('PH_128', 'Ngô Gia Vy', '0955963954', 1, 158),
+('PH_129', 'Trần Văn Phúc', '0985776583', 1, 159),
+('PH_13', 'Hồ Đức Khánh', '0988589614', 1, 43),
+('PH_130', 'Huỳnh Văn Long', '0972986589', 1, 160),
+('PH_131', 'Ngô Văn Lan', '0948958900', 1, 161),
+('PH_132', 'Dương Hữu Yến', '0906232256', 1, 162),
+('PH_133', 'Lê Gia Nhi', '0922979003', 1, 163),
+('PH_134', 'Hồ Hữu Quỳnh', '0985735798', 1, 164),
+('PH_135', 'Lý Văn Vân', '0914302251', 1, 165),
+('PH_136', 'Ngô Mỹ Giang', '0913923415', 1, 166),
+('PH_137', 'Ngô Mỹ Hùng', '0914883190', 1, 167),
+('PH_138', 'Võ Thị Quỳnh', '0940950893', 1, 168),
+('PH_139', 'Vũ Quốc Hải', '0905457205', 1, 169),
+('PH_14', 'Vũ Kim Hải', '0927731284', 1, 44),
+('PH_140', 'Ngô Thu Phúc', '0907318728', 1, 170),
+('PH_141', 'Trần Thanh Linh', '0997493063', 1, 171),
+('PH_142', 'Hoàng Văn Dũng', '0991033981', 1, 172),
+('PH_143', 'Phan Minh Dũng', '0930315833', 1, 173),
+('PH_144', 'Phan Hữu Việt', '0957625162', 1, 174),
+('PH_145', 'Đặng Thu Thủy', '0924216466', 1, 175),
+('PH_146', 'Đặng Xuân Việt', '0920338240', 1, 176),
+('PH_147', 'Bùi Minh Long', '0929283561', 1, 177),
+('PH_148', 'Lê Thị Quân', '0961451067', 1, 178),
+('PH_149', 'Huỳnh Minh Khánh', '0992842589', 1, 179),
+('PH_15', 'Hoàng Thị Tùng', '0986854756', 1, 45),
+('PH_150', 'Phan Thị Phượng', '0960465300', 1, 180),
+('PH_151', 'Dương Xuân Vy', '0934765011', 1, 181),
+('PH_152', 'Võ Gia Phúc', '0975703388', 1, 182),
+('PH_153', 'Lê Đức Sơn', '0952365985', 1, 183),
+('PH_154', 'Phan Minh Vân', '0961802283', 1, 184),
+('PH_155', 'Ngô Văn Tùng', '0974725978', 1, 185),
+('PH_156', 'Bùi Gia Trung', '0932235542', 1, 186),
+('PH_157', 'Phạm Kim Nam', '0923956417', 1, 187),
+('PH_158', 'Đỗ Kim Tùng', '0955799731', 1, 188),
+('PH_159', 'Lý Minh Nam', '0940769567', 1, 189),
+('PH_16', 'Ngô Quốc Lan', '0951233225', 1, 46),
+('PH_160', 'Võ Gia Nam', '0932959198', 1, 190),
+('PH_161', 'Trần Hữu Trung', '0913058918', 1, 191),
+('PH_162', 'Bùi Mỹ Quỳnh', '0949338870', 1, 192),
+('PH_163', 'Lý Quốc Vân', '0907608441', 1, 193),
+('PH_164', 'Ngô Kim Phượng', '0930099134', 1, 194),
+('PH_165', 'Hồ Xuân Dũng', '0968202928', 1, 195),
+('PH_166', 'Võ Mỹ Thủy', '0901479747', 1, 196),
+('PH_167', 'Huỳnh Thị Sơn', '0947915658', 1, 197),
+('PH_168', 'Đỗ Thanh Sơn', '0962160020', 1, 198),
+('PH_169', 'Phạm Thị Nam', '0943078841', 1, 199),
+('PH_17', 'Huỳnh Thanh Huy', '0906493144', 1, 47),
+('PH_170', 'Huỳnh Thanh Quỳnh', '0973951368', 1, 200),
+('PH_171', 'Vũ Quốc Minh', '0960939733', 1, 201),
+('PH_172', 'Đặng Kim Thảo', '0934552352', 1, 202),
+('PH_173', 'Vũ Mỹ Sơn', '0927826004', 1, 203),
+('PH_174', 'Ngô Quốc Thảo', '0915237238', 1, 204),
+('PH_175', 'Võ Xuân Trang', '0980204019', 1, 205),
+('PH_176', 'Phan Thanh Trang', '0957084037', 1, 206),
+('PH_177', 'Phạm Gia Uyên', '0926003294', 1, 207),
+('PH_178', 'Nguyễn Thu Trung', '0983345555', 1, 208),
+('PH_179', 'Phạm Gia Linh', '0907188171', 1, 209),
+('PH_18', 'Hồ Hữu Tuấn', '0927609561', 1, 48),
+('PH_180', 'Bùi Đức Uyên', '0955411913', 1, 210),
+('PH_181', 'Vũ Thị Nam', '0901657980', 1, 211),
+('PH_182', 'Phan Thanh Hải', '0984493216', 1, 212),
+('PH_183', 'Hoàng Văn Thảo', '0991822866', 1, 213),
+('PH_184', 'Vũ Minh Yến', '0983387470', 1, 214),
+('PH_185', 'Trần Văn Huy', '0995180329', 1, 215),
+('PH_186', 'Huỳnh Văn Dũng', '0955315001', 1, 216),
+('PH_187', 'Phan Thanh Trung', '0931460116', 1, 217),
+('PH_188', 'Phan Đức Hải', '0943039049', 1, 218),
+('PH_189', 'Lý Gia Hùng', '0949158020', 1, 219),
+('PH_19', 'Ngô Quốc Quỳnh', '0914170205', 1, 49),
+('PH_190', 'Bùi Thanh Linh', '0957313603', 1, 220),
+('PH_191', 'Đặng Kim Lan', '0975839497', 1, 221),
+('PH_192', 'Bùi Gia Sơn', '0992998106', 1, 222),
+('PH_193', 'Đỗ Gia Thắng', '0900727480', 1, 223),
+('PH_194', 'Phạm Mỹ Trang', '0995828911', 1, 224),
+('PH_195', 'Đỗ Thanh Yến', '0912625594', 1, 225),
+('PH_196', 'Phan Minh Giang', '0996620427', 1, 226),
+('PH_197', 'Phan Hữu Mai', '0939003220', 1, 227),
+('PH_198', 'Bùi Hữu Thảo', '0933184380', 1, 228),
+('PH_199', 'Vũ Thị Khánh', '0950071702', 1, 229),
+('PH_2', 'Lý Đức Lan', '0976936529', 1, 32),
+('PH_20', 'Huỳnh Minh Trang', '0995637970', 1, 50),
+('PH_200', 'Hồ Minh Quang', '0953045073', 1, 230),
+('PH_201', 'Vũ Xuân Lan', '0972791744', 1, 231),
+('PH_202', 'Hồ Gia Minh', '0993013802', 1, 232),
+('PH_203', 'Đặng Gia Minh', '0996662727', 1, 233),
+('PH_204', 'Nguyễn Hữu Linh', '0990757034', 1, 234),
+('PH_205', 'Đỗ Gia Lan', '0985888592', 1, 235),
+('PH_206', 'Bùi Thanh Nam', '0955076440', 1, 236),
+('PH_207', 'Lê Gia Khánh', '0979169025', 1, 237),
+('PH_208', 'Nguyễn Văn Lan', '0976282627', 1, 238),
+('PH_209', 'Lý Minh Vân', '0950619475', 1, 239),
+('PH_21', 'Bùi Kim Thắng', '0926590697', 1, 51),
+('PH_210', 'Huỳnh Xuân Việt', '0914980412', 1, 240),
+('PH_211', 'Hoàng Thu Trang', '0903368964', 1, 241),
+('PH_212', 'Dương Xuân Cường', '0987378229', 1, 242),
+('PH_213', 'Lê Gia Khánh', '0972445466', 1, 243),
+('PH_214', 'Dương Đức Yến', '0980171672', 1, 244),
+('PH_215', 'Vũ Thanh Uyên', '0943960772', 1, 245),
+('PH_216', 'Phan Văn Vy', '0938655585', 1, 246),
+('PH_217', 'Vũ Văn Long', '0942158117', 1, 247),
+('PH_218', 'Võ Quốc Trung', '0903649204', 1, 248),
+('PH_219', 'Võ Mỹ Tuấn', '0983108932', 1, 249),
+('PH_22', 'Vũ Văn Lan', '0940499474', 1, 52),
+('PH_220', 'Hoàng Mỹ Tuấn', '0933139861', 1, 250),
+('PH_221', 'Hồ Xuân Tuấn', '0932939890', 1, 251),
+('PH_222', 'Đặng Đức Bình', '0943536522', 1, 252),
+('PH_223', 'Phạm Minh Sơn', '0959106744', 1, 253),
+('PH_224', 'Hồ Mỹ Nhi', '0919136081', 1, 254),
+('PH_225', 'Ngô Mỹ Tuấn', '0952075741', 1, 255),
+('PH_226', 'Huỳnh Hữu Nhi', '0916203095', 1, 256),
+('PH_227', 'Bùi Kim An', '0981266790', 1, 257),
+('PH_228', 'Nguyễn Đức Trung', '0982725289', 1, 258),
+('PH_229', 'Hồ Mỹ Sơn', '0913484073', 1, 259),
+('PH_23', 'Đỗ Thanh Lan', '0991091202', 1, 53),
+('PH_230', 'Đỗ Thị Việt', '0928582593', 1, 260),
+('PH_231', 'Ngô Hữu Vân', '0954736842', 1, 261),
+('PH_232', 'Nguyễn Kim Quang', '0948273032', 1, 262),
+('PH_233', 'Võ Gia Cường', '0923692321', 1, 263),
+('PH_234', 'Vũ Minh Mai', '0984765454', 1, 264),
+('PH_235', 'Dương Quốc Nhi', '0994647552', 1, 265),
+('PH_236', 'Vũ Đức Quang', '0920568726', 1, 266),
+('PH_237', 'Hồ Thanh Thủy', '0924175117', 1, 267),
+('PH_238', 'Hoàng Mỹ Huy', '0949280736', 1, 268),
+('PH_239', 'Phan Kim Tùng', '0941432442', 1, 269),
+('PH_24', 'Trần Minh Huy', '0944907539', 1, 54),
+('PH_240', 'Vũ Văn Nam', '0995965726', 1, 270),
+('PH_241', 'Ngô Gia Thắng', '0954435014', 1, 271),
+('PH_242', 'Đỗ Gia Sơn', '0902077083', 1, 272),
+('PH_243', 'Lê Thu Long', '0934734497', 1, 273),
+('PH_244', 'Phan Xuân Tuấn', '0914208807', 1, 274),
+('PH_245', 'Dương Hữu Long', '0982674276', 1, 275),
+('PH_246', 'Phạm Văn Cường', '0920629718', 1, 276),
+('PH_247', 'Hồ Hữu Thủy', '0942061158', 1, 277),
+('PH_248', 'Vũ Gia Hải', '0997569537', 1, 278),
+('PH_249', 'Phạm Mỹ Phượng', '0948194639', 1, 279),
+('PH_25', 'Phạm Gia Quân', '0919462375', 1, 55),
+('PH_250', 'Võ Thanh Trung', '0908405680', 1, 280),
+('PH_251', 'Đặng Gia Quân', '0961628876', 1, 281),
+('PH_252', 'Ngô Hữu Sơn', '0955844859', 1, 282),
+('PH_253', 'Vũ Gia Trung', '0921428730', 1, 283),
+('PH_254', 'Võ Kim Thủy', '0984201774', 1, 284),
+('PH_255', 'Vũ Văn Dũng', '0988148796', 1, 285),
+('PH_256', 'Dương Hữu Phượng', '0950561648', 1, 286),
+('PH_257', 'Ngô Thị Vân', '0939243681', 1, 287),
+('PH_258', 'Võ Hữu Minh', '0909907519', 1, 288),
+('PH_259', 'Bùi Gia Cường', '0991874231', 1, 289),
+('PH_26', 'Vũ Kim Minh', '0983619988', 1, 56),
+('PH_260', 'Vũ Đức Tùng', '0942248105', 1, 290),
+('PH_261', 'Dương Văn Bình', '0985789928', 1, 291),
+('PH_262', 'Đặng Thu Quân', '0938727689', 1, 292),
+('PH_263', 'Đỗ Gia Dũng', '0936236220', 1, 293),
+('PH_264', 'Lý Hữu Lan', '0953625543', 1, 294),
+('PH_265', 'Đỗ Văn Phượng', '0937028679', 1, 295),
+('PH_266', 'Lê Đức Cường', '0903845363', 1, 296),
+('PH_267', 'Lý Thu Thắng', '0907189969', 1, 297),
+('PH_268', 'Đỗ Gia Trung', '0932806579', 1, 298),
+('PH_269', 'Trần Quốc Quân', '0996641156', 1, 299),
+('PH_27', 'Phan Kim Bình', '0972681558', 1, 57),
+('PH_270', 'Huỳnh Thị Giang', '0993238447', 1, 300),
+('PH_271', 'Vũ Thanh Vy', '0987355928', 1, 301),
+('PH_272', 'Hồ Mỹ Nhi', '0933869573', 1, 302),
+('PH_273', 'Hoàng Gia Hùng', '0929382845', 1, 303),
+('PH_274', 'Dương Thị Thảo', '0956267334', 1, 304),
+('PH_275', 'Huỳnh Minh Tùng', '0902591728', 1, 305),
+('PH_276', 'Hồ Mỹ Mai', '0996823122', 1, 306),
+('PH_277', 'Đỗ Gia Bình', '0945650979', 1, 307),
+('PH_278', 'Đặng Thanh Vy', '0989575485', 1, 308),
+('PH_279', 'Lý Thu Thủy', '0967738353', 1, 309),
+('PH_28', 'Vũ Đức Sơn', '0953908386', 1, 58),
+('PH_280', 'Vũ Quốc Thắng', '0984363351', 1, 310),
+('PH_281', 'Dương Xuân Lan', '0948538600', 1, 311),
+('PH_282', 'Dương Thanh Giang', '0976178928', 1, 312),
+('PH_283', 'Đỗ Thanh Khánh', '0981077691', 1, 313),
+('PH_284', 'Phạm Mỹ Cường', '0922005994', 1, 314),
+('PH_285', 'Hoàng Văn Tùng', '0902908084', 1, 315),
+('PH_286', 'Huỳnh Quốc Dũng', '0960480060', 1, 316),
+('PH_287', 'Lê Minh Thảo', '0943315111', 1, 317),
+('PH_288', 'Đỗ Hữu Quân', '0936782367', 1, 318),
+('PH_289', 'Dương Thị Bình', '0951592416', 1, 319),
+('PH_29', 'Hồ Kim Minh', '0981565297', 1, 59),
+('PH_290', 'Võ Quốc Bình', '0923543031', 1, 320),
+('PH_291', 'Lý Mỹ Nga', '0983384479', 1, 321),
+('PH_292', 'Lý Thu Minh', '0977251580', 1, 322),
+('PH_293', 'Phạm Đức Cường', '0984842939', 1, 323),
+('PH_294', 'Ngô Văn Sơn', '0933595966', 1, 324),
+('PH_295', 'Dương Gia An', '0901095948', 1, 325),
+('PH_296', 'Huỳnh Kim Sơn', '0925651937', 1, 326),
+('PH_297', 'Huỳnh Xuân Lan', '0920924587', 1, 327),
+('PH_298', 'Bùi Mỹ Hải', '0907071944', 1, 328),
+('PH_299', 'Phạm Gia Linh', '0983258680', 1, 329),
+('PH_3', 'Nguyễn Thanh Hùng', '0981791969', 1, 33),
+('PH_30', 'Huỳnh Kim Tuấn', '0990863056', 1, 60),
+('PH_300', 'Dương Hữu Trang', '0922762031', 1, 330),
+('PH_31', 'Ngô Thu Tùng', '0974245758', 1, 61),
+('PH_32', 'Phan Minh Tuấn', '0937224419', 1, 62),
+('PH_33', 'Phạm Thị Thắng', '0928214536', 1, 63),
+('PH_34', 'Võ Thanh Thảo', '0930544109', 1, 64),
+('PH_35', 'Phạm Kim Việt', '0922345715', 1, 65),
+('PH_36', 'Nguyễn Gia Phúc', '0999905189', 1, 66),
+('PH_37', 'Huỳnh Thanh Nhi', '0972652477', 1, 67),
+('PH_38', 'Ngô Minh Vy', '0990841808', 1, 68),
+('PH_39', 'Lý Gia Nga', '0962550223', 1, 69),
+('PH_4', 'Hoàng Mỹ Thảo', '0995830831', 1, 34),
+('PH_40', 'Bùi Hữu Nam', '0919110061', 1, 70),
+('PH_41', 'Phạm Văn Vy', '0920378753', 1, 71),
+('PH_42', 'Phạm Văn Uyên', '0938828129', 1, 72),
+('PH_43', 'Đỗ Kim Lan', '0941820044', 1, 73),
+('PH_44', 'Đặng Thu Bình', '0946459251', 1, 74),
+('PH_45', 'Hồ Văn Việt', '0977222480', 1, 75),
+('PH_46', 'Bùi Kim Hùng', '0989585595', 1, 76),
+('PH_47', 'Lê Kim Uyên', '0990577478', 1, 77),
+('PH_48', 'Phạm Văn Việt', '0910097276', 1, 78),
+('PH_49', 'Ngô Quốc Tùng', '0950142370', 1, 79),
+('PH_5', 'Ngô Văn Thủy', '0938923309', 1, 35),
+('PH_50', 'Đỗ Quốc An', '0999855820', 1, 80),
+('PH_51', 'Lý Gia Uyên', '0943172756', 1, 81),
+('PH_52', 'Vũ Thu Quỳnh', '0903755431', 1, 82),
+('PH_53', 'Hồ Gia Tuấn', '0919588223', 1, 83),
+('PH_54', 'Nguyễn Đức Quân', '0960303109', 1, 84),
+('PH_55', 'Hồ Hữu Nam', '0968576438', 1, 85),
+('PH_56', 'Phạm Thị Phúc', '0971660853', 1, 86),
+('PH_57', 'Đỗ Đức Trang', '0965330079', 1, 87),
+('PH_58', 'Bùi Thu Trung', '0977192770', 1, 88),
+('PH_59', 'Lý Minh Hải', '0940031295', 1, 89),
+('PH_6', 'Bùi Minh Lan', '0970762142', 1, 36),
+('PH_60', 'Hoàng Thị Nhi', '0984776789', 1, 90),
+('PH_61', 'Huỳnh Quốc Thảo', '0911210811', 1, 91),
+('PH_62', 'Nguyễn Hữu Yến', '0920990797', 1, 92),
+('PH_63', 'Trần Xuân Khánh', '0908797728', 1, 93),
+('PH_64', 'Phan Thu Lan', '0964355219', 1, 94),
+('PH_65', 'Phạm Văn Thảo', '0957123484', 1, 95),
+('PH_66', 'Lý Văn Vy', '0956864505', 1, 96),
+('PH_67', 'Nguyễn Văn Hải', '0983716785', 1, 97),
+('PH_68', 'Huỳnh Thu Thắng', '0913405518', 1, 98),
+('PH_69', 'Nguyễn Thanh Mai', '0973667653', 1, 99),
+('PH_7', 'Hồ Thanh Nam', '0969476730', 1, 37),
+('PH_70', 'Lý Thu Yến', '0987378320', 1, 100),
+('PH_71', 'Nguyễn Thu Quân', '0953067802', 1, 101),
+('PH_72', 'Phan Văn Mai', '0927165913', 1, 102),
+('PH_73', 'Phan Thu Minh', '0989517110', 1, 103),
+('PH_74', 'Huỳnh Gia Sơn', '0934216966', 1, 104),
+('PH_75', 'Võ Thị Khánh', '0937431135', 1, 105),
+('PH_76', 'Dương Quốc Quang', '0965764779', 1, 106),
+('PH_77', 'Đỗ Thu Yến', '0924014844', 1, 107),
+('PH_78', 'Vũ Kim Hải', '0901536030', 1, 108),
+('PH_79', 'Bùi Mỹ Hải', '0930349420', 1, 109),
+('PH_8', 'Phạm Mỹ Quang', '0985055575', 1, 38),
+('PH_80', 'Nguyễn Minh Dũng', '0917122054', 1, 110),
+('PH_81', 'Đỗ Thanh Mai', '0934861007', 1, 111),
+('PH_82', 'Vũ Gia Khánh', '0900661701', 1, 112),
+('PH_83', 'Hồ Hữu Huy', '0946882846', 1, 113),
+('PH_84', 'Hồ Gia Trung', '0951288920', 1, 114),
+('PH_85', 'Lý Minh Long', '0913581326', 1, 115),
+('PH_86', 'Đặng Kim Sơn', '0939217619', 1, 116),
+('PH_87', 'Phạm Đức Hải', '0925500574', 1, 117),
+('PH_88', 'Phan Mỹ Vân', '0917550578', 1, 118),
+('PH_89', 'Vũ Văn Bình', '0989120601', 1, 119),
+('PH_9', 'Võ Gia Hùng', '0949586041', 1, 39),
+('PH_90', 'Ngô Hữu Tuấn', '0920553882', 1, 120),
+('PH_91', 'Phạm Kim An', '0937647483', 1, 121),
+('PH_92', 'Hồ Mỹ Mai', '0926049608', 1, 122),
+('PH_93', 'Bùi Kim Uyên', '0993468030', 1, 123),
+('PH_94', 'Dương Kim Phúc', '0982366373', 1, 124),
+('PH_95', 'Đỗ Văn Khánh', '0904766883', 1, 125),
+('PH_96', 'Lê Thị Việt', '0976130283', 1, 126),
+('PH_97', 'Dương Minh Quang', '0961132457', 1, 127),
+('PH_98', 'Đỗ Văn An', '0984851787', 1, 128),
+('PH_99', 'Phạm Thu Khánh', '0960595313', 1, 129),
+('PH001', 'Nguyễn Văn A', '0901234567', 1, 8),
+('PH002', 'Trần Thị B', '0907654321', 1, 9),
+('PH003', 'Lê Văn C', '0903456789', 1, 10),
+('PH004', 'Phạm Thị D', '0909876543', 1, NULL),
+('PH005', 'Võ Văn E', '0904444444', 1, NULL),
+('PH006', 'Đỗ Thị F', '0905555555', 1, NULL),
+('PH007', 'Bùi Văn G', '0906666666', 1, NULL),
+('PH008', 'Hoàng Thị H', '0907777777', 1, NULL),
+('PH009', 'Phan Văn I', '0908888888', 1, NULL),
+('PH010', 'Lý Thị K', '0909999999', 1, NULL);
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `pickuppoints`
+--
+
+CREATE TABLE `pickuppoints` (
+  `Id` int(11) NOT NULL,
+  `RouteId` int(11) NOT NULL COMMENT 'Tuyến xe',
+  `MaHocSinh` varchar(20) DEFAULT NULL COMMENT 'Học sinh được đón tại điểm này (NULL nếu là điểm trường)',
+  `Latitude` decimal(10,8) NOT NULL COMMENT 'Vĩ độ điểm đón (copy từ hocsinh)',
+  `Longitude` decimal(11,8) NOT NULL COMMENT 'Kinh độ điểm đón (copy từ hocsinh)',
+  `DiaChi` text DEFAULT NULL COMMENT 'Địa chỉ điểm đón',
+  `PointOrder` int(11) NOT NULL COMMENT 'Thứ tự điểm đón trên tuyến (1, 2, 3...)',
+  `PointName` varchar(255) DEFAULT NULL COMMENT 'Tên điểm đón (thường là tên học sinh)',
+  `TinhTrangDon` enum('Chưa đón','Đã đón','Vắng','Đã trả','Xuất phát','Điểm cuối') DEFAULT 'Chưa đón' COMMENT 'Trạng thái đón trả học sinh (Xuất phát/Điểm cuối cho điểm trường)',
+  `ThoiGianDonDuKien` time DEFAULT NULL COMMENT 'Thời gian đón dự kiến',
+  `ThoiGianDonThucTe` datetime DEFAULT NULL COMMENT 'Thời gian đón thực tế'
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+--
+-- Dumping data for table `pickuppoints`
+--
+
+INSERT INTO `pickuppoints` (`Id`, `RouteId`, `MaHocSinh`, `Latitude`, `Longitude`, `DiaChi`, `PointOrder`, `PointName`, `TinhTrangDon`, `ThoiGianDonDuKien`, `ThoiGianDonThucTe`) VALUES
+(166, 13, NULL, 10.76143060, 106.68216890, 'Trường ĐH Sài Gòn, Quận 5', 0, NULL, 'Xuất phát', NULL, NULL),
+(167, 13, 'HS_188', 10.80389946, 106.70635505, '770 Lê Lợi, Quận 3, TP.HCM', 1, NULL, 'Đã đón', NULL, '2025-11-26 20:26:01'),
+(168, 13, 'HS_100', 10.80256797, 106.69654150, '713 Điện Biên Phủ, Quận 1, TP.HCM', 2, NULL, 'Đã đón', NULL, '2025-11-26 20:26:13'),
+(169, 13, 'HS_18', 10.80718333, 106.69324441, '340 Nam Kỳ Khởi Nghĩa, Quận 5, TP.HCM', 3, NULL, 'Đã đón', NULL, '2025-11-26 20:26:27'),
+(170, 13, 'HS_186', 10.79372615, 106.69328364, '951 Võ Thị Sáu, Quận 4, TP.HCM', 4, NULL, 'Đã đón', NULL, '2025-11-26 20:26:49'),
+(171, 13, 'HS_163', 10.79156543, 106.68164766, '698 Lê Lợi, Phú Nhuận, TP.HCM', 5, NULL, 'Đã đón', NULL, '2025-11-26 20:27:21'),
+(172, 13, 'HS_101', 10.78835787, 106.67842059, '291 Pasteur, Quận 10, TP.HCM', 6, NULL, 'Đã đón', NULL, '2025-11-26 20:27:33'),
+(173, 13, 'HS_36', 10.77739372, 106.67705090, '819 Đồng Khởi, Bình Thạnh, TP.HCM', 7, NULL, 'Đã đón', NULL, '2025-11-26 20:27:57'),
+(174, 13, 'HS_259', 10.76401881, 106.67676423, '31 Lê Duẩn, Quận 3, TP.HCM', 8, NULL, 'Đã đón', NULL, '2025-11-26 20:28:11'),
+(175, 13, 'HS_51', 10.75707225, 106.68294009, '904 Nguyễn Huệ, Quận 1, TP.HCM', 9, NULL, 'Đã đón', NULL, '2025-11-26 20:28:23'),
+(176, 13, 'HS_162', 10.74896122, 106.67142507, '838 Võ Thị Sáu, Phú Nhuận, TP.HCM', 10, NULL, 'Đã đón', NULL, '2025-11-26 20:28:43'),
+(177, 13, 'HS_288', 10.74625067, 106.66046404, '174 Lê Duẩn, Phú Nhuận, TP.HCM', 11, NULL, 'Đã đón', NULL, '2025-11-26 20:29:09'),
+(178, 13, 'HS_177', 10.74136798, 106.66203877, '213 Nguyễn Trãi, Quận 5, TP.HCM', 12, NULL, 'Chưa đón', NULL, NULL),
+(179, 13, 'HS_102', 10.73200986, 106.66216702, '625 Cách Mạng Tháng 8, Quận 5, TP.HCM', 13, NULL, 'Đã đón', NULL, '2025-11-26 20:29:47'),
+(180, 13, 'HS_164', 10.72062152, 106.65376340, '502 Hai Bà Trưng, Quận 1, TP.HCM', 14, NULL, 'Chưa đón', NULL, NULL),
+(181, 13, 'HS_228', 10.71834758, 106.65111484, '564 Nguyễn Trãi, Quận 10, TP.HCM', 15, NULL, 'Chưa đón', NULL, NULL),
+(182, 13, 'HS_178', 10.72681088, 106.66123742, '646 Nam Kỳ Khởi Nghĩa, Quận 1, TP.HCM', 16, NULL, 'Chưa đón', NULL, NULL),
+(183, 13, 'HS_223', 10.72129663, 106.65695248, '359 Đồng Khởi, Quận 3, TP.HCM', 17, NULL, 'Đã đón', NULL, '2025-11-26 20:30:40'),
+(184, 13, 'HS_166', 10.73612177, 106.68908332, '320 Nguyễn Trãi, Quận 3, TP.HCM', 18, NULL, 'Đã đón', NULL, '2025-11-26 20:31:08'),
+(185, 13, 'HS_202', 10.75398772, 106.70238522, '680 Hai Bà Trưng, Quận 1, TP.HCM', 19, NULL, 'Đã đón', NULL, '2025-11-26 20:31:28'),
+(186, 13, 'HS_189', 10.77398983, 106.70396031, '372 Võ Thị Sáu, Quận 10, TP.HCM', 20, NULL, 'Đã đón', NULL, '2025-11-26 20:31:54'),
+(187, 13, 'HS_169', 10.78161098, 106.70284771, '983 Điện Biên Phủ, Quận 5, TP.HCM', 21, NULL, 'Chưa đón', NULL, NULL),
+(188, 13, 'HS_183', 10.78921898, 106.70969035, '99 Võ Thị Sáu, Bình Thạnh, TP.HCM', 22, NULL, 'Đã đón', NULL, '2025-11-26 20:32:20'),
+(189, 13, NULL, 10.76143060, 106.68216890, 'Trường ĐH Sài Gòn, Quận 5 (Điểm về)', 23, NULL, 'Điểm cuối', NULL, NULL),
+(190, 14, NULL, 10.76143060, 106.68216890, 'Trường ĐH Sài Gòn, Quận 5', 0, NULL, 'Xuất phát', NULL, NULL),
+(191, 14, 'HS_50', 10.81188961, 106.66668034, '227 Nguyễn Trãi, Quận 4, TP.HCM', 1, NULL, 'Chưa đón', NULL, NULL),
+(192, 14, 'HS_49', 10.79232365, 106.65874584, '571 Nam Kỳ Khởi Nghĩa, Quận 4, TP.HCM', 2, NULL, 'Chưa đón', NULL, NULL),
+(193, 14, 'HS_46', 10.78470888, 106.65276333, '105 Nam Kỳ Khởi Nghĩa, Bình Thạnh, TP.HCM', 3, NULL, 'Chưa đón', NULL, NULL),
+(194, 14, 'HS_161', 10.77059660, 106.65718237, '879 Nguyễn Thị Minh Khai, Quận 4, TP.HCM', 4, NULL, 'Chưa đón', NULL, NULL),
+(195, 14, 'HS_190', 10.76895309, 106.63942439, '477 Cách Mạng Tháng 8, Bình Thạnh, TP.HCM', 5, NULL, 'Chưa đón', NULL, NULL),
+(196, 14, 'HS_45', 10.77381207, 106.63308015, '803 Nguyễn Thị Minh Khai, Quận 3, TP.HCM', 6, NULL, 'Chưa đón', NULL, NULL),
+(197, 14, 'HS_22', 10.78047688, 106.63446220, '264 Nguyễn Huệ, Phú Nhuận, TP.HCM', 7, NULL, 'Chưa đón', NULL, NULL),
+(198, 14, 'HS_185', 10.77466545, 106.61917993, '742 Nguyễn Huệ, Quận 1, TP.HCM', 8, NULL, 'Chưa đón', NULL, NULL),
+(199, 14, 'HS_47', 10.77466646, 106.61074347, '421 Trần Hưng Đạo, Quận 3, TP.HCM', 9, NULL, 'Chưa đón', NULL, NULL),
+(200, 14, 'HS_4', 10.78434996, 106.61332125, '860 Cách Mạng Tháng 8, Quận 1, TP.HCM', 10, NULL, 'Chưa đón', NULL, NULL),
+(201, 14, 'HS_44', 10.79465622, 106.63451624, '206 Lê Duẩn, Quận 1, TP.HCM', 11, NULL, 'Chưa đón', NULL, NULL),
+(202, 14, 'HS_231', 10.80562268, 106.63338171, '941 Cách Mạng Tháng 8, Quận 1, TP.HCM', 12, NULL, 'Chưa đón', NULL, NULL),
+(203, 14, 'HS_168', 10.81169918, 106.65679595, '609 Đồng Khởi, Quận 1, TP.HCM', 13, NULL, 'Chưa đón', NULL, NULL),
+(204, 14, 'HS_167', 10.78573979, 106.66025711, '479 Võ Thị Sáu, Bình Thạnh, TP.HCM', 14, NULL, 'Chưa đón', NULL, NULL),
+(205, 14, NULL, 10.76143060, 106.68216890, 'Trường ĐH Sài Gòn, Quận 5 (Điểm về)', 15, NULL, 'Điểm cuối', NULL, NULL),
+(206, 15, NULL, 10.76143060, 106.68216890, 'Trường ĐH Sài Gòn, Quận 5', 0, NULL, 'Xuất phát', NULL, NULL),
+(207, 15, 'HS_184', 10.77249961, 106.69230923, '227 Nguyễn Trãi, Quận 3, TP.HCM', 1, NULL, 'Chưa đón', NULL, NULL),
+(208, 15, 'HS_191', 10.77001147, 106.69007004, '705 Pasteur, Phú Nhuận, TP.HCM', 2, NULL, 'Chưa đón', NULL, NULL),
+(209, 15, 'HS_10', 10.72631259, 106.68178227, '467 Hai Bà Trưng, Quận 4, TP.HCM', 3, NULL, 'Chưa đón', NULL, NULL),
+(210, 15, 'HS_34', 10.72693574, 106.69593086, '640 Lê Lợi, Quận 5, TP.HCM', 4, NULL, 'Chưa đón', NULL, NULL),
+(211, 15, 'HS_181', 10.72370241, 106.69479622, '807 Đồng Khởi, Phú Nhuận, TP.HCM', 5, NULL, 'Chưa đón', NULL, NULL),
+(212, 15, 'HS_192', 10.71279264, 106.69571056, '963 Hai Bà Trưng, Quận 10, TP.HCM', 6, NULL, 'Chưa đón', NULL, NULL),
+(213, 15, 'HS_292', 10.72931981, 106.64036624, '816 Lê Duẩn, Quận 5, TP.HCM', 7, NULL, 'Chưa đón', NULL, NULL),
+(214, 15, 'HS_289', 10.73708710, 106.63718700, '679 Tôn Đức Thắng, Quận 10, TP.HCM', 8, NULL, 'Chưa đón', NULL, NULL),
+(215, 15, 'HS_187', 10.72733783, 106.61755834, '108 Điện Biên Phủ, Phú Nhuận, TP.HCM', 9, NULL, 'Chưa đón', NULL, NULL),
+(216, 15, 'HS_203', 10.71757742, 106.61457258, '275 Nguyễn Huệ, Quận 5, TP.HCM', 10, NULL, 'Chưa đón', NULL, NULL),
+(217, 15, 'HS_180', 10.71732863, 106.61499695, '217 Nam Kỳ Khởi Nghĩa, Bình Thạnh, TP.HCM', 11, NULL, 'Chưa đón', NULL, NULL),
+(218, 15, 'HS_165', 10.71299507, 106.61523516, '598 Nguyễn Huệ, Phú Nhuận, TP.HCM', 12, NULL, 'Chưa đón', NULL, NULL),
+(219, 15, 'HS_179', 10.71702157, 106.62314769, '649 Hai Bà Trưng, Quận 4, TP.HCM', 13, NULL, 'Chưa đón', NULL, NULL),
+(220, 15, 'HS_48', 10.72018652, 106.62550558, '473 Pasteur, Quận 10, TP.HCM', 14, NULL, 'Chưa đón', NULL, NULL),
+(221, 15, 'HS_182', 10.72052414, 106.62346330, '144 Lý Tự Trọng, Bình Thạnh, TP.HCM', 15, NULL, 'Chưa đón', NULL, NULL),
+(222, 15, 'HS_1', 10.74442427, 106.62295436, '484 Pasteur, Phú Nhuận, TP.HCM', 16, NULL, 'Chưa đón', NULL, NULL),
+(223, 15, 'HS_5', 10.76618573, 106.62210104, '448 Trần Hưng Đạo, Bình Thạnh, TP.HCM', 17, NULL, 'Chưa đón', NULL, NULL),
+(224, 15, 'HS_19', 10.76119935, 106.61054879, '610 Nguyễn Trãi, Quận 4, TP.HCM', 18, NULL, 'Chưa đón', NULL, NULL),
+(225, 15, 'HS_216', 10.75597315, 106.63551171, '101 Nam Kỳ Khởi Nghĩa, Quận 10, TP.HCM', 19, NULL, 'Chưa đón', NULL, NULL),
+(226, 15, NULL, 10.76143060, 106.68216890, 'Trường ĐH Sài Gòn, Quận 5 (Điểm về)', 20, NULL, 'Điểm cuối', NULL, NULL);
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `quanly`
+--
+
+CREATE TABLE `quanly` (
+  `MaQuanLy` varchar(20) NOT NULL,
+  `HoTen` varchar(100) NOT NULL,
+  `SoDienThoai` varchar(15) DEFAULT NULL,
+  `UserId` int(11) DEFAULT NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+--
+-- Dumping data for table `quanly`
+--
+
+INSERT INTO `quanly` (`MaQuanLy`, `HoTen`, `SoDienThoai`, `UserId`) VALUES
+('QL001', 'Bùi Bích Phương', '0912345678', 1),
+('QL002', 'Trần Minh Tuấn', '0913456789', 2);
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `routes`
+--
+
+CREATE TABLE `routes` (
+  `Id` int(11) NOT NULL,
+  `MaTuyen` varchar(20) NOT NULL,
+  `Name` varchar(255) NOT NULL,
+  `DriverId` varchar(20) DEFAULT NULL,
+  `VehicleId` int(11) DEFAULT NULL,
+  `Status` enum('Chưa chạy','Đang chạy','Đã hoàn thành','Đã hủy') NOT NULL DEFAULT 'Chưa chạy',
+  `TotalDistance` decimal(10,2) DEFAULT NULL COMMENT 'Tổng quãng đường (km)',
+  `EstimatedTime` int(11) DEFAULT NULL COMMENT 'Thời gian ước tính (phút)',
+  `CreatedAt` timestamp NOT NULL DEFAULT current_timestamp(),
+  `UpdatedAt` timestamp NOT NULL DEFAULT current_timestamp() ON UPDATE current_timestamp(),
+  `currentLatitude` decimal(10,8) DEFAULT NULL COMMENT 'Vĩ độ hiện tại của xe (real-time tracking)',
+  `currentLongitude` decimal(11,8) DEFAULT NULL COMMENT 'Kinh độ hiện tại của xe (real-time tracking)',
+  `lastUpdated` timestamp NULL DEFAULT NULL COMMENT 'Thời gian cập nhật vị trí cuối cùng'
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+--
+-- Dumping data for table `routes`
+--
+
+INSERT INTO `routes` (`Id`, `MaTuyen`, `Name`, `DriverId`, `VehicleId`, `Status`, `TotalDistance`, `EstimatedTime`, `CreatedAt`, `UpdatedAt`, `currentLatitude`, `currentLongitude`, `lastUpdated`) VALUES
+(13, 'AUTO001', 'Tuyến tự động 1', 'TX001', 13, 'Đã hoàn thành', 71.25, 102, '2025-11-26 10:42:45', '2025-11-27 05:26:35', NULL, NULL, '2025-11-27 05:26:33'),
+(14, 'AUTO002', 'Tuyến tự động 2', 'TX_1', 18, '', 63.59, 88, '2025-11-26 10:42:45', '2025-11-26 13:25:00', NULL, NULL, NULL),
+(15, 'AUTO003', 'Tuyến tự động 3', NULL, 20, 'Chưa chạy', 88.32, 117, '2025-11-26 10:42:45', '2025-11-26 10:42:45', NULL, NULL, NULL);
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `schedules`
+--
+
+CREATE TABLE `schedules` (
+  `id` int(11) NOT NULL,
+  `route_id` int(11) NOT NULL,
+  `date` date NOT NULL,
+  `start_time` time NOT NULL,
+  `shift` enum('Sáng','Chiều') NOT NULL DEFAULT 'Sáng',
+  `end_time` time DEFAULT NULL,
+  `status` enum('Sắp diễn ra','Đang chạy','Hoàn thành','Đã hủy','Đã phân công') DEFAULT 'Sắp diễn ra' COMMENT 'Trạng thái lịch trình',
+  `created_at` timestamp NOT NULL DEFAULT current_timestamp()
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+--
+-- Dumping data for table `schedules`
+--
+
+INSERT INTO `schedules` (`id`, `route_id`, `date`, `start_time`, `shift`, `end_time`, `status`, `created_at`) VALUES
+(24, 13, '2025-11-26', '06:30:00', 'Sáng', NULL, 'Đang chạy', '2025-11-26 10:42:45'),
+(25, 15, '2025-11-26', '06:30:00', 'Sáng', NULL, 'Sắp diễn ra', '2025-11-26 10:42:45'),
+(26, 14, '2025-11-26', '06:30:00', 'Sáng', NULL, 'Sắp diễn ra', '2025-11-26 10:42:45'),
+(27, 15, '2025-11-26', '16:30:00', 'Sáng', NULL, 'Sắp diễn ra', '2025-11-26 10:42:45'),
+(28, 13, '2025-11-26', '16:30:00', 'Sáng', NULL, 'Sắp diễn ra', '2025-11-26 10:42:45'),
+(29, 14, '2025-11-26', '16:30:00', 'Chiều', NULL, 'Sắp diễn ra', '2025-11-26 10:42:45'),
+(30, 13, '2025-11-26', '07:00:00', 'Sáng', NULL, 'Sắp diễn ra', '2025-11-26 12:21:25'),
+(31, 13, '2025-11-26', '07:00:00', 'Sáng', NULL, 'Sắp diễn ra', '2025-11-26 12:33:02'),
+(32, 13, '2025-11-26', '07:00:00', 'Sáng', NULL, 'Sắp diễn ra', '2025-11-26 12:41:49'),
+(33, 13, '2025-11-27', '07:00:00', 'Sáng', NULL, 'Sắp diễn ra', '2025-11-26 12:42:31'),
+(34, 14, '2025-11-26', '07:00:00', 'Sáng', NULL, 'Sắp diễn ra', '2025-11-26 12:45:45'),
+(35, 14, '2025-11-27', '07:00:00', 'Sáng', NULL, 'Sắp diễn ra', '2025-11-26 12:45:50'),
+(36, 14, '2025-11-27', '07:00:00', 'Sáng', NULL, 'Sắp diễn ra', '2025-11-26 12:55:55'),
+(37, 13, '2025-11-27', '04:05:00', 'Sáng', NULL, 'Sắp diễn ra', '2025-11-26 13:00:36'),
+(38, 13, '2025-11-27', '07:00:00', 'Sáng', NULL, 'Sắp diễn ra', '2025-11-26 13:03:12'),
+(39, 13, '2025-11-28', '07:00:00', 'Sáng', NULL, 'Đã phân công', '2025-11-26 13:22:27'),
+(40, 13, '2025-11-28', '16:00:00', 'Sáng', '12:26:35', 'Hoàn thành', '2025-11-26 13:22:27'),
+(41, 14, '2025-11-28', '07:00:00', 'Sáng', NULL, 'Đã phân công', '2025-11-26 13:25:00'),
+(42, 14, '2025-11-28', '16:00:00', 'Chiều', NULL, 'Đã phân công', '2025-11-26 13:25:00');
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `schedule_pickup_status`
+--
+
+CREATE TABLE `schedule_pickup_status` (
+  `Id` int(11) NOT NULL,
+  `ScheduleId` int(11) NOT NULL COMMENT 'ID của schedule',
+  `PickupPointId` int(11) NOT NULL COMMENT 'ID của điểm đón',
+  `TinhTrangDon` enum('Chưa đón','Đã đón','Vắng','Đã trả','Xuất phát','Điểm cuối') DEFAULT 'Chưa đón' COMMENT 'Trạng thái đón trả học sinh',
+  `ThoiGianDonThucTe` datetime DEFAULT NULL COMMENT 'Thời gian đón thực tế',
+  `GhiChu` text DEFAULT NULL COMMENT 'Ghi chú (lý do vắng, v.v.)',
+  `CreatedAt` timestamp NOT NULL DEFAULT current_timestamp(),
+  `UpdatedAt` timestamp NOT NULL DEFAULT current_timestamp() ON UPDATE current_timestamp()
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='Lưu trạng thái đón học sinh riêng cho từng schedule';
+
+--
+-- Dumping data for table `schedule_pickup_status`
+--
+
+INSERT INTO `schedule_pickup_status` (`Id`, `ScheduleId`, `PickupPointId`, `TinhTrangDon`, `ThoiGianDonThucTe`, `GhiChu`, `CreatedAt`, `UpdatedAt`) VALUES
+(1, 24, 166, 'Xuất phát', NULL, NULL, '2025-11-27 12:48:51', '2025-11-27 12:48:51'),
+(2, 28, 166, 'Xuất phát', NULL, NULL, '2025-11-27 12:48:51', '2025-11-27 12:48:51'),
+(3, 30, 166, 'Xuất phát', NULL, NULL, '2025-11-27 12:48:51', '2025-11-27 12:48:51'),
+(4, 31, 166, 'Xuất phát', NULL, NULL, '2025-11-27 12:48:51', '2025-11-27 12:48:51'),
+(5, 32, 166, 'Xuất phát', NULL, NULL, '2025-11-27 12:48:51', '2025-11-27 12:48:51'),
+(6, 33, 166, 'Xuất phát', NULL, NULL, '2025-11-27 12:48:51', '2025-11-27 12:48:51'),
+(7, 37, 166, 'Xuất phát', NULL, NULL, '2025-11-27 12:48:51', '2025-11-27 12:48:51'),
+(8, 38, 166, 'Xuất phát', NULL, NULL, '2025-11-27 12:48:51', '2025-11-27 12:48:51'),
+(9, 39, 166, 'Xuất phát', NULL, NULL, '2025-11-27 12:48:51', '2025-11-27 12:48:51'),
+(10, 40, 166, 'Xuất phát', NULL, NULL, '2025-11-27 12:48:51', '2025-11-27 12:48:51'),
+(11, 24, 167, 'Đã đón', '2025-11-26 20:26:01', NULL, '2025-11-27 12:48:51', '2025-11-27 12:48:51'),
+(12, 28, 167, 'Đã đón', '2025-11-26 20:26:01', NULL, '2025-11-27 12:48:51', '2025-11-27 12:48:51'),
+(13, 30, 167, 'Đã đón', '2025-11-26 20:26:01', NULL, '2025-11-27 12:48:51', '2025-11-27 12:48:51'),
+(14, 31, 167, 'Đã đón', '2025-11-26 20:26:01', NULL, '2025-11-27 12:48:51', '2025-11-27 12:48:51'),
+(15, 32, 167, 'Đã đón', '2025-11-26 20:26:01', NULL, '2025-11-27 12:48:51', '2025-11-27 12:48:51'),
+(16, 33, 167, 'Đã đón', '2025-11-26 20:26:01', NULL, '2025-11-27 12:48:51', '2025-11-27 12:48:51'),
+(17, 37, 167, 'Đã đón', '2025-11-26 20:26:01', NULL, '2025-11-27 12:48:51', '2025-11-27 12:48:51'),
+(18, 38, 167, 'Đã đón', '2025-11-26 20:26:01', NULL, '2025-11-27 12:48:51', '2025-11-27 12:48:51'),
+(19, 39, 167, 'Đã đón', '2025-11-26 20:26:01', NULL, '2025-11-27 12:48:51', '2025-11-27 12:48:51'),
+(20, 40, 167, 'Đã đón', '2025-11-26 20:26:01', NULL, '2025-11-27 12:48:51', '2025-11-27 12:48:51'),
+(21, 24, 168, 'Đã đón', '2025-11-26 20:26:13', NULL, '2025-11-27 12:48:51', '2025-11-27 12:48:51'),
+(22, 28, 168, 'Đã đón', '2025-11-26 20:26:13', NULL, '2025-11-27 12:48:51', '2025-11-27 12:48:51'),
+(23, 30, 168, 'Đã đón', '2025-11-26 20:26:13', NULL, '2025-11-27 12:48:51', '2025-11-27 12:48:51'),
+(24, 31, 168, 'Đã đón', '2025-11-26 20:26:13', NULL, '2025-11-27 12:48:51', '2025-11-27 12:48:51'),
+(25, 32, 168, 'Đã đón', '2025-11-26 20:26:13', NULL, '2025-11-27 12:48:51', '2025-11-27 12:48:51'),
+(26, 33, 168, 'Đã đón', '2025-11-26 20:26:13', NULL, '2025-11-27 12:48:51', '2025-11-27 12:48:51'),
+(27, 37, 168, 'Đã đón', '2025-11-26 20:26:13', NULL, '2025-11-27 12:48:51', '2025-11-27 12:48:51'),
+(28, 38, 168, 'Đã đón', '2025-11-26 20:26:13', NULL, '2025-11-27 12:48:51', '2025-11-27 12:48:51'),
+(29, 39, 168, 'Đã đón', '2025-11-26 20:26:13', NULL, '2025-11-27 12:48:51', '2025-11-27 12:48:51'),
+(30, 40, 168, 'Đã đón', '2025-11-26 20:26:13', NULL, '2025-11-27 12:48:51', '2025-11-27 12:48:51'),
+(31, 24, 169, 'Đã đón', '2025-11-26 20:26:27', NULL, '2025-11-27 12:48:51', '2025-11-27 12:48:51'),
+(32, 28, 169, 'Đã đón', '2025-11-26 20:26:27', NULL, '2025-11-27 12:48:51', '2025-11-27 12:48:51'),
+(33, 30, 169, 'Đã đón', '2025-11-26 20:26:27', NULL, '2025-11-27 12:48:51', '2025-11-27 12:48:51'),
+(34, 31, 169, 'Đã đón', '2025-11-26 20:26:27', NULL, '2025-11-27 12:48:51', '2025-11-27 12:48:51'),
+(35, 32, 169, 'Đã đón', '2025-11-26 20:26:27', NULL, '2025-11-27 12:48:51', '2025-11-27 12:48:51'),
+(36, 33, 169, 'Đã đón', '2025-11-26 20:26:27', NULL, '2025-11-27 12:48:51', '2025-11-27 12:48:51'),
+(37, 37, 169, 'Đã đón', '2025-11-26 20:26:27', NULL, '2025-11-27 12:48:51', '2025-11-27 12:48:51'),
+(38, 38, 169, 'Đã đón', '2025-11-26 20:26:27', NULL, '2025-11-27 12:48:51', '2025-11-27 12:48:51'),
+(39, 39, 169, 'Đã đón', '2025-11-26 20:26:27', NULL, '2025-11-27 12:48:51', '2025-11-27 12:48:51'),
+(40, 40, 169, 'Đã đón', '2025-11-26 20:26:27', NULL, '2025-11-27 12:48:51', '2025-11-27 12:48:51'),
+(41, 24, 170, 'Đã đón', '2025-11-26 20:26:49', NULL, '2025-11-27 12:48:51', '2025-11-27 12:48:51'),
+(42, 28, 170, 'Đã đón', '2025-11-26 20:26:49', NULL, '2025-11-27 12:48:51', '2025-11-27 12:48:51'),
+(43, 30, 170, 'Đã đón', '2025-11-26 20:26:49', NULL, '2025-11-27 12:48:51', '2025-11-27 12:48:51'),
+(44, 31, 170, 'Đã đón', '2025-11-26 20:26:49', NULL, '2025-11-27 12:48:51', '2025-11-27 12:48:51'),
+(45, 32, 170, 'Đã đón', '2025-11-26 20:26:49', NULL, '2025-11-27 12:48:51', '2025-11-27 12:48:51'),
+(46, 33, 170, 'Đã đón', '2025-11-26 20:26:49', NULL, '2025-11-27 12:48:51', '2025-11-27 12:48:51'),
+(47, 37, 170, 'Đã đón', '2025-11-26 20:26:49', NULL, '2025-11-27 12:48:51', '2025-11-27 12:48:51'),
+(48, 38, 170, 'Đã đón', '2025-11-26 20:26:49', NULL, '2025-11-27 12:48:51', '2025-11-27 12:48:51'),
+(49, 39, 170, 'Đã đón', '2025-11-26 20:26:49', NULL, '2025-11-27 12:48:51', '2025-11-27 12:48:51'),
+(50, 40, 170, 'Đã đón', '2025-11-26 20:26:49', NULL, '2025-11-27 12:48:51', '2025-11-27 12:48:51'),
+(51, 24, 171, 'Đã đón', '2025-11-26 20:27:21', NULL, '2025-11-27 12:48:51', '2025-11-27 12:48:51'),
+(52, 28, 171, 'Đã đón', '2025-11-26 20:27:21', NULL, '2025-11-27 12:48:51', '2025-11-27 12:48:51'),
+(53, 30, 171, 'Đã đón', '2025-11-26 20:27:21', NULL, '2025-11-27 12:48:51', '2025-11-27 12:48:51'),
+(54, 31, 171, 'Đã đón', '2025-11-26 20:27:21', NULL, '2025-11-27 12:48:51', '2025-11-27 12:48:51'),
+(55, 32, 171, 'Đã đón', '2025-11-26 20:27:21', NULL, '2025-11-27 12:48:51', '2025-11-27 12:48:51'),
+(56, 33, 171, 'Đã đón', '2025-11-26 20:27:21', NULL, '2025-11-27 12:48:51', '2025-11-27 12:48:51'),
+(57, 37, 171, 'Đã đón', '2025-11-26 20:27:21', NULL, '2025-11-27 12:48:51', '2025-11-27 12:48:51'),
+(58, 38, 171, 'Đã đón', '2025-11-26 20:27:21', NULL, '2025-11-27 12:48:51', '2025-11-27 12:48:51'),
+(59, 39, 171, 'Đã đón', '2025-11-26 20:27:21', NULL, '2025-11-27 12:48:51', '2025-11-27 12:48:51'),
+(60, 40, 171, 'Đã đón', '2025-11-26 20:27:21', NULL, '2025-11-27 12:48:51', '2025-11-27 12:48:51'),
+(61, 24, 172, 'Đã đón', '2025-11-26 20:27:33', NULL, '2025-11-27 12:48:51', '2025-11-27 12:48:51'),
+(62, 28, 172, 'Đã đón', '2025-11-26 20:27:33', NULL, '2025-11-27 12:48:51', '2025-11-27 12:48:51'),
+(63, 30, 172, 'Đã đón', '2025-11-26 20:27:33', NULL, '2025-11-27 12:48:51', '2025-11-27 12:48:51'),
+(64, 31, 172, 'Đã đón', '2025-11-26 20:27:33', NULL, '2025-11-27 12:48:51', '2025-11-27 12:48:51'),
+(65, 32, 172, 'Đã đón', '2025-11-26 20:27:33', NULL, '2025-11-27 12:48:51', '2025-11-27 12:48:51'),
+(66, 33, 172, 'Đã đón', '2025-11-26 20:27:33', NULL, '2025-11-27 12:48:51', '2025-11-27 12:48:51'),
+(67, 37, 172, 'Đã đón', '2025-11-26 20:27:33', NULL, '2025-11-27 12:48:51', '2025-11-27 12:48:51'),
+(68, 38, 172, 'Đã đón', '2025-11-26 20:27:33', NULL, '2025-11-27 12:48:51', '2025-11-27 12:48:51'),
+(69, 39, 172, 'Đã đón', '2025-11-26 20:27:33', NULL, '2025-11-27 12:48:51', '2025-11-27 12:48:51'),
+(70, 40, 172, 'Đã đón', '2025-11-26 20:27:33', NULL, '2025-11-27 12:48:51', '2025-11-27 12:48:51'),
+(71, 24, 173, 'Đã đón', '2025-11-26 20:27:57', NULL, '2025-11-27 12:48:51', '2025-11-27 12:48:51'),
+(72, 28, 173, 'Đã đón', '2025-11-26 20:27:57', NULL, '2025-11-27 12:48:51', '2025-11-27 12:48:51'),
+(73, 30, 173, 'Đã đón', '2025-11-26 20:27:57', NULL, '2025-11-27 12:48:51', '2025-11-27 12:48:51'),
+(74, 31, 173, 'Đã đón', '2025-11-26 20:27:57', NULL, '2025-11-27 12:48:51', '2025-11-27 12:48:51'),
+(75, 32, 173, 'Đã đón', '2025-11-26 20:27:57', NULL, '2025-11-27 12:48:51', '2025-11-27 12:48:51'),
+(76, 33, 173, 'Đã đón', '2025-11-26 20:27:57', NULL, '2025-11-27 12:48:51', '2025-11-27 12:48:51'),
+(77, 37, 173, 'Đã đón', '2025-11-26 20:27:57', NULL, '2025-11-27 12:48:51', '2025-11-27 12:48:51'),
+(78, 38, 173, 'Đã đón', '2025-11-26 20:27:57', NULL, '2025-11-27 12:48:51', '2025-11-27 12:48:51'),
+(79, 39, 173, 'Đã đón', '2025-11-26 20:27:57', NULL, '2025-11-27 12:48:51', '2025-11-27 12:48:51'),
+(80, 40, 173, 'Đã đón', '2025-11-26 20:27:57', NULL, '2025-11-27 12:48:51', '2025-11-27 12:48:51'),
+(81, 24, 174, 'Đã đón', '2025-11-26 20:28:11', NULL, '2025-11-27 12:48:51', '2025-11-27 12:48:51'),
+(82, 28, 174, 'Đã đón', '2025-11-26 20:28:11', NULL, '2025-11-27 12:48:51', '2025-11-27 12:48:51'),
+(83, 30, 174, 'Đã đón', '2025-11-26 20:28:11', NULL, '2025-11-27 12:48:51', '2025-11-27 12:48:51'),
+(84, 31, 174, 'Đã đón', '2025-11-26 20:28:11', NULL, '2025-11-27 12:48:51', '2025-11-27 12:48:51'),
+(85, 32, 174, 'Đã đón', '2025-11-26 20:28:11', NULL, '2025-11-27 12:48:51', '2025-11-27 12:48:51'),
+(86, 33, 174, 'Đã đón', '2025-11-26 20:28:11', NULL, '2025-11-27 12:48:51', '2025-11-27 12:48:51'),
+(87, 37, 174, 'Đã đón', '2025-11-26 20:28:11', NULL, '2025-11-27 12:48:51', '2025-11-27 12:48:51'),
+(88, 38, 174, 'Đã đón', '2025-11-26 20:28:11', NULL, '2025-11-27 12:48:51', '2025-11-27 12:48:51'),
+(89, 39, 174, 'Đã đón', '2025-11-26 20:28:11', NULL, '2025-11-27 12:48:51', '2025-11-27 12:48:51'),
+(90, 40, 174, 'Đã đón', '2025-11-26 20:28:11', NULL, '2025-11-27 12:48:51', '2025-11-27 12:48:51'),
+(91, 24, 175, 'Đã đón', '2025-11-26 20:28:23', NULL, '2025-11-27 12:48:51', '2025-11-27 12:48:51'),
+(92, 28, 175, 'Đã đón', '2025-11-26 20:28:23', NULL, '2025-11-27 12:48:51', '2025-11-27 12:48:51'),
+(93, 30, 175, 'Đã đón', '2025-11-26 20:28:23', NULL, '2025-11-27 12:48:51', '2025-11-27 12:48:51'),
+(94, 31, 175, 'Đã đón', '2025-11-26 20:28:23', NULL, '2025-11-27 12:48:51', '2025-11-27 12:48:51'),
+(95, 32, 175, 'Đã đón', '2025-11-26 20:28:23', NULL, '2025-11-27 12:48:51', '2025-11-27 12:48:51'),
+(96, 33, 175, 'Đã đón', '2025-11-26 20:28:23', NULL, '2025-11-27 12:48:51', '2025-11-27 12:48:51'),
+(97, 37, 175, 'Đã đón', '2025-11-26 20:28:23', NULL, '2025-11-27 12:48:51', '2025-11-27 12:48:51'),
+(98, 38, 175, 'Đã đón', '2025-11-26 20:28:23', NULL, '2025-11-27 12:48:51', '2025-11-27 12:48:51'),
+(99, 39, 175, 'Đã đón', '2025-11-26 20:28:23', NULL, '2025-11-27 12:48:51', '2025-11-27 12:48:51'),
+(100, 40, 175, 'Đã đón', '2025-11-26 20:28:23', NULL, '2025-11-27 12:48:51', '2025-11-27 12:48:51'),
+(101, 24, 176, 'Đã đón', '2025-11-26 20:28:43', NULL, '2025-11-27 12:48:51', '2025-11-27 12:48:51'),
+(102, 28, 176, 'Đã đón', '2025-11-26 20:28:43', NULL, '2025-11-27 12:48:51', '2025-11-27 12:48:51'),
+(103, 30, 176, 'Đã đón', '2025-11-26 20:28:43', NULL, '2025-11-27 12:48:51', '2025-11-27 12:48:51'),
+(104, 31, 176, 'Đã đón', '2025-11-26 20:28:43', NULL, '2025-11-27 12:48:51', '2025-11-27 12:48:51'),
+(105, 32, 176, 'Đã đón', '2025-11-26 20:28:43', NULL, '2025-11-27 12:48:51', '2025-11-27 12:48:51'),
+(106, 33, 176, 'Đã đón', '2025-11-26 20:28:43', NULL, '2025-11-27 12:48:51', '2025-11-27 12:48:51'),
+(107, 37, 176, 'Đã đón', '2025-11-26 20:28:43', NULL, '2025-11-27 12:48:51', '2025-11-27 12:48:51'),
+(108, 38, 176, 'Đã đón', '2025-11-26 20:28:43', NULL, '2025-11-27 12:48:51', '2025-11-27 12:48:51'),
+(109, 39, 176, 'Đã đón', '2025-11-26 20:28:43', NULL, '2025-11-27 12:48:51', '2025-11-27 12:48:51'),
+(110, 40, 176, 'Đã đón', '2025-11-26 20:28:43', NULL, '2025-11-27 12:48:51', '2025-11-27 12:48:51'),
+(111, 24, 177, 'Đã đón', '2025-11-26 20:29:09', NULL, '2025-11-27 12:48:51', '2025-11-27 12:48:51'),
+(112, 28, 177, 'Đã đón', '2025-11-26 20:29:09', NULL, '2025-11-27 12:48:51', '2025-11-27 12:48:51'),
+(113, 30, 177, 'Đã đón', '2025-11-26 20:29:09', NULL, '2025-11-27 12:48:51', '2025-11-27 12:48:51'),
+(114, 31, 177, 'Đã đón', '2025-11-26 20:29:09', NULL, '2025-11-27 12:48:51', '2025-11-27 12:48:51'),
+(115, 32, 177, 'Đã đón', '2025-11-26 20:29:09', NULL, '2025-11-27 12:48:51', '2025-11-27 12:48:51'),
+(116, 33, 177, 'Đã đón', '2025-11-26 20:29:09', NULL, '2025-11-27 12:48:51', '2025-11-27 12:48:51'),
+(117, 37, 177, 'Đã đón', '2025-11-26 20:29:09', NULL, '2025-11-27 12:48:51', '2025-11-27 12:48:51'),
+(118, 38, 177, 'Đã đón', '2025-11-26 20:29:09', NULL, '2025-11-27 12:48:51', '2025-11-27 12:48:51'),
+(119, 39, 177, 'Đã đón', '2025-11-26 20:29:09', NULL, '2025-11-27 12:48:51', '2025-11-27 12:48:51'),
+(120, 40, 177, 'Đã đón', '2025-11-26 20:29:09', NULL, '2025-11-27 12:48:51', '2025-11-27 12:48:51'),
+(121, 24, 178, 'Chưa đón', NULL, NULL, '2025-11-27 12:48:51', '2025-11-27 12:48:51'),
+(122, 28, 178, 'Chưa đón', NULL, NULL, '2025-11-27 12:48:51', '2025-11-27 12:48:51'),
+(123, 30, 178, 'Chưa đón', NULL, NULL, '2025-11-27 12:48:51', '2025-11-27 12:48:51'),
+(124, 31, 178, 'Chưa đón', NULL, NULL, '2025-11-27 12:48:51', '2025-11-27 12:48:51'),
+(125, 32, 178, 'Chưa đón', NULL, NULL, '2025-11-27 12:48:51', '2025-11-27 12:48:51'),
+(126, 33, 178, 'Chưa đón', NULL, NULL, '2025-11-27 12:48:51', '2025-11-27 12:48:51'),
+(127, 37, 178, 'Chưa đón', NULL, NULL, '2025-11-27 12:48:51', '2025-11-27 12:48:51'),
+(128, 38, 178, 'Chưa đón', NULL, NULL, '2025-11-27 12:48:51', '2025-11-27 12:48:51'),
+(129, 39, 178, 'Chưa đón', NULL, NULL, '2025-11-27 12:48:51', '2025-11-27 12:48:51'),
+(130, 40, 178, 'Chưa đón', NULL, NULL, '2025-11-27 12:48:51', '2025-11-27 12:48:51'),
+(131, 24, 179, 'Đã đón', '2025-11-26 20:29:47', NULL, '2025-11-27 12:48:51', '2025-11-27 12:48:51'),
+(132, 28, 179, 'Đã đón', '2025-11-26 20:29:47', NULL, '2025-11-27 12:48:51', '2025-11-27 12:48:51'),
+(133, 30, 179, 'Đã đón', '2025-11-26 20:29:47', NULL, '2025-11-27 12:48:51', '2025-11-27 12:48:51'),
+(134, 31, 179, 'Đã đón', '2025-11-26 20:29:47', NULL, '2025-11-27 12:48:51', '2025-11-27 12:48:51'),
+(135, 32, 179, 'Đã đón', '2025-11-26 20:29:47', NULL, '2025-11-27 12:48:51', '2025-11-27 12:48:51'),
+(136, 33, 179, 'Đã đón', '2025-11-26 20:29:47', NULL, '2025-11-27 12:48:51', '2025-11-27 12:48:51'),
+(137, 37, 179, 'Đã đón', '2025-11-26 20:29:47', NULL, '2025-11-27 12:48:51', '2025-11-27 12:48:51'),
+(138, 38, 179, 'Đã đón', '2025-11-26 20:29:47', NULL, '2025-11-27 12:48:51', '2025-11-27 12:48:51'),
+(139, 39, 179, 'Đã đón', '2025-11-26 20:29:47', NULL, '2025-11-27 12:48:51', '2025-11-27 12:48:51'),
+(140, 40, 179, 'Đã đón', '2025-11-26 20:29:47', NULL, '2025-11-27 12:48:51', '2025-11-27 12:48:51'),
+(141, 24, 180, 'Chưa đón', NULL, NULL, '2025-11-27 12:48:51', '2025-11-27 12:48:51'),
+(142, 28, 180, 'Chưa đón', NULL, NULL, '2025-11-27 12:48:51', '2025-11-27 12:48:51'),
+(143, 30, 180, 'Chưa đón', NULL, NULL, '2025-11-27 12:48:51', '2025-11-27 12:48:51'),
+(144, 31, 180, 'Chưa đón', NULL, NULL, '2025-11-27 12:48:51', '2025-11-27 12:48:51'),
+(145, 32, 180, 'Chưa đón', NULL, NULL, '2025-11-27 12:48:51', '2025-11-27 12:48:51'),
+(146, 33, 180, 'Chưa đón', NULL, NULL, '2025-11-27 12:48:51', '2025-11-27 12:48:51'),
+(147, 37, 180, 'Chưa đón', NULL, NULL, '2025-11-27 12:48:51', '2025-11-27 12:48:51'),
+(148, 38, 180, 'Chưa đón', NULL, NULL, '2025-11-27 12:48:51', '2025-11-27 12:48:51'),
+(149, 39, 180, 'Chưa đón', NULL, NULL, '2025-11-27 12:48:51', '2025-11-27 12:48:51'),
+(150, 40, 180, 'Chưa đón', NULL, NULL, '2025-11-27 12:48:51', '2025-11-27 12:48:51'),
+(151, 24, 181, 'Chưa đón', NULL, NULL, '2025-11-27 12:48:51', '2025-11-27 12:48:51'),
+(152, 28, 181, 'Chưa đón', NULL, NULL, '2025-11-27 12:48:51', '2025-11-27 12:48:51'),
+(153, 30, 181, 'Chưa đón', NULL, NULL, '2025-11-27 12:48:51', '2025-11-27 12:48:51'),
+(154, 31, 181, 'Chưa đón', NULL, NULL, '2025-11-27 12:48:51', '2025-11-27 12:48:51'),
+(155, 32, 181, 'Chưa đón', NULL, NULL, '2025-11-27 12:48:51', '2025-11-27 12:48:51'),
+(156, 33, 181, 'Chưa đón', NULL, NULL, '2025-11-27 12:48:51', '2025-11-27 12:48:51'),
+(157, 37, 181, 'Chưa đón', NULL, NULL, '2025-11-27 12:48:51', '2025-11-27 12:48:51'),
+(158, 38, 181, 'Chưa đón', NULL, NULL, '2025-11-27 12:48:51', '2025-11-27 12:48:51'),
+(159, 39, 181, 'Chưa đón', NULL, NULL, '2025-11-27 12:48:51', '2025-11-27 12:48:51'),
+(160, 40, 181, 'Chưa đón', NULL, NULL, '2025-11-27 12:48:51', '2025-11-27 12:48:51'),
+(161, 24, 182, 'Chưa đón', NULL, NULL, '2025-11-27 12:48:51', '2025-11-27 12:48:51'),
+(162, 28, 182, 'Chưa đón', NULL, NULL, '2025-11-27 12:48:51', '2025-11-27 12:48:51'),
+(163, 30, 182, 'Chưa đón', NULL, NULL, '2025-11-27 12:48:51', '2025-11-27 12:48:51'),
+(164, 31, 182, 'Chưa đón', NULL, NULL, '2025-11-27 12:48:51', '2025-11-27 12:48:51'),
+(165, 32, 182, 'Chưa đón', NULL, NULL, '2025-11-27 12:48:51', '2025-11-27 12:48:51'),
+(166, 33, 182, 'Chưa đón', NULL, NULL, '2025-11-27 12:48:51', '2025-11-27 12:48:51'),
+(167, 37, 182, 'Chưa đón', NULL, NULL, '2025-11-27 12:48:51', '2025-11-27 12:48:51'),
+(168, 38, 182, 'Chưa đón', NULL, NULL, '2025-11-27 12:48:51', '2025-11-27 12:48:51'),
+(169, 39, 182, 'Chưa đón', NULL, NULL, '2025-11-27 12:48:51', '2025-11-27 12:48:51'),
+(170, 40, 182, 'Chưa đón', NULL, NULL, '2025-11-27 12:48:51', '2025-11-27 12:48:51'),
+(171, 24, 183, 'Đã đón', '2025-11-26 20:30:40', NULL, '2025-11-27 12:48:51', '2025-11-27 12:48:51'),
+(172, 28, 183, 'Đã đón', '2025-11-26 20:30:40', NULL, '2025-11-27 12:48:51', '2025-11-27 12:48:51'),
+(173, 30, 183, 'Đã đón', '2025-11-26 20:30:40', NULL, '2025-11-27 12:48:51', '2025-11-27 12:48:51'),
+(174, 31, 183, 'Đã đón', '2025-11-26 20:30:40', NULL, '2025-11-27 12:48:51', '2025-11-27 12:48:51'),
+(175, 32, 183, 'Đã đón', '2025-11-26 20:30:40', NULL, '2025-11-27 12:48:51', '2025-11-27 12:48:51'),
+(176, 33, 183, 'Đã đón', '2025-11-26 20:30:40', NULL, '2025-11-27 12:48:51', '2025-11-27 12:48:51'),
+(177, 37, 183, 'Đã đón', '2025-11-26 20:30:40', NULL, '2025-11-27 12:48:51', '2025-11-27 12:48:51'),
+(178, 38, 183, 'Đã đón', '2025-11-26 20:30:40', NULL, '2025-11-27 12:48:51', '2025-11-27 12:48:51'),
+(179, 39, 183, 'Đã đón', '2025-11-26 20:30:40', NULL, '2025-11-27 12:48:51', '2025-11-27 12:48:51'),
+(180, 40, 183, 'Đã đón', '2025-11-26 20:30:40', NULL, '2025-11-27 12:48:51', '2025-11-27 12:48:51'),
+(181, 24, 184, 'Đã đón', '2025-11-26 20:31:08', NULL, '2025-11-27 12:48:51', '2025-11-27 12:48:51'),
+(182, 28, 184, 'Đã đón', '2025-11-26 20:31:08', NULL, '2025-11-27 12:48:51', '2025-11-27 12:48:51'),
+(183, 30, 184, 'Đã đón', '2025-11-26 20:31:08', NULL, '2025-11-27 12:48:51', '2025-11-27 12:48:51'),
+(184, 31, 184, 'Đã đón', '2025-11-26 20:31:08', NULL, '2025-11-27 12:48:51', '2025-11-27 12:48:51'),
+(185, 32, 184, 'Đã đón', '2025-11-26 20:31:08', NULL, '2025-11-27 12:48:51', '2025-11-27 12:48:51'),
+(186, 33, 184, 'Đã đón', '2025-11-26 20:31:08', NULL, '2025-11-27 12:48:51', '2025-11-27 12:48:51'),
+(187, 37, 184, 'Đã đón', '2025-11-26 20:31:08', NULL, '2025-11-27 12:48:51', '2025-11-27 12:48:51'),
+(188, 38, 184, 'Đã đón', '2025-11-26 20:31:08', NULL, '2025-11-27 12:48:51', '2025-11-27 12:48:51'),
+(189, 39, 184, 'Đã đón', '2025-11-26 20:31:08', NULL, '2025-11-27 12:48:51', '2025-11-27 12:48:51'),
+(190, 40, 184, 'Đã đón', '2025-11-26 20:31:08', NULL, '2025-11-27 12:48:51', '2025-11-27 12:48:51'),
+(191, 24, 185, 'Đã đón', '2025-11-26 20:31:28', NULL, '2025-11-27 12:48:51', '2025-11-27 12:48:51'),
+(192, 28, 185, 'Đã đón', '2025-11-26 20:31:28', NULL, '2025-11-27 12:48:51', '2025-11-27 12:48:51'),
+(193, 30, 185, 'Đã đón', '2025-11-26 20:31:28', NULL, '2025-11-27 12:48:51', '2025-11-27 12:48:51'),
+(194, 31, 185, 'Đã đón', '2025-11-26 20:31:28', NULL, '2025-11-27 12:48:51', '2025-11-27 12:48:51'),
+(195, 32, 185, 'Đã đón', '2025-11-26 20:31:28', NULL, '2025-11-27 12:48:51', '2025-11-27 12:48:51'),
+(196, 33, 185, 'Đã đón', '2025-11-26 20:31:28', NULL, '2025-11-27 12:48:51', '2025-11-27 12:48:51'),
+(197, 37, 185, 'Đã đón', '2025-11-26 20:31:28', NULL, '2025-11-27 12:48:51', '2025-11-27 12:48:51'),
+(198, 38, 185, 'Đã đón', '2025-11-26 20:31:28', NULL, '2025-11-27 12:48:51', '2025-11-27 12:48:51'),
+(199, 39, 185, 'Đã đón', '2025-11-26 20:31:28', NULL, '2025-11-27 12:48:51', '2025-11-27 12:48:51'),
+(200, 40, 185, 'Đã đón', '2025-11-26 20:31:28', NULL, '2025-11-27 12:48:51', '2025-11-27 12:48:51'),
+(201, 24, 186, 'Đã đón', '2025-11-26 20:31:54', NULL, '2025-11-27 12:48:51', '2025-11-27 12:48:51'),
+(202, 28, 186, 'Đã đón', '2025-11-26 20:31:54', NULL, '2025-11-27 12:48:51', '2025-11-27 12:48:51'),
+(203, 30, 186, 'Đã đón', '2025-11-26 20:31:54', NULL, '2025-11-27 12:48:51', '2025-11-27 12:48:51'),
+(204, 31, 186, 'Đã đón', '2025-11-26 20:31:54', NULL, '2025-11-27 12:48:51', '2025-11-27 12:48:51'),
+(205, 32, 186, 'Đã đón', '2025-11-26 20:31:54', NULL, '2025-11-27 12:48:51', '2025-11-27 12:48:51'),
+(206, 33, 186, 'Đã đón', '2025-11-26 20:31:54', NULL, '2025-11-27 12:48:51', '2025-11-27 12:48:51'),
+(207, 37, 186, 'Đã đón', '2025-11-26 20:31:54', NULL, '2025-11-27 12:48:51', '2025-11-27 12:48:51'),
+(208, 38, 186, 'Đã đón', '2025-11-26 20:31:54', NULL, '2025-11-27 12:48:51', '2025-11-27 12:48:51'),
+(209, 39, 186, 'Đã đón', '2025-11-26 20:31:54', NULL, '2025-11-27 12:48:51', '2025-11-27 12:48:51'),
+(210, 40, 186, 'Đã đón', '2025-11-26 20:31:54', NULL, '2025-11-27 12:48:51', '2025-11-27 12:48:51'),
+(211, 24, 187, 'Chưa đón', NULL, NULL, '2025-11-27 12:48:51', '2025-11-27 12:48:51'),
+(212, 28, 187, 'Chưa đón', NULL, NULL, '2025-11-27 12:48:51', '2025-11-27 12:48:51'),
+(213, 30, 187, 'Chưa đón', NULL, NULL, '2025-11-27 12:48:51', '2025-11-27 12:48:51'),
+(214, 31, 187, 'Chưa đón', NULL, NULL, '2025-11-27 12:48:51', '2025-11-27 12:48:51'),
+(215, 32, 187, 'Chưa đón', NULL, NULL, '2025-11-27 12:48:51', '2025-11-27 12:48:51'),
+(216, 33, 187, 'Chưa đón', NULL, NULL, '2025-11-27 12:48:51', '2025-11-27 12:48:51'),
+(217, 37, 187, 'Chưa đón', NULL, NULL, '2025-11-27 12:48:51', '2025-11-27 12:48:51'),
+(218, 38, 187, 'Chưa đón', NULL, NULL, '2025-11-27 12:48:51', '2025-11-27 12:48:51'),
+(219, 39, 187, 'Chưa đón', NULL, NULL, '2025-11-27 12:48:51', '2025-11-27 12:48:51'),
+(220, 40, 187, 'Chưa đón', NULL, NULL, '2025-11-27 12:48:51', '2025-11-27 12:48:51'),
+(221, 24, 188, 'Đã đón', '2025-11-26 20:32:20', NULL, '2025-11-27 12:48:51', '2025-11-27 12:48:51'),
+(222, 28, 188, 'Đã đón', '2025-11-26 20:32:20', NULL, '2025-11-27 12:48:51', '2025-11-27 12:48:51'),
+(223, 30, 188, 'Đã đón', '2025-11-26 20:32:20', NULL, '2025-11-27 12:48:51', '2025-11-27 12:48:51'),
+(224, 31, 188, 'Đã đón', '2025-11-26 20:32:20', NULL, '2025-11-27 12:48:51', '2025-11-27 12:48:51'),
+(225, 32, 188, 'Đã đón', '2025-11-26 20:32:20', NULL, '2025-11-27 12:48:51', '2025-11-27 12:48:51'),
+(226, 33, 188, 'Đã đón', '2025-11-26 20:32:20', NULL, '2025-11-27 12:48:51', '2025-11-27 12:48:51'),
+(227, 37, 188, 'Đã đón', '2025-11-26 20:32:20', NULL, '2025-11-27 12:48:51', '2025-11-27 12:48:51'),
+(228, 38, 188, 'Đã đón', '2025-11-26 20:32:20', NULL, '2025-11-27 12:48:51', '2025-11-27 12:48:51'),
+(229, 39, 188, 'Đã đón', '2025-11-26 20:32:20', NULL, '2025-11-27 12:48:51', '2025-11-27 12:48:51'),
+(230, 40, 188, 'Đã đón', '2025-11-26 20:32:20', NULL, '2025-11-27 12:48:51', '2025-11-27 12:48:51'),
+(231, 24, 189, 'Điểm cuối', NULL, NULL, '2025-11-27 12:48:51', '2025-11-27 12:48:51'),
+(232, 28, 189, 'Điểm cuối', NULL, NULL, '2025-11-27 12:48:51', '2025-11-27 12:48:51'),
+(233, 30, 189, 'Điểm cuối', NULL, NULL, '2025-11-27 12:48:51', '2025-11-27 12:48:51'),
+(234, 31, 189, 'Điểm cuối', NULL, NULL, '2025-11-27 12:48:51', '2025-11-27 12:48:51'),
+(235, 32, 189, 'Điểm cuối', NULL, NULL, '2025-11-27 12:48:51', '2025-11-27 12:48:51'),
+(236, 33, 189, 'Điểm cuối', NULL, NULL, '2025-11-27 12:48:51', '2025-11-27 12:48:51'),
+(237, 37, 189, 'Điểm cuối', NULL, NULL, '2025-11-27 12:48:51', '2025-11-27 12:48:51'),
+(238, 38, 189, 'Điểm cuối', NULL, NULL, '2025-11-27 12:48:51', '2025-11-27 12:48:51'),
+(239, 39, 189, 'Điểm cuối', NULL, NULL, '2025-11-27 12:48:51', '2025-11-27 12:48:51'),
+(240, 40, 189, 'Điểm cuối', NULL, NULL, '2025-11-27 12:48:51', '2025-11-27 12:48:51'),
+(241, 26, 190, 'Xuất phát', NULL, NULL, '2025-11-27 12:48:51', '2025-11-27 12:48:51'),
+(242, 29, 190, 'Xuất phát', NULL, NULL, '2025-11-27 12:48:51', '2025-11-27 12:48:51'),
+(243, 34, 190, 'Xuất phát', NULL, NULL, '2025-11-27 12:48:51', '2025-11-27 12:48:51'),
+(244, 35, 190, 'Xuất phát', NULL, NULL, '2025-11-27 12:48:51', '2025-11-27 12:48:51'),
+(245, 36, 190, 'Xuất phát', NULL, NULL, '2025-11-27 12:48:51', '2025-11-27 12:48:51'),
+(246, 41, 190, 'Xuất phát', NULL, NULL, '2025-11-27 12:48:51', '2025-11-27 12:48:51'),
+(247, 42, 190, 'Xuất phát', NULL, NULL, '2025-11-27 12:48:51', '2025-11-27 12:48:51'),
+(248, 26, 191, 'Chưa đón', NULL, NULL, '2025-11-27 12:48:51', '2025-11-27 12:48:51'),
+(249, 29, 191, 'Chưa đón', NULL, NULL, '2025-11-27 12:48:51', '2025-11-27 12:48:51'),
+(250, 34, 191, 'Chưa đón', NULL, NULL, '2025-11-27 12:48:51', '2025-11-27 12:48:51'),
+(251, 35, 191, 'Chưa đón', NULL, NULL, '2025-11-27 12:48:51', '2025-11-27 12:48:51'),
+(252, 36, 191, 'Chưa đón', NULL, NULL, '2025-11-27 12:48:51', '2025-11-27 12:48:51'),
+(253, 41, 191, 'Chưa đón', NULL, NULL, '2025-11-27 12:48:51', '2025-11-27 12:48:51'),
+(254, 42, 191, 'Chưa đón', NULL, NULL, '2025-11-27 12:48:51', '2025-11-27 12:48:51'),
+(255, 26, 192, 'Chưa đón', NULL, NULL, '2025-11-27 12:48:51', '2025-11-27 12:48:51'),
+(256, 29, 192, 'Chưa đón', NULL, NULL, '2025-11-27 12:48:51', '2025-11-27 12:48:51'),
+(257, 34, 192, 'Chưa đón', NULL, NULL, '2025-11-27 12:48:51', '2025-11-27 12:48:51'),
+(258, 35, 192, 'Chưa đón', NULL, NULL, '2025-11-27 12:48:51', '2025-11-27 12:48:51'),
+(259, 36, 192, 'Chưa đón', NULL, NULL, '2025-11-27 12:48:51', '2025-11-27 12:48:51'),
+(260, 41, 192, 'Chưa đón', NULL, NULL, '2025-11-27 12:48:51', '2025-11-27 12:48:51'),
+(261, 42, 192, 'Chưa đón', NULL, NULL, '2025-11-27 12:48:51', '2025-11-27 12:48:51'),
+(262, 26, 193, 'Chưa đón', NULL, NULL, '2025-11-27 12:48:51', '2025-11-27 12:48:51'),
+(263, 29, 193, 'Chưa đón', NULL, NULL, '2025-11-27 12:48:51', '2025-11-27 12:48:51'),
+(264, 34, 193, 'Chưa đón', NULL, NULL, '2025-11-27 12:48:51', '2025-11-27 12:48:51'),
+(265, 35, 193, 'Chưa đón', NULL, NULL, '2025-11-27 12:48:51', '2025-11-27 12:48:51'),
+(266, 36, 193, 'Chưa đón', NULL, NULL, '2025-11-27 12:48:51', '2025-11-27 12:48:51'),
+(267, 41, 193, 'Chưa đón', NULL, NULL, '2025-11-27 12:48:51', '2025-11-27 12:48:51'),
+(268, 42, 193, 'Chưa đón', NULL, NULL, '2025-11-27 12:48:51', '2025-11-27 12:48:51'),
+(269, 26, 194, 'Chưa đón', NULL, NULL, '2025-11-27 12:48:51', '2025-11-27 12:48:51'),
+(270, 29, 194, 'Chưa đón', NULL, NULL, '2025-11-27 12:48:51', '2025-11-27 12:48:51'),
+(271, 34, 194, 'Chưa đón', NULL, NULL, '2025-11-27 12:48:51', '2025-11-27 12:48:51'),
+(272, 35, 194, 'Chưa đón', NULL, NULL, '2025-11-27 12:48:51', '2025-11-27 12:48:51'),
+(273, 36, 194, 'Chưa đón', NULL, NULL, '2025-11-27 12:48:51', '2025-11-27 12:48:51'),
+(274, 41, 194, 'Chưa đón', NULL, NULL, '2025-11-27 12:48:51', '2025-11-27 12:48:51'),
+(275, 42, 194, 'Chưa đón', NULL, NULL, '2025-11-27 12:48:51', '2025-11-27 12:48:51'),
+(276, 26, 195, 'Chưa đón', NULL, NULL, '2025-11-27 12:48:51', '2025-11-27 12:48:51'),
+(277, 29, 195, 'Chưa đón', NULL, NULL, '2025-11-27 12:48:51', '2025-11-27 12:48:51'),
+(278, 34, 195, 'Chưa đón', NULL, NULL, '2025-11-27 12:48:51', '2025-11-27 12:48:51'),
+(279, 35, 195, 'Chưa đón', NULL, NULL, '2025-11-27 12:48:51', '2025-11-27 12:48:51'),
+(280, 36, 195, 'Chưa đón', NULL, NULL, '2025-11-27 12:48:51', '2025-11-27 12:48:51'),
+(281, 41, 195, 'Chưa đón', NULL, NULL, '2025-11-27 12:48:51', '2025-11-27 12:48:51'),
+(282, 42, 195, 'Chưa đón', NULL, NULL, '2025-11-27 12:48:51', '2025-11-27 12:48:51'),
+(283, 26, 196, 'Chưa đón', NULL, NULL, '2025-11-27 12:48:51', '2025-11-27 12:48:51'),
+(284, 29, 196, 'Chưa đón', NULL, NULL, '2025-11-27 12:48:51', '2025-11-27 12:48:51'),
+(285, 34, 196, 'Chưa đón', NULL, NULL, '2025-11-27 12:48:51', '2025-11-27 12:48:51'),
+(286, 35, 196, 'Chưa đón', NULL, NULL, '2025-11-27 12:48:51', '2025-11-27 12:48:51'),
+(287, 36, 196, 'Chưa đón', NULL, NULL, '2025-11-27 12:48:51', '2025-11-27 12:48:51'),
+(288, 41, 196, 'Chưa đón', NULL, NULL, '2025-11-27 12:48:51', '2025-11-27 12:48:51'),
+(289, 42, 196, 'Chưa đón', NULL, NULL, '2025-11-27 12:48:51', '2025-11-27 12:48:51'),
+(290, 26, 197, 'Chưa đón', NULL, NULL, '2025-11-27 12:48:51', '2025-11-27 12:48:51'),
+(291, 29, 197, 'Chưa đón', NULL, NULL, '2025-11-27 12:48:51', '2025-11-27 12:48:51'),
+(292, 34, 197, 'Chưa đón', NULL, NULL, '2025-11-27 12:48:51', '2025-11-27 12:48:51'),
+(293, 35, 197, 'Chưa đón', NULL, NULL, '2025-11-27 12:48:51', '2025-11-27 12:48:51'),
+(294, 36, 197, 'Chưa đón', NULL, NULL, '2025-11-27 12:48:51', '2025-11-27 12:48:51'),
+(295, 41, 197, 'Chưa đón', NULL, NULL, '2025-11-27 12:48:51', '2025-11-27 12:48:51'),
+(296, 42, 197, 'Chưa đón', NULL, NULL, '2025-11-27 12:48:51', '2025-11-27 12:48:51'),
+(297, 26, 198, 'Chưa đón', NULL, NULL, '2025-11-27 12:48:51', '2025-11-27 12:48:51'),
+(298, 29, 198, 'Chưa đón', NULL, NULL, '2025-11-27 12:48:51', '2025-11-27 12:48:51'),
+(299, 34, 198, 'Chưa đón', NULL, NULL, '2025-11-27 12:48:51', '2025-11-27 12:48:51'),
+(300, 35, 198, 'Chưa đón', NULL, NULL, '2025-11-27 12:48:51', '2025-11-27 12:48:51'),
+(301, 36, 198, 'Chưa đón', NULL, NULL, '2025-11-27 12:48:51', '2025-11-27 12:48:51'),
+(302, 41, 198, 'Chưa đón', NULL, NULL, '2025-11-27 12:48:51', '2025-11-27 12:48:51'),
+(303, 42, 198, 'Chưa đón', NULL, NULL, '2025-11-27 12:48:51', '2025-11-27 12:48:51'),
+(304, 26, 199, 'Chưa đón', NULL, NULL, '2025-11-27 12:48:51', '2025-11-27 12:48:51'),
+(305, 29, 199, 'Chưa đón', NULL, NULL, '2025-11-27 12:48:51', '2025-11-27 12:48:51'),
+(306, 34, 199, 'Chưa đón', NULL, NULL, '2025-11-27 12:48:51', '2025-11-27 12:48:51'),
+(307, 35, 199, 'Chưa đón', NULL, NULL, '2025-11-27 12:48:51', '2025-11-27 12:48:51'),
+(308, 36, 199, 'Chưa đón', NULL, NULL, '2025-11-27 12:48:51', '2025-11-27 12:48:51'),
+(309, 41, 199, 'Chưa đón', NULL, NULL, '2025-11-27 12:48:51', '2025-11-27 12:48:51'),
+(310, 42, 199, 'Chưa đón', NULL, NULL, '2025-11-27 12:48:51', '2025-11-27 12:48:51'),
+(311, 26, 200, 'Chưa đón', NULL, NULL, '2025-11-27 12:48:51', '2025-11-27 12:48:51'),
+(312, 29, 200, 'Chưa đón', NULL, NULL, '2025-11-27 12:48:51', '2025-11-27 12:48:51'),
+(313, 34, 200, 'Chưa đón', NULL, NULL, '2025-11-27 12:48:51', '2025-11-27 12:48:51'),
+(314, 35, 200, 'Chưa đón', NULL, NULL, '2025-11-27 12:48:51', '2025-11-27 12:48:51'),
+(315, 36, 200, 'Chưa đón', NULL, NULL, '2025-11-27 12:48:51', '2025-11-27 12:48:51'),
+(316, 41, 200, 'Chưa đón', NULL, NULL, '2025-11-27 12:48:51', '2025-11-27 12:48:51'),
+(317, 42, 200, 'Chưa đón', NULL, NULL, '2025-11-27 12:48:51', '2025-11-27 12:48:51'),
+(318, 26, 201, 'Chưa đón', NULL, NULL, '2025-11-27 12:48:51', '2025-11-27 12:48:51'),
+(319, 29, 201, 'Chưa đón', NULL, NULL, '2025-11-27 12:48:51', '2025-11-27 12:48:51'),
+(320, 34, 201, 'Chưa đón', NULL, NULL, '2025-11-27 12:48:51', '2025-11-27 12:48:51'),
+(321, 35, 201, 'Chưa đón', NULL, NULL, '2025-11-27 12:48:51', '2025-11-27 12:48:51'),
+(322, 36, 201, 'Chưa đón', NULL, NULL, '2025-11-27 12:48:51', '2025-11-27 12:48:51'),
+(323, 41, 201, 'Chưa đón', NULL, NULL, '2025-11-27 12:48:51', '2025-11-27 12:48:51'),
+(324, 42, 201, 'Chưa đón', NULL, NULL, '2025-11-27 12:48:51', '2025-11-27 12:48:51'),
+(325, 26, 202, 'Chưa đón', NULL, NULL, '2025-11-27 12:48:51', '2025-11-27 12:48:51'),
+(326, 29, 202, 'Chưa đón', NULL, NULL, '2025-11-27 12:48:51', '2025-11-27 12:48:51'),
+(327, 34, 202, 'Chưa đón', NULL, NULL, '2025-11-27 12:48:51', '2025-11-27 12:48:51'),
+(328, 35, 202, 'Chưa đón', NULL, NULL, '2025-11-27 12:48:51', '2025-11-27 12:48:51'),
+(329, 36, 202, 'Chưa đón', NULL, NULL, '2025-11-27 12:48:51', '2025-11-27 12:48:51'),
+(330, 41, 202, 'Chưa đón', NULL, NULL, '2025-11-27 12:48:51', '2025-11-27 12:48:51'),
+(331, 42, 202, 'Chưa đón', NULL, NULL, '2025-11-27 12:48:51', '2025-11-27 12:48:51'),
+(332, 26, 203, 'Chưa đón', NULL, NULL, '2025-11-27 12:48:51', '2025-11-27 12:48:51'),
+(333, 29, 203, 'Chưa đón', NULL, NULL, '2025-11-27 12:48:51', '2025-11-27 12:48:51'),
+(334, 34, 203, 'Chưa đón', NULL, NULL, '2025-11-27 12:48:51', '2025-11-27 12:48:51'),
+(335, 35, 203, 'Chưa đón', NULL, NULL, '2025-11-27 12:48:51', '2025-11-27 12:48:51'),
+(336, 36, 203, 'Chưa đón', NULL, NULL, '2025-11-27 12:48:51', '2025-11-27 12:48:51'),
+(337, 41, 203, 'Chưa đón', NULL, NULL, '2025-11-27 12:48:51', '2025-11-27 12:48:51'),
+(338, 42, 203, 'Chưa đón', NULL, NULL, '2025-11-27 12:48:51', '2025-11-27 12:48:51'),
+(339, 26, 204, 'Chưa đón', NULL, NULL, '2025-11-27 12:48:51', '2025-11-27 12:48:51'),
+(340, 29, 204, 'Chưa đón', NULL, NULL, '2025-11-27 12:48:51', '2025-11-27 12:48:51'),
+(341, 34, 204, 'Chưa đón', NULL, NULL, '2025-11-27 12:48:51', '2025-11-27 12:48:51'),
+(342, 35, 204, 'Chưa đón', NULL, NULL, '2025-11-27 12:48:51', '2025-11-27 12:48:51'),
+(343, 36, 204, 'Chưa đón', NULL, NULL, '2025-11-27 12:48:51', '2025-11-27 12:48:51'),
+(344, 41, 204, 'Chưa đón', NULL, NULL, '2025-11-27 12:48:51', '2025-11-27 12:48:51'),
+(345, 42, 204, 'Chưa đón', NULL, NULL, '2025-11-27 12:48:51', '2025-11-27 12:48:51'),
+(346, 26, 205, 'Điểm cuối', NULL, NULL, '2025-11-27 12:48:51', '2025-11-27 12:48:51'),
+(347, 29, 205, 'Điểm cuối', NULL, NULL, '2025-11-27 12:48:51', '2025-11-27 12:48:51'),
+(348, 34, 205, 'Điểm cuối', NULL, NULL, '2025-11-27 12:48:51', '2025-11-27 12:48:51'),
+(349, 35, 205, 'Điểm cuối', NULL, NULL, '2025-11-27 12:48:51', '2025-11-27 12:48:51'),
+(350, 36, 205, 'Điểm cuối', NULL, NULL, '2025-11-27 12:48:51', '2025-11-27 12:48:51'),
+(351, 41, 205, 'Điểm cuối', NULL, NULL, '2025-11-27 12:48:51', '2025-11-27 12:48:51'),
+(352, 42, 205, 'Điểm cuối', NULL, NULL, '2025-11-27 12:48:51', '2025-11-27 12:48:51'),
+(353, 25, 206, 'Xuất phát', NULL, NULL, '2025-11-27 12:48:51', '2025-11-27 12:48:51'),
+(354, 27, 206, 'Xuất phát', NULL, NULL, '2025-11-27 12:48:51', '2025-11-27 12:48:51'),
+(355, 25, 207, 'Chưa đón', NULL, NULL, '2025-11-27 12:48:51', '2025-11-27 12:48:51'),
+(356, 27, 207, 'Chưa đón', NULL, NULL, '2025-11-27 12:48:51', '2025-11-27 12:48:51'),
+(357, 25, 208, 'Chưa đón', NULL, NULL, '2025-11-27 12:48:51', '2025-11-27 12:48:51'),
+(358, 27, 208, 'Chưa đón', NULL, NULL, '2025-11-27 12:48:51', '2025-11-27 12:48:51'),
+(359, 25, 209, 'Chưa đón', NULL, NULL, '2025-11-27 12:48:51', '2025-11-27 12:48:51'),
+(360, 27, 209, 'Chưa đón', NULL, NULL, '2025-11-27 12:48:51', '2025-11-27 12:48:51'),
+(361, 25, 210, 'Chưa đón', NULL, NULL, '2025-11-27 12:48:51', '2025-11-27 12:48:51'),
+(362, 27, 210, 'Chưa đón', NULL, NULL, '2025-11-27 12:48:51', '2025-11-27 12:48:51'),
+(363, 25, 211, 'Chưa đón', NULL, NULL, '2025-11-27 12:48:51', '2025-11-27 12:48:51'),
+(364, 27, 211, 'Chưa đón', NULL, NULL, '2025-11-27 12:48:51', '2025-11-27 12:48:51'),
+(365, 25, 212, 'Chưa đón', NULL, NULL, '2025-11-27 12:48:51', '2025-11-27 12:48:51'),
+(366, 27, 212, 'Chưa đón', NULL, NULL, '2025-11-27 12:48:51', '2025-11-27 12:48:51'),
+(367, 25, 213, 'Chưa đón', NULL, NULL, '2025-11-27 12:48:51', '2025-11-27 12:48:51'),
+(368, 27, 213, 'Chưa đón', NULL, NULL, '2025-11-27 12:48:51', '2025-11-27 12:48:51'),
+(369, 25, 214, 'Chưa đón', NULL, NULL, '2025-11-27 12:48:51', '2025-11-27 12:48:51'),
+(370, 27, 214, 'Chưa đón', NULL, NULL, '2025-11-27 12:48:51', '2025-11-27 12:48:51'),
+(371, 25, 215, 'Chưa đón', NULL, NULL, '2025-11-27 12:48:51', '2025-11-27 12:48:51'),
+(372, 27, 215, 'Chưa đón', NULL, NULL, '2025-11-27 12:48:51', '2025-11-27 12:48:51'),
+(373, 25, 216, 'Chưa đón', NULL, NULL, '2025-11-27 12:48:51', '2025-11-27 12:48:51'),
+(374, 27, 216, 'Chưa đón', NULL, NULL, '2025-11-27 12:48:51', '2025-11-27 12:48:51'),
+(375, 25, 217, 'Chưa đón', NULL, NULL, '2025-11-27 12:48:51', '2025-11-27 12:48:51'),
+(376, 27, 217, 'Chưa đón', NULL, NULL, '2025-11-27 12:48:51', '2025-11-27 12:48:51'),
+(377, 25, 218, 'Chưa đón', NULL, NULL, '2025-11-27 12:48:51', '2025-11-27 12:48:51'),
+(378, 27, 218, 'Chưa đón', NULL, NULL, '2025-11-27 12:48:51', '2025-11-27 12:48:51'),
+(379, 25, 219, 'Chưa đón', NULL, NULL, '2025-11-27 12:48:51', '2025-11-27 12:48:51'),
+(380, 27, 219, 'Chưa đón', NULL, NULL, '2025-11-27 12:48:51', '2025-11-27 12:48:51'),
+(381, 25, 220, 'Chưa đón', NULL, NULL, '2025-11-27 12:48:51', '2025-11-27 12:48:51'),
+(382, 27, 220, 'Chưa đón', NULL, NULL, '2025-11-27 12:48:51', '2025-11-27 12:48:51'),
+(383, 25, 221, 'Chưa đón', NULL, NULL, '2025-11-27 12:48:51', '2025-11-27 12:48:51'),
+(384, 27, 221, 'Chưa đón', NULL, NULL, '2025-11-27 12:48:51', '2025-11-27 12:48:51'),
+(385, 25, 222, 'Chưa đón', NULL, NULL, '2025-11-27 12:48:51', '2025-11-27 12:48:51'),
+(386, 27, 222, 'Chưa đón', NULL, NULL, '2025-11-27 12:48:51', '2025-11-27 12:48:51'),
+(387, 25, 223, 'Chưa đón', NULL, NULL, '2025-11-27 12:48:51', '2025-11-27 12:48:51'),
+(388, 27, 223, 'Chưa đón', NULL, NULL, '2025-11-27 12:48:51', '2025-11-27 12:48:51'),
+(389, 25, 224, 'Chưa đón', NULL, NULL, '2025-11-27 12:48:51', '2025-11-27 12:48:51'),
+(390, 27, 224, 'Chưa đón', NULL, NULL, '2025-11-27 12:48:51', '2025-11-27 12:48:51'),
+(391, 25, 225, 'Chưa đón', NULL, NULL, '2025-11-27 12:48:51', '2025-11-27 12:48:51'),
+(392, 27, 225, 'Chưa đón', NULL, NULL, '2025-11-27 12:48:51', '2025-11-27 12:48:51'),
+(393, 25, 226, 'Điểm cuối', NULL, NULL, '2025-11-27 12:48:51', '2025-11-27 12:48:51'),
+(394, 27, 226, 'Điểm cuối', NULL, NULL, '2025-11-27 12:48:51', '2025-11-27 12:48:51');
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `thongbao`
+--
+
+CREATE TABLE `thongbao` (
+  `MaThongBao` varchar(20) NOT NULL,
+  `NoiDung` text DEFAULT NULL,
+  `ThoiGian` datetime DEFAULT NULL,
+  `LoaiThongBao` varchar(50) DEFAULT NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+--
+-- Dumping data for table `thongbao`
+--
+
+INSERT INTO `thongbao` (`MaThongBao`, `NoiDung`, `ThoiGian`, `LoaiThongBao`) VALUES
+('TB001', 'Thông báo quan trọng số 1 về lịch trình xe buýt.', '2025-11-24 19:07:03', 'Hệ thống'),
+('TB002', 'Thông báo quan trọng số 2 về lịch trình xe buýt.', '2025-11-24 19:07:03', 'Hệ thống'),
+('TB003', 'Thông báo quan trọng số 3 về lịch trình xe buýt.', '2025-11-24 19:07:03', 'Hệ thống'),
+('TB004', 'Thông báo quan trọng số 4 về lịch trình xe buýt.', '2025-11-24 19:07:03', 'Hệ thống'),
+('TB005', 'Thông báo quan trọng số 5 về lịch trình xe buýt.', '2025-11-24 19:07:03', 'Hệ thống'),
+('TB006', 'Thông báo quan trọng số 6 về lịch trình xe buýt.', '2025-11-24 19:07:03', 'Hệ thống'),
+('TB007', 'Thông báo quan trọng số 7 về lịch trình xe buýt.', '2025-11-24 19:07:03', 'Hệ thống'),
+('TB008', 'Thông báo quan trọng số 8 về lịch trình xe buýt.', '2025-11-24 19:07:03', 'Hệ thống'),
+('TB009', 'Thông báo quan trọng số 9 về lịch trình xe buýt.', '2025-11-24 19:07:03', 'Hệ thống'),
+('TB010', 'Thông báo quan trọng số 10 về lịch trình xe buýt.', '2025-11-24 19:07:03', 'Hệ thống');
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `thongbao_phuhuynh`
+--
+
+CREATE TABLE `thongbao_phuhuynh` (
+  `Id` int(11) NOT NULL,
+  `MaThongBao` varchar(20) NOT NULL,
+  `MaPhuHuynh` varchar(20) NOT NULL,
+  `NoiDung` text NOT NULL,
+  `ThoiGian` datetime NOT NULL DEFAULT current_timestamp(),
+  `LoaiThongBao` varchar(50) DEFAULT 'Thông báo',
+  `DaDoc` tinyint(1) DEFAULT 0
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+--
+-- Dumping data for table `thongbao_phuhuynh`
+--
+
+INSERT INTO `thongbao_phuhuynh` (`Id`, `MaThongBao`, `MaPhuHuynh`, `NoiDung`, `ThoiGian`, `LoaiThongBao`, `DaDoc`) VALUES
+(1, 'TB001', 'PH001', 'Xe buýt đang cách điểm đón của con bạn 500m. Vui lòng chuẩn bị!', '2025-11-26 20:51:57', 'Xe đang đến gần', 0),
+(2, 'TB002', 'PH001', 'Xe buýt đã đến điểm đón. Con bạn đã lên xe an toàn.', '2025-11-26 20:41:57', 'Xe đã đến', 0),
+(3, 'TB003', 'PH001', 'Chuyến đi đã hoàn thành. Con bạn đã về đến trường an toàn lúc 7:30.', '2025-11-26 20:26:57', 'Hoàn thành', 1),
+(4, 'TB004', 'PH001', 'Xe buýt có thể trễ 10 phút do tắc đường tại khu vực cầu Sài Gòn. Xin lỗi vì sự bất tiện.', '2025-11-26 19:56:57', 'Xe bị trễ', 0),
+(5, 'TB005', 'PH001', 'Hệ thống đã được nâng cấp với tính năng theo dõi vị trí xe bus realtime. Vui lòng trải nghiệm!', '2025-11-26 18:56:57', 'Thông báo hệ thống', 1),
+(6, 'TB006', 'PH002', 'Xe buýt đang trên đường đến điểm đón của con bạn.', '2025-11-26 20:46:58', 'Đang trên đường', 0),
+(7, 'TB007', 'PH002', 'Con bạn đã được đón và đang trên đường đến trường.', '2025-11-26 20:36:58', 'Đã đón', 1),
+(8, 'TB008', 'PH003', 'Lịch trình ngày mai: Xe sẽ đến đón lúc 7:00 sáng như thường lệ.', '2025-11-26 17:56:58', 'Lịch trình', 1);
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `users`
+--
+
+CREATE TABLE `users` (
+  `Id` int(11) NOT NULL,
+  `Username` varchar(50) NOT NULL,
+  `Password` varchar(255) NOT NULL,
+  `Role` enum('admin','driver','parent') NOT NULL,
+  `ProfileId` varchar(20) NOT NULL,
+  `CreatedAt` timestamp NOT NULL DEFAULT current_timestamp()
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+--
+-- Dumping data for table `users`
+--
+
+INSERT INTO `users` (`Id`, `Username`, `Password`, `Role`, `ProfileId`, `CreatedAt`) VALUES
+(1, 'admin', '123456', 'admin', 'QL001', '2025-11-24 12:06:47'),
+(2, 'admin2', '$2b$10$2v10OALDsE2SyMOnIVl8K.Sb2Abv7TIKk9lRu/Tbn/kNCnhgFCmCS', 'admin', 'QL002', '2025-11-24 12:06:47'),
+(3, 'taixe01', '123456', 'driver', 'TX001', '2025-11-24 12:06:47'),
+(4, 'taixe02', '$2b$10$2v10OALDsE2SyMOnIVl8K.Sb2Abv7TIKk9lRu/Tbn/kNCnhgFCmCS', 'driver', 'TX002', '2025-11-24 12:06:47'),
+(5, 'taixe03', '$2b$10$2v10OALDsE2SyMOnIVl8K.Sb2Abv7TIKk9lRu/Tbn/kNCnhgFCmCS', 'driver', 'TX003', '2025-11-24 12:06:47'),
+(6, 'taixe04', '$2b$10$2v10OALDsE2SyMOnIVl8K.Sb2Abv7TIKk9lRu/Tbn/kNCnhgFCmCS', 'driver', 'TX004', '2025-11-24 12:06:47'),
+(7, 'taixe05', '$2b$10$2v10OALDsE2SyMOnIVl8K.Sb2Abv7TIKk9lRu/Tbn/kNCnhgFCmCS', 'driver', 'TX005', '2025-11-24 12:06:47'),
+(8, 'phuhuynh01', '123456', 'parent', 'PH001', '2025-11-24 12:06:47'),
+(9, 'phuhuynh02', '$2b$10$2v10OALDsE2SyMOnIVl8K.Sb2Abv7TIKk9lRu/Tbn/kNCnhgFCmCS', 'parent', 'PH002', '2025-11-24 12:06:47'),
+(10, 'phuhuynh03', '$2b$10$2v10OALDsE2SyMOnIVl8K.Sb2Abv7TIKk9lRu/Tbn/kNCnhgFCmCS', 'parent', 'PH003', '2025-11-24 12:06:47'),
+(11, 'taixe__1', '123456', 'driver', 'TX_1', '2025-11-24 12:07:01'),
+(12, 'taixe__2', '$2b$10$2v10OALDsE2SyMOnIVl8K.Sb2Abv7TIKk9lRu/Tbn/kNCnhgFCmCS', 'driver', 'TX_2', '2025-11-24 12:07:01'),
+(13, 'taixe__3', '$2b$10$2v10OALDsE2SyMOnIVl8K.Sb2Abv7TIKk9lRu/Tbn/kNCnhgFCmCS', 'driver', 'TX_3', '2025-11-24 12:07:01'),
+(14, 'taixe__4', '$2b$10$2v10OALDsE2SyMOnIVl8K.Sb2Abv7TIKk9lRu/Tbn/kNCnhgFCmCS', 'driver', 'TX_4', '2025-11-24 12:07:01'),
+(15, 'taixe__5', '$2b$10$2v10OALDsE2SyMOnIVl8K.Sb2Abv7TIKk9lRu/Tbn/kNCnhgFCmCS', 'driver', 'TX_5', '2025-11-24 12:07:01'),
+(16, 'taixe__6', '$2b$10$2v10OALDsE2SyMOnIVl8K.Sb2Abv7TIKk9lRu/Tbn/kNCnhgFCmCS', 'driver', 'TX_6', '2025-11-24 12:07:01'),
+(17, 'taixe__7', '$2b$10$2v10OALDsE2SyMOnIVl8K.Sb2Abv7TIKk9lRu/Tbn/kNCnhgFCmCS', 'driver', 'TX_7', '2025-11-24 12:07:01'),
+(18, 'taixe__8', '$2b$10$2v10OALDsE2SyMOnIVl8K.Sb2Abv7TIKk9lRu/Tbn/kNCnhgFCmCS', 'driver', 'TX_8', '2025-11-24 12:07:01'),
+(19, 'taixe__9', '$2b$10$2v10OALDsE2SyMOnIVl8K.Sb2Abv7TIKk9lRu/Tbn/kNCnhgFCmCS', 'driver', 'TX_9', '2025-11-24 12:07:01'),
+(20, 'taixe__10', '$2b$10$2v10OALDsE2SyMOnIVl8K.Sb2Abv7TIKk9lRu/Tbn/kNCnhgFCmCS', 'driver', 'TX_10', '2025-11-24 12:07:01'),
+(21, 'taixe__11', '$2b$10$2v10OALDsE2SyMOnIVl8K.Sb2Abv7TIKk9lRu/Tbn/kNCnhgFCmCS', 'driver', 'TX_11', '2025-11-24 12:07:01'),
+(22, 'taixe__12', '$2b$10$2v10OALDsE2SyMOnIVl8K.Sb2Abv7TIKk9lRu/Tbn/kNCnhgFCmCS', 'driver', 'TX_12', '2025-11-24 12:07:01'),
+(23, 'taixe__13', '$2b$10$2v10OALDsE2SyMOnIVl8K.Sb2Abv7TIKk9lRu/Tbn/kNCnhgFCmCS', 'driver', 'TX_13', '2025-11-24 12:07:01'),
+(24, 'taixe__14', '$2b$10$2v10OALDsE2SyMOnIVl8K.Sb2Abv7TIKk9lRu/Tbn/kNCnhgFCmCS', 'driver', 'TX_14', '2025-11-24 12:07:01'),
+(25, 'taixe__15', '$2b$10$2v10OALDsE2SyMOnIVl8K.Sb2Abv7TIKk9lRu/Tbn/kNCnhgFCmCS', 'driver', 'TX_15', '2025-11-24 12:07:01'),
+(26, 'taixe__16', '$2b$10$2v10OALDsE2SyMOnIVl8K.Sb2Abv7TIKk9lRu/Tbn/kNCnhgFCmCS', 'driver', 'TX_16', '2025-11-24 12:07:01'),
+(27, 'taixe__17', '$2b$10$2v10OALDsE2SyMOnIVl8K.Sb2Abv7TIKk9lRu/Tbn/kNCnhgFCmCS', 'driver', 'TX_17', '2025-11-24 12:07:01'),
+(28, 'taixe__18', '$2b$10$2v10OALDsE2SyMOnIVl8K.Sb2Abv7TIKk9lRu/Tbn/kNCnhgFCmCS', 'driver', 'TX_18', '2025-11-24 12:07:01'),
+(29, 'taixe__19', '$2b$10$2v10OALDsE2SyMOnIVl8K.Sb2Abv7TIKk9lRu/Tbn/kNCnhgFCmCS', 'driver', 'TX_19', '2025-11-24 12:07:01'),
+(30, 'taixe__20', '$2b$10$2v10OALDsE2SyMOnIVl8K.Sb2Abv7TIKk9lRu/Tbn/kNCnhgFCmCS', 'driver', 'TX_20', '2025-11-24 12:07:01'),
+(31, 'phuhuynh__1', '123456', 'parent', 'PH_1', '2025-11-24 12:07:01'),
+(32, 'phuhuynh__2', '$2b$10$2v10OALDsE2SyMOnIVl8K.Sb2Abv7TIKk9lRu/Tbn/kNCnhgFCmCS', 'parent', 'PH_2', '2025-11-24 12:07:01'),
+(33, 'phuhuynh__3', '$2b$10$2v10OALDsE2SyMOnIVl8K.Sb2Abv7TIKk9lRu/Tbn/kNCnhgFCmCS', 'parent', 'PH_3', '2025-11-24 12:07:01'),
+(34, 'phuhuynh__4', '$2b$10$2v10OALDsE2SyMOnIVl8K.Sb2Abv7TIKk9lRu/Tbn/kNCnhgFCmCS', 'parent', 'PH_4', '2025-11-24 12:07:01'),
+(35, 'phuhuynh__5', '$2b$10$2v10OALDsE2SyMOnIVl8K.Sb2Abv7TIKk9lRu/Tbn/kNCnhgFCmCS', 'parent', 'PH_5', '2025-11-24 12:07:01'),
+(36, 'phuhuynh__6', '$2b$10$2v10OALDsE2SyMOnIVl8K.Sb2Abv7TIKk9lRu/Tbn/kNCnhgFCmCS', 'parent', 'PH_6', '2025-11-24 12:07:01'),
+(37, 'phuhuynh__7', '$2b$10$2v10OALDsE2SyMOnIVl8K.Sb2Abv7TIKk9lRu/Tbn/kNCnhgFCmCS', 'parent', 'PH_7', '2025-11-24 12:07:01'),
+(38, 'phuhuynh__8', '$2b$10$2v10OALDsE2SyMOnIVl8K.Sb2Abv7TIKk9lRu/Tbn/kNCnhgFCmCS', 'parent', 'PH_8', '2025-11-24 12:07:01'),
+(39, 'phuhuynh__9', '$2b$10$2v10OALDsE2SyMOnIVl8K.Sb2Abv7TIKk9lRu/Tbn/kNCnhgFCmCS', 'parent', 'PH_9', '2025-11-24 12:07:01'),
+(40, 'phuhuynh__10', '$2b$10$2v10OALDsE2SyMOnIVl8K.Sb2Abv7TIKk9lRu/Tbn/kNCnhgFCmCS', 'parent', 'PH_10', '2025-11-24 12:07:01'),
+(41, 'phuhuynh__11', '$2b$10$2v10OALDsE2SyMOnIVl8K.Sb2Abv7TIKk9lRu/Tbn/kNCnhgFCmCS', 'parent', 'PH_11', '2025-11-24 12:07:01'),
+(42, 'phuhuynh__12', '$2b$10$2v10OALDsE2SyMOnIVl8K.Sb2Abv7TIKk9lRu/Tbn/kNCnhgFCmCS', 'parent', 'PH_12', '2025-11-24 12:07:01'),
+(43, 'phuhuynh__13', '$2b$10$2v10OALDsE2SyMOnIVl8K.Sb2Abv7TIKk9lRu/Tbn/kNCnhgFCmCS', 'parent', 'PH_13', '2025-11-24 12:07:01'),
+(44, 'phuhuynh__14', '$2b$10$2v10OALDsE2SyMOnIVl8K.Sb2Abv7TIKk9lRu/Tbn/kNCnhgFCmCS', 'parent', 'PH_14', '2025-11-24 12:07:01'),
+(45, 'phuhuynh__15', '$2b$10$2v10OALDsE2SyMOnIVl8K.Sb2Abv7TIKk9lRu/Tbn/kNCnhgFCmCS', 'parent', 'PH_15', '2025-11-24 12:07:01'),
+(46, 'phuhuynh__16', '$2b$10$2v10OALDsE2SyMOnIVl8K.Sb2Abv7TIKk9lRu/Tbn/kNCnhgFCmCS', 'parent', 'PH_16', '2025-11-24 12:07:01'),
+(47, 'phuhuynh__17', '$2b$10$2v10OALDsE2SyMOnIVl8K.Sb2Abv7TIKk9lRu/Tbn/kNCnhgFCmCS', 'parent', 'PH_17', '2025-11-24 12:07:01'),
+(48, 'phuhuynh__18', '$2b$10$2v10OALDsE2SyMOnIVl8K.Sb2Abv7TIKk9lRu/Tbn/kNCnhgFCmCS', 'parent', 'PH_18', '2025-11-24 12:07:01'),
+(49, 'phuhuynh__19', '$2b$10$2v10OALDsE2SyMOnIVl8K.Sb2Abv7TIKk9lRu/Tbn/kNCnhgFCmCS', 'parent', 'PH_19', '2025-11-24 12:07:01'),
+(50, 'phuhuynh__20', '$2b$10$2v10OALDsE2SyMOnIVl8K.Sb2Abv7TIKk9lRu/Tbn/kNCnhgFCmCS', 'parent', 'PH_20', '2025-11-24 12:07:01'),
+(51, 'phuhuynh__21', '$2b$10$2v10OALDsE2SyMOnIVl8K.Sb2Abv7TIKk9lRu/Tbn/kNCnhgFCmCS', 'parent', 'PH_21', '2025-11-24 12:07:01'),
+(52, 'phuhuynh__22', '$2b$10$2v10OALDsE2SyMOnIVl8K.Sb2Abv7TIKk9lRu/Tbn/kNCnhgFCmCS', 'parent', 'PH_22', '2025-11-24 12:07:01'),
+(53, 'phuhuynh__23', '$2b$10$2v10OALDsE2SyMOnIVl8K.Sb2Abv7TIKk9lRu/Tbn/kNCnhgFCmCS', 'parent', 'PH_23', '2025-11-24 12:07:01'),
+(54, 'phuhuynh__24', '$2b$10$2v10OALDsE2SyMOnIVl8K.Sb2Abv7TIKk9lRu/Tbn/kNCnhgFCmCS', 'parent', 'PH_24', '2025-11-24 12:07:01'),
+(55, 'phuhuynh__25', '$2b$10$2v10OALDsE2SyMOnIVl8K.Sb2Abv7TIKk9lRu/Tbn/kNCnhgFCmCS', 'parent', 'PH_25', '2025-11-24 12:07:01'),
+(56, 'phuhuynh__26', '$2b$10$2v10OALDsE2SyMOnIVl8K.Sb2Abv7TIKk9lRu/Tbn/kNCnhgFCmCS', 'parent', 'PH_26', '2025-11-24 12:07:01'),
+(57, 'phuhuynh__27', '$2b$10$2v10OALDsE2SyMOnIVl8K.Sb2Abv7TIKk9lRu/Tbn/kNCnhgFCmCS', 'parent', 'PH_27', '2025-11-24 12:07:01'),
+(58, 'phuhuynh__28', '$2b$10$2v10OALDsE2SyMOnIVl8K.Sb2Abv7TIKk9lRu/Tbn/kNCnhgFCmCS', 'parent', 'PH_28', '2025-11-24 12:07:01'),
+(59, 'phuhuynh__29', '$2b$10$2v10OALDsE2SyMOnIVl8K.Sb2Abv7TIKk9lRu/Tbn/kNCnhgFCmCS', 'parent', 'PH_29', '2025-11-24 12:07:01'),
+(60, 'phuhuynh__30', '$2b$10$2v10OALDsE2SyMOnIVl8K.Sb2Abv7TIKk9lRu/Tbn/kNCnhgFCmCS', 'parent', 'PH_30', '2025-11-24 12:07:01'),
+(61, 'phuhuynh__31', '$2b$10$2v10OALDsE2SyMOnIVl8K.Sb2Abv7TIKk9lRu/Tbn/kNCnhgFCmCS', 'parent', 'PH_31', '2025-11-24 12:07:01'),
+(62, 'phuhuynh__32', '$2b$10$2v10OALDsE2SyMOnIVl8K.Sb2Abv7TIKk9lRu/Tbn/kNCnhgFCmCS', 'parent', 'PH_32', '2025-11-24 12:07:01'),
+(63, 'phuhuynh__33', '$2b$10$2v10OALDsE2SyMOnIVl8K.Sb2Abv7TIKk9lRu/Tbn/kNCnhgFCmCS', 'parent', 'PH_33', '2025-11-24 12:07:01'),
+(64, 'phuhuynh__34', '$2b$10$2v10OALDsE2SyMOnIVl8K.Sb2Abv7TIKk9lRu/Tbn/kNCnhgFCmCS', 'parent', 'PH_34', '2025-11-24 12:07:01'),
+(65, 'phuhuynh__35', '$2b$10$2v10OALDsE2SyMOnIVl8K.Sb2Abv7TIKk9lRu/Tbn/kNCnhgFCmCS', 'parent', 'PH_35', '2025-11-24 12:07:01'),
+(66, 'phuhuynh__36', '$2b$10$2v10OALDsE2SyMOnIVl8K.Sb2Abv7TIKk9lRu/Tbn/kNCnhgFCmCS', 'parent', 'PH_36', '2025-11-24 12:07:01'),
+(67, 'phuhuynh__37', '$2b$10$2v10OALDsE2SyMOnIVl8K.Sb2Abv7TIKk9lRu/Tbn/kNCnhgFCmCS', 'parent', 'PH_37', '2025-11-24 12:07:01'),
+(68, 'phuhuynh__38', '$2b$10$2v10OALDsE2SyMOnIVl8K.Sb2Abv7TIKk9lRu/Tbn/kNCnhgFCmCS', 'parent', 'PH_38', '2025-11-24 12:07:01'),
+(69, 'phuhuynh__39', '$2b$10$2v10OALDsE2SyMOnIVl8K.Sb2Abv7TIKk9lRu/Tbn/kNCnhgFCmCS', 'parent', 'PH_39', '2025-11-24 12:07:01'),
+(70, 'phuhuynh__40', '$2b$10$2v10OALDsE2SyMOnIVl8K.Sb2Abv7TIKk9lRu/Tbn/kNCnhgFCmCS', 'parent', 'PH_40', '2025-11-24 12:07:01'),
+(71, 'phuhuynh__41', '$2b$10$2v10OALDsE2SyMOnIVl8K.Sb2Abv7TIKk9lRu/Tbn/kNCnhgFCmCS', 'parent', 'PH_41', '2025-11-24 12:07:01'),
+(72, 'phuhuynh__42', '$2b$10$2v10OALDsE2SyMOnIVl8K.Sb2Abv7TIKk9lRu/Tbn/kNCnhgFCmCS', 'parent', 'PH_42', '2025-11-24 12:07:01'),
+(73, 'phuhuynh__43', '$2b$10$2v10OALDsE2SyMOnIVl8K.Sb2Abv7TIKk9lRu/Tbn/kNCnhgFCmCS', 'parent', 'PH_43', '2025-11-24 12:07:01'),
+(74, 'phuhuynh__44', '$2b$10$2v10OALDsE2SyMOnIVl8K.Sb2Abv7TIKk9lRu/Tbn/kNCnhgFCmCS', 'parent', 'PH_44', '2025-11-24 12:07:01'),
+(75, 'phuhuynh__45', '$2b$10$2v10OALDsE2SyMOnIVl8K.Sb2Abv7TIKk9lRu/Tbn/kNCnhgFCmCS', 'parent', 'PH_45', '2025-11-24 12:07:01'),
+(76, 'phuhuynh__46', '$2b$10$2v10OALDsE2SyMOnIVl8K.Sb2Abv7TIKk9lRu/Tbn/kNCnhgFCmCS', 'parent', 'PH_46', '2025-11-24 12:07:01'),
+(77, 'phuhuynh__47', '$2b$10$2v10OALDsE2SyMOnIVl8K.Sb2Abv7TIKk9lRu/Tbn/kNCnhgFCmCS', 'parent', 'PH_47', '2025-11-24 12:07:01'),
+(78, 'phuhuynh__48', '$2b$10$2v10OALDsE2SyMOnIVl8K.Sb2Abv7TIKk9lRu/Tbn/kNCnhgFCmCS', 'parent', 'PH_48', '2025-11-24 12:07:01'),
+(79, 'phuhuynh__49', '$2b$10$2v10OALDsE2SyMOnIVl8K.Sb2Abv7TIKk9lRu/Tbn/kNCnhgFCmCS', 'parent', 'PH_49', '2025-11-24 12:07:01'),
+(80, 'phuhuynh__50', '$2b$10$2v10OALDsE2SyMOnIVl8K.Sb2Abv7TIKk9lRu/Tbn/kNCnhgFCmCS', 'parent', 'PH_50', '2025-11-24 12:07:01'),
+(81, 'phuhuynh__51', '$2b$10$2v10OALDsE2SyMOnIVl8K.Sb2Abv7TIKk9lRu/Tbn/kNCnhgFCmCS', 'parent', 'PH_51', '2025-11-24 12:07:01'),
+(82, 'phuhuynh__52', '$2b$10$2v10OALDsE2SyMOnIVl8K.Sb2Abv7TIKk9lRu/Tbn/kNCnhgFCmCS', 'parent', 'PH_52', '2025-11-24 12:07:01'),
+(83, 'phuhuynh__53', '$2b$10$2v10OALDsE2SyMOnIVl8K.Sb2Abv7TIKk9lRu/Tbn/kNCnhgFCmCS', 'parent', 'PH_53', '2025-11-24 12:07:01'),
+(84, 'phuhuynh__54', '$2b$10$2v10OALDsE2SyMOnIVl8K.Sb2Abv7TIKk9lRu/Tbn/kNCnhgFCmCS', 'parent', 'PH_54', '2025-11-24 12:07:01'),
+(85, 'phuhuynh__55', '$2b$10$2v10OALDsE2SyMOnIVl8K.Sb2Abv7TIKk9lRu/Tbn/kNCnhgFCmCS', 'parent', 'PH_55', '2025-11-24 12:07:01'),
+(86, 'phuhuynh__56', '$2b$10$2v10OALDsE2SyMOnIVl8K.Sb2Abv7TIKk9lRu/Tbn/kNCnhgFCmCS', 'parent', 'PH_56', '2025-11-24 12:07:01'),
+(87, 'phuhuynh__57', '$2b$10$2v10OALDsE2SyMOnIVl8K.Sb2Abv7TIKk9lRu/Tbn/kNCnhgFCmCS', 'parent', 'PH_57', '2025-11-24 12:07:01'),
+(88, 'phuhuynh__58', '$2b$10$2v10OALDsE2SyMOnIVl8K.Sb2Abv7TIKk9lRu/Tbn/kNCnhgFCmCS', 'parent', 'PH_58', '2025-11-24 12:07:01'),
+(89, 'phuhuynh__59', '$2b$10$2v10OALDsE2SyMOnIVl8K.Sb2Abv7TIKk9lRu/Tbn/kNCnhgFCmCS', 'parent', 'PH_59', '2025-11-24 12:07:01'),
+(90, 'phuhuynh__60', '$2b$10$2v10OALDsE2SyMOnIVl8K.Sb2Abv7TIKk9lRu/Tbn/kNCnhgFCmCS', 'parent', 'PH_60', '2025-11-24 12:07:01'),
+(91, 'phuhuynh__61', '$2b$10$2v10OALDsE2SyMOnIVl8K.Sb2Abv7TIKk9lRu/Tbn/kNCnhgFCmCS', 'parent', 'PH_61', '2025-11-24 12:07:01'),
+(92, 'phuhuynh__62', '$2b$10$2v10OALDsE2SyMOnIVl8K.Sb2Abv7TIKk9lRu/Tbn/kNCnhgFCmCS', 'parent', 'PH_62', '2025-11-24 12:07:01'),
+(93, 'phuhuynh__63', '$2b$10$2v10OALDsE2SyMOnIVl8K.Sb2Abv7TIKk9lRu/Tbn/kNCnhgFCmCS', 'parent', 'PH_63', '2025-11-24 12:07:01'),
+(94, 'phuhuynh__64', '$2b$10$2v10OALDsE2SyMOnIVl8K.Sb2Abv7TIKk9lRu/Tbn/kNCnhgFCmCS', 'parent', 'PH_64', '2025-11-24 12:07:02'),
+(95, 'phuhuynh__65', '$2b$10$2v10OALDsE2SyMOnIVl8K.Sb2Abv7TIKk9lRu/Tbn/kNCnhgFCmCS', 'parent', 'PH_65', '2025-11-24 12:07:02'),
+(96, 'phuhuynh__66', '$2b$10$2v10OALDsE2SyMOnIVl8K.Sb2Abv7TIKk9lRu/Tbn/kNCnhgFCmCS', 'parent', 'PH_66', '2025-11-24 12:07:02'),
+(97, 'phuhuynh__67', '$2b$10$2v10OALDsE2SyMOnIVl8K.Sb2Abv7TIKk9lRu/Tbn/kNCnhgFCmCS', 'parent', 'PH_67', '2025-11-24 12:07:02'),
+(98, 'phuhuynh__68', '$2b$10$2v10OALDsE2SyMOnIVl8K.Sb2Abv7TIKk9lRu/Tbn/kNCnhgFCmCS', 'parent', 'PH_68', '2025-11-24 12:07:02'),
+(99, 'phuhuynh__69', '$2b$10$2v10OALDsE2SyMOnIVl8K.Sb2Abv7TIKk9lRu/Tbn/kNCnhgFCmCS', 'parent', 'PH_69', '2025-11-24 12:07:02'),
+(100, 'phuhuynh__70', '$2b$10$2v10OALDsE2SyMOnIVl8K.Sb2Abv7TIKk9lRu/Tbn/kNCnhgFCmCS', 'parent', 'PH_70', '2025-11-24 12:07:02'),
+(101, 'phuhuynh__71', '$2b$10$2v10OALDsE2SyMOnIVl8K.Sb2Abv7TIKk9lRu/Tbn/kNCnhgFCmCS', 'parent', 'PH_71', '2025-11-24 12:07:02'),
+(102, 'phuhuynh__72', '$2b$10$2v10OALDsE2SyMOnIVl8K.Sb2Abv7TIKk9lRu/Tbn/kNCnhgFCmCS', 'parent', 'PH_72', '2025-11-24 12:07:02'),
+(103, 'phuhuynh__73', '$2b$10$2v10OALDsE2SyMOnIVl8K.Sb2Abv7TIKk9lRu/Tbn/kNCnhgFCmCS', 'parent', 'PH_73', '2025-11-24 12:07:02'),
+(104, 'phuhuynh__74', '$2b$10$2v10OALDsE2SyMOnIVl8K.Sb2Abv7TIKk9lRu/Tbn/kNCnhgFCmCS', 'parent', 'PH_74', '2025-11-24 12:07:02'),
+(105, 'phuhuynh__75', '$2b$10$2v10OALDsE2SyMOnIVl8K.Sb2Abv7TIKk9lRu/Tbn/kNCnhgFCmCS', 'parent', 'PH_75', '2025-11-24 12:07:02'),
+(106, 'phuhuynh__76', '$2b$10$2v10OALDsE2SyMOnIVl8K.Sb2Abv7TIKk9lRu/Tbn/kNCnhgFCmCS', 'parent', 'PH_76', '2025-11-24 12:07:02'),
+(107, 'phuhuynh__77', '$2b$10$2v10OALDsE2SyMOnIVl8K.Sb2Abv7TIKk9lRu/Tbn/kNCnhgFCmCS', 'parent', 'PH_77', '2025-11-24 12:07:02'),
+(108, 'phuhuynh__78', '$2b$10$2v10OALDsE2SyMOnIVl8K.Sb2Abv7TIKk9lRu/Tbn/kNCnhgFCmCS', 'parent', 'PH_78', '2025-11-24 12:07:02'),
+(109, 'phuhuynh__79', '$2b$10$2v10OALDsE2SyMOnIVl8K.Sb2Abv7TIKk9lRu/Tbn/kNCnhgFCmCS', 'parent', 'PH_79', '2025-11-24 12:07:02'),
+(110, 'phuhuynh__80', '$2b$10$2v10OALDsE2SyMOnIVl8K.Sb2Abv7TIKk9lRu/Tbn/kNCnhgFCmCS', 'parent', 'PH_80', '2025-11-24 12:07:02'),
+(111, 'phuhuynh__81', '$2b$10$2v10OALDsE2SyMOnIVl8K.Sb2Abv7TIKk9lRu/Tbn/kNCnhgFCmCS', 'parent', 'PH_81', '2025-11-24 12:07:02'),
+(112, 'phuhuynh__82', '$2b$10$2v10OALDsE2SyMOnIVl8K.Sb2Abv7TIKk9lRu/Tbn/kNCnhgFCmCS', 'parent', 'PH_82', '2025-11-24 12:07:02'),
+(113, 'phuhuynh__83', '$2b$10$2v10OALDsE2SyMOnIVl8K.Sb2Abv7TIKk9lRu/Tbn/kNCnhgFCmCS', 'parent', 'PH_83', '2025-11-24 12:07:02'),
+(114, 'phuhuynh__84', '$2b$10$2v10OALDsE2SyMOnIVl8K.Sb2Abv7TIKk9lRu/Tbn/kNCnhgFCmCS', 'parent', 'PH_84', '2025-11-24 12:07:02'),
+(115, 'phuhuynh__85', '$2b$10$2v10OALDsE2SyMOnIVl8K.Sb2Abv7TIKk9lRu/Tbn/kNCnhgFCmCS', 'parent', 'PH_85', '2025-11-24 12:07:02'),
+(116, 'phuhuynh__86', '$2b$10$2v10OALDsE2SyMOnIVl8K.Sb2Abv7TIKk9lRu/Tbn/kNCnhgFCmCS', 'parent', 'PH_86', '2025-11-24 12:07:02'),
+(117, 'phuhuynh__87', '$2b$10$2v10OALDsE2SyMOnIVl8K.Sb2Abv7TIKk9lRu/Tbn/kNCnhgFCmCS', 'parent', 'PH_87', '2025-11-24 12:07:02'),
+(118, 'phuhuynh__88', '$2b$10$2v10OALDsE2SyMOnIVl8K.Sb2Abv7TIKk9lRu/Tbn/kNCnhgFCmCS', 'parent', 'PH_88', '2025-11-24 12:07:02'),
+(119, 'phuhuynh__89', '$2b$10$2v10OALDsE2SyMOnIVl8K.Sb2Abv7TIKk9lRu/Tbn/kNCnhgFCmCS', 'parent', 'PH_89', '2025-11-24 12:07:02'),
+(120, 'phuhuynh__90', '$2b$10$2v10OALDsE2SyMOnIVl8K.Sb2Abv7TIKk9lRu/Tbn/kNCnhgFCmCS', 'parent', 'PH_90', '2025-11-24 12:07:02'),
+(121, 'phuhuynh__91', '$2b$10$2v10OALDsE2SyMOnIVl8K.Sb2Abv7TIKk9lRu/Tbn/kNCnhgFCmCS', 'parent', 'PH_91', '2025-11-24 12:07:02'),
+(122, 'phuhuynh__92', '$2b$10$2v10OALDsE2SyMOnIVl8K.Sb2Abv7TIKk9lRu/Tbn/kNCnhgFCmCS', 'parent', 'PH_92', '2025-11-24 12:07:02'),
+(123, 'phuhuynh__93', '$2b$10$2v10OALDsE2SyMOnIVl8K.Sb2Abv7TIKk9lRu/Tbn/kNCnhgFCmCS', 'parent', 'PH_93', '2025-11-24 12:07:02'),
+(124, 'phuhuynh__94', '$2b$10$2v10OALDsE2SyMOnIVl8K.Sb2Abv7TIKk9lRu/Tbn/kNCnhgFCmCS', 'parent', 'PH_94', '2025-11-24 12:07:02'),
+(125, 'phuhuynh__95', '$2b$10$2v10OALDsE2SyMOnIVl8K.Sb2Abv7TIKk9lRu/Tbn/kNCnhgFCmCS', 'parent', 'PH_95', '2025-11-24 12:07:02'),
+(126, 'phuhuynh__96', '$2b$10$2v10OALDsE2SyMOnIVl8K.Sb2Abv7TIKk9lRu/Tbn/kNCnhgFCmCS', 'parent', 'PH_96', '2025-11-24 12:07:02'),
+(127, 'phuhuynh__97', '$2b$10$2v10OALDsE2SyMOnIVl8K.Sb2Abv7TIKk9lRu/Tbn/kNCnhgFCmCS', 'parent', 'PH_97', '2025-11-24 12:07:02'),
+(128, 'phuhuynh__98', '$2b$10$2v10OALDsE2SyMOnIVl8K.Sb2Abv7TIKk9lRu/Tbn/kNCnhgFCmCS', 'parent', 'PH_98', '2025-11-24 12:07:02'),
+(129, 'phuhuynh__99', '$2b$10$2v10OALDsE2SyMOnIVl8K.Sb2Abv7TIKk9lRu/Tbn/kNCnhgFCmCS', 'parent', 'PH_99', '2025-11-24 12:07:02'),
+(130, 'phuhuynh__100', '$2b$10$2v10OALDsE2SyMOnIVl8K.Sb2Abv7TIKk9lRu/Tbn/kNCnhgFCmCS', 'parent', 'PH_100', '2025-11-24 12:07:02'),
+(131, 'phuhuynh__101', '$2b$10$2v10OALDsE2SyMOnIVl8K.Sb2Abv7TIKk9lRu/Tbn/kNCnhgFCmCS', 'parent', 'PH_101', '2025-11-24 12:07:02'),
+(132, 'phuhuynh__102', '$2b$10$2v10OALDsE2SyMOnIVl8K.Sb2Abv7TIKk9lRu/Tbn/kNCnhgFCmCS', 'parent', 'PH_102', '2025-11-24 12:07:02'),
+(133, 'phuhuynh__103', '$2b$10$2v10OALDsE2SyMOnIVl8K.Sb2Abv7TIKk9lRu/Tbn/kNCnhgFCmCS', 'parent', 'PH_103', '2025-11-24 12:07:02'),
+(134, 'phuhuynh__104', '$2b$10$2v10OALDsE2SyMOnIVl8K.Sb2Abv7TIKk9lRu/Tbn/kNCnhgFCmCS', 'parent', 'PH_104', '2025-11-24 12:07:02'),
+(135, 'phuhuynh__105', '$2b$10$2v10OALDsE2SyMOnIVl8K.Sb2Abv7TIKk9lRu/Tbn/kNCnhgFCmCS', 'parent', 'PH_105', '2025-11-24 12:07:02'),
+(136, 'phuhuynh__106', '$2b$10$2v10OALDsE2SyMOnIVl8K.Sb2Abv7TIKk9lRu/Tbn/kNCnhgFCmCS', 'parent', 'PH_106', '2025-11-24 12:07:02'),
+(137, 'phuhuynh__107', '$2b$10$2v10OALDsE2SyMOnIVl8K.Sb2Abv7TIKk9lRu/Tbn/kNCnhgFCmCS', 'parent', 'PH_107', '2025-11-24 12:07:02'),
+(138, 'phuhuynh__108', '$2b$10$2v10OALDsE2SyMOnIVl8K.Sb2Abv7TIKk9lRu/Tbn/kNCnhgFCmCS', 'parent', 'PH_108', '2025-11-24 12:07:02'),
+(139, 'phuhuynh__109', '$2b$10$2v10OALDsE2SyMOnIVl8K.Sb2Abv7TIKk9lRu/Tbn/kNCnhgFCmCS', 'parent', 'PH_109', '2025-11-24 12:07:02'),
+(140, 'phuhuynh__110', '$2b$10$2v10OALDsE2SyMOnIVl8K.Sb2Abv7TIKk9lRu/Tbn/kNCnhgFCmCS', 'parent', 'PH_110', '2025-11-24 12:07:02'),
+(141, 'phuhuynh__111', '$2b$10$2v10OALDsE2SyMOnIVl8K.Sb2Abv7TIKk9lRu/Tbn/kNCnhgFCmCS', 'parent', 'PH_111', '2025-11-24 12:07:02'),
+(142, 'phuhuynh__112', '$2b$10$2v10OALDsE2SyMOnIVl8K.Sb2Abv7TIKk9lRu/Tbn/kNCnhgFCmCS', 'parent', 'PH_112', '2025-11-24 12:07:02'),
+(143, 'phuhuynh__113', '$2b$10$2v10OALDsE2SyMOnIVl8K.Sb2Abv7TIKk9lRu/Tbn/kNCnhgFCmCS', 'parent', 'PH_113', '2025-11-24 12:07:02'),
+(144, 'phuhuynh__114', '$2b$10$2v10OALDsE2SyMOnIVl8K.Sb2Abv7TIKk9lRu/Tbn/kNCnhgFCmCS', 'parent', 'PH_114', '2025-11-24 12:07:02'),
+(145, 'phuhuynh__115', '$2b$10$2v10OALDsE2SyMOnIVl8K.Sb2Abv7TIKk9lRu/Tbn/kNCnhgFCmCS', 'parent', 'PH_115', '2025-11-24 12:07:02'),
+(146, 'phuhuynh__116', '$2b$10$2v10OALDsE2SyMOnIVl8K.Sb2Abv7TIKk9lRu/Tbn/kNCnhgFCmCS', 'parent', 'PH_116', '2025-11-24 12:07:02'),
+(147, 'phuhuynh__117', '$2b$10$2v10OALDsE2SyMOnIVl8K.Sb2Abv7TIKk9lRu/Tbn/kNCnhgFCmCS', 'parent', 'PH_117', '2025-11-24 12:07:02'),
+(148, 'phuhuynh__118', '$2b$10$2v10OALDsE2SyMOnIVl8K.Sb2Abv7TIKk9lRu/Tbn/kNCnhgFCmCS', 'parent', 'PH_118', '2025-11-24 12:07:02'),
+(149, 'phuhuynh__119', '$2b$10$2v10OALDsE2SyMOnIVl8K.Sb2Abv7TIKk9lRu/Tbn/kNCnhgFCmCS', 'parent', 'PH_119', '2025-11-24 12:07:02'),
+(150, 'phuhuynh__120', '$2b$10$2v10OALDsE2SyMOnIVl8K.Sb2Abv7TIKk9lRu/Tbn/kNCnhgFCmCS', 'parent', 'PH_120', '2025-11-24 12:07:02'),
+(151, 'phuhuynh__121', '$2b$10$2v10OALDsE2SyMOnIVl8K.Sb2Abv7TIKk9lRu/Tbn/kNCnhgFCmCS', 'parent', 'PH_121', '2025-11-24 12:07:02'),
+(152, 'phuhuynh__122', '$2b$10$2v10OALDsE2SyMOnIVl8K.Sb2Abv7TIKk9lRu/Tbn/kNCnhgFCmCS', 'parent', 'PH_122', '2025-11-24 12:07:02'),
+(153, 'phuhuynh__123', '$2b$10$2v10OALDsE2SyMOnIVl8K.Sb2Abv7TIKk9lRu/Tbn/kNCnhgFCmCS', 'parent', 'PH_123', '2025-11-24 12:07:02'),
+(154, 'phuhuynh__124', '$2b$10$2v10OALDsE2SyMOnIVl8K.Sb2Abv7TIKk9lRu/Tbn/kNCnhgFCmCS', 'parent', 'PH_124', '2025-11-24 12:07:02'),
+(155, 'phuhuynh__125', '$2b$10$2v10OALDsE2SyMOnIVl8K.Sb2Abv7TIKk9lRu/Tbn/kNCnhgFCmCS', 'parent', 'PH_125', '2025-11-24 12:07:02'),
+(156, 'phuhuynh__126', '$2b$10$2v10OALDsE2SyMOnIVl8K.Sb2Abv7TIKk9lRu/Tbn/kNCnhgFCmCS', 'parent', 'PH_126', '2025-11-24 12:07:02'),
+(157, 'phuhuynh__127', '$2b$10$2v10OALDsE2SyMOnIVl8K.Sb2Abv7TIKk9lRu/Tbn/kNCnhgFCmCS', 'parent', 'PH_127', '2025-11-24 12:07:02'),
+(158, 'phuhuynh__128', '$2b$10$2v10OALDsE2SyMOnIVl8K.Sb2Abv7TIKk9lRu/Tbn/kNCnhgFCmCS', 'parent', 'PH_128', '2025-11-24 12:07:02'),
+(159, 'phuhuynh__129', '$2b$10$2v10OALDsE2SyMOnIVl8K.Sb2Abv7TIKk9lRu/Tbn/kNCnhgFCmCS', 'parent', 'PH_129', '2025-11-24 12:07:02'),
+(160, 'phuhuynh__130', '$2b$10$2v10OALDsE2SyMOnIVl8K.Sb2Abv7TIKk9lRu/Tbn/kNCnhgFCmCS', 'parent', 'PH_130', '2025-11-24 12:07:02'),
+(161, 'phuhuynh__131', '$2b$10$2v10OALDsE2SyMOnIVl8K.Sb2Abv7TIKk9lRu/Tbn/kNCnhgFCmCS', 'parent', 'PH_131', '2025-11-24 12:07:02'),
+(162, 'phuhuynh__132', '$2b$10$2v10OALDsE2SyMOnIVl8K.Sb2Abv7TIKk9lRu/Tbn/kNCnhgFCmCS', 'parent', 'PH_132', '2025-11-24 12:07:02'),
+(163, 'phuhuynh__133', '$2b$10$2v10OALDsE2SyMOnIVl8K.Sb2Abv7TIKk9lRu/Tbn/kNCnhgFCmCS', 'parent', 'PH_133', '2025-11-24 12:07:02'),
+(164, 'phuhuynh__134', '$2b$10$2v10OALDsE2SyMOnIVl8K.Sb2Abv7TIKk9lRu/Tbn/kNCnhgFCmCS', 'parent', 'PH_134', '2025-11-24 12:07:02'),
+(165, 'phuhuynh__135', '$2b$10$2v10OALDsE2SyMOnIVl8K.Sb2Abv7TIKk9lRu/Tbn/kNCnhgFCmCS', 'parent', 'PH_135', '2025-11-24 12:07:02'),
+(166, 'phuhuynh__136', '$2b$10$2v10OALDsE2SyMOnIVl8K.Sb2Abv7TIKk9lRu/Tbn/kNCnhgFCmCS', 'parent', 'PH_136', '2025-11-24 12:07:02'),
+(167, 'phuhuynh__137', '$2b$10$2v10OALDsE2SyMOnIVl8K.Sb2Abv7TIKk9lRu/Tbn/kNCnhgFCmCS', 'parent', 'PH_137', '2025-11-24 12:07:02'),
+(168, 'phuhuynh__138', '$2b$10$2v10OALDsE2SyMOnIVl8K.Sb2Abv7TIKk9lRu/Tbn/kNCnhgFCmCS', 'parent', 'PH_138', '2025-11-24 12:07:02'),
+(169, 'phuhuynh__139', '$2b$10$2v10OALDsE2SyMOnIVl8K.Sb2Abv7TIKk9lRu/Tbn/kNCnhgFCmCS', 'parent', 'PH_139', '2025-11-24 12:07:02'),
+(170, 'phuhuynh__140', '$2b$10$2v10OALDsE2SyMOnIVl8K.Sb2Abv7TIKk9lRu/Tbn/kNCnhgFCmCS', 'parent', 'PH_140', '2025-11-24 12:07:02'),
+(171, 'phuhuynh__141', '$2b$10$2v10OALDsE2SyMOnIVl8K.Sb2Abv7TIKk9lRu/Tbn/kNCnhgFCmCS', 'parent', 'PH_141', '2025-11-24 12:07:02'),
+(172, 'phuhuynh__142', '$2b$10$2v10OALDsE2SyMOnIVl8K.Sb2Abv7TIKk9lRu/Tbn/kNCnhgFCmCS', 'parent', 'PH_142', '2025-11-24 12:07:02'),
+(173, 'phuhuynh__143', '$2b$10$2v10OALDsE2SyMOnIVl8K.Sb2Abv7TIKk9lRu/Tbn/kNCnhgFCmCS', 'parent', 'PH_143', '2025-11-24 12:07:02'),
+(174, 'phuhuynh__144', '$2b$10$2v10OALDsE2SyMOnIVl8K.Sb2Abv7TIKk9lRu/Tbn/kNCnhgFCmCS', 'parent', 'PH_144', '2025-11-24 12:07:02'),
+(175, 'phuhuynh__145', '$2b$10$2v10OALDsE2SyMOnIVl8K.Sb2Abv7TIKk9lRu/Tbn/kNCnhgFCmCS', 'parent', 'PH_145', '2025-11-24 12:07:02'),
+(176, 'phuhuynh__146', '$2b$10$2v10OALDsE2SyMOnIVl8K.Sb2Abv7TIKk9lRu/Tbn/kNCnhgFCmCS', 'parent', 'PH_146', '2025-11-24 12:07:02'),
+(177, 'phuhuynh__147', '$2b$10$2v10OALDsE2SyMOnIVl8K.Sb2Abv7TIKk9lRu/Tbn/kNCnhgFCmCS', 'parent', 'PH_147', '2025-11-24 12:07:02'),
+(178, 'phuhuynh__148', '$2b$10$2v10OALDsE2SyMOnIVl8K.Sb2Abv7TIKk9lRu/Tbn/kNCnhgFCmCS', 'parent', 'PH_148', '2025-11-24 12:07:02'),
+(179, 'phuhuynh__149', '$2b$10$2v10OALDsE2SyMOnIVl8K.Sb2Abv7TIKk9lRu/Tbn/kNCnhgFCmCS', 'parent', 'PH_149', '2025-11-24 12:07:02'),
+(180, 'phuhuynh__150', '$2b$10$2v10OALDsE2SyMOnIVl8K.Sb2Abv7TIKk9lRu/Tbn/kNCnhgFCmCS', 'parent', 'PH_150', '2025-11-24 12:07:02'),
+(181, 'phuhuynh__151', '$2b$10$2v10OALDsE2SyMOnIVl8K.Sb2Abv7TIKk9lRu/Tbn/kNCnhgFCmCS', 'parent', 'PH_151', '2025-11-24 12:07:02'),
+(182, 'phuhuynh__152', '$2b$10$2v10OALDsE2SyMOnIVl8K.Sb2Abv7TIKk9lRu/Tbn/kNCnhgFCmCS', 'parent', 'PH_152', '2025-11-24 12:07:02'),
+(183, 'phuhuynh__153', '$2b$10$2v10OALDsE2SyMOnIVl8K.Sb2Abv7TIKk9lRu/Tbn/kNCnhgFCmCS', 'parent', 'PH_153', '2025-11-24 12:07:02'),
+(184, 'phuhuynh__154', '$2b$10$2v10OALDsE2SyMOnIVl8K.Sb2Abv7TIKk9lRu/Tbn/kNCnhgFCmCS', 'parent', 'PH_154', '2025-11-24 12:07:02'),
+(185, 'phuhuynh__155', '$2b$10$2v10OALDsE2SyMOnIVl8K.Sb2Abv7TIKk9lRu/Tbn/kNCnhgFCmCS', 'parent', 'PH_155', '2025-11-24 12:07:02'),
+(186, 'phuhuynh__156', '$2b$10$2v10OALDsE2SyMOnIVl8K.Sb2Abv7TIKk9lRu/Tbn/kNCnhgFCmCS', 'parent', 'PH_156', '2025-11-24 12:07:02'),
+(187, 'phuhuynh__157', '$2b$10$2v10OALDsE2SyMOnIVl8K.Sb2Abv7TIKk9lRu/Tbn/kNCnhgFCmCS', 'parent', 'PH_157', '2025-11-24 12:07:02'),
+(188, 'phuhuynh__158', '$2b$10$2v10OALDsE2SyMOnIVl8K.Sb2Abv7TIKk9lRu/Tbn/kNCnhgFCmCS', 'parent', 'PH_158', '2025-11-24 12:07:02'),
+(189, 'phuhuynh__159', '$2b$10$2v10OALDsE2SyMOnIVl8K.Sb2Abv7TIKk9lRu/Tbn/kNCnhgFCmCS', 'parent', 'PH_159', '2025-11-24 12:07:02'),
+(190, 'phuhuynh__160', '$2b$10$2v10OALDsE2SyMOnIVl8K.Sb2Abv7TIKk9lRu/Tbn/kNCnhgFCmCS', 'parent', 'PH_160', '2025-11-24 12:07:02'),
+(191, 'phuhuynh__161', '$2b$10$2v10OALDsE2SyMOnIVl8K.Sb2Abv7TIKk9lRu/Tbn/kNCnhgFCmCS', 'parent', 'PH_161', '2025-11-24 12:07:02'),
+(192, 'phuhuynh__162', '$2b$10$2v10OALDsE2SyMOnIVl8K.Sb2Abv7TIKk9lRu/Tbn/kNCnhgFCmCS', 'parent', 'PH_162', '2025-11-24 12:07:02'),
+(193, 'phuhuynh__163', '$2b$10$2v10OALDsE2SyMOnIVl8K.Sb2Abv7TIKk9lRu/Tbn/kNCnhgFCmCS', 'parent', 'PH_163', '2025-11-24 12:07:02'),
+(194, 'phuhuynh__164', '$2b$10$2v10OALDsE2SyMOnIVl8K.Sb2Abv7TIKk9lRu/Tbn/kNCnhgFCmCS', 'parent', 'PH_164', '2025-11-24 12:07:02'),
+(195, 'phuhuynh__165', '$2b$10$2v10OALDsE2SyMOnIVl8K.Sb2Abv7TIKk9lRu/Tbn/kNCnhgFCmCS', 'parent', 'PH_165', '2025-11-24 12:07:02'),
+(196, 'phuhuynh__166', '$2b$10$2v10OALDsE2SyMOnIVl8K.Sb2Abv7TIKk9lRu/Tbn/kNCnhgFCmCS', 'parent', 'PH_166', '2025-11-24 12:07:02'),
+(197, 'phuhuynh__167', '$2b$10$2v10OALDsE2SyMOnIVl8K.Sb2Abv7TIKk9lRu/Tbn/kNCnhgFCmCS', 'parent', 'PH_167', '2025-11-24 12:07:02'),
+(198, 'phuhuynh__168', '$2b$10$2v10OALDsE2SyMOnIVl8K.Sb2Abv7TIKk9lRu/Tbn/kNCnhgFCmCS', 'parent', 'PH_168', '2025-11-24 12:07:02'),
+(199, 'phuhuynh__169', '$2b$10$2v10OALDsE2SyMOnIVl8K.Sb2Abv7TIKk9lRu/Tbn/kNCnhgFCmCS', 'parent', 'PH_169', '2025-11-24 12:07:02'),
+(200, 'phuhuynh__170', '$2b$10$2v10OALDsE2SyMOnIVl8K.Sb2Abv7TIKk9lRu/Tbn/kNCnhgFCmCS', 'parent', 'PH_170', '2025-11-24 12:07:02'),
+(201, 'phuhuynh__171', '$2b$10$2v10OALDsE2SyMOnIVl8K.Sb2Abv7TIKk9lRu/Tbn/kNCnhgFCmCS', 'parent', 'PH_171', '2025-11-24 12:07:02'),
+(202, 'phuhuynh__172', '$2b$10$2v10OALDsE2SyMOnIVl8K.Sb2Abv7TIKk9lRu/Tbn/kNCnhgFCmCS', 'parent', 'PH_172', '2025-11-24 12:07:02'),
+(203, 'phuhuynh__173', '$2b$10$2v10OALDsE2SyMOnIVl8K.Sb2Abv7TIKk9lRu/Tbn/kNCnhgFCmCS', 'parent', 'PH_173', '2025-11-24 12:07:02'),
+(204, 'phuhuynh__174', '$2b$10$2v10OALDsE2SyMOnIVl8K.Sb2Abv7TIKk9lRu/Tbn/kNCnhgFCmCS', 'parent', 'PH_174', '2025-11-24 12:07:02'),
+(205, 'phuhuynh__175', '$2b$10$2v10OALDsE2SyMOnIVl8K.Sb2Abv7TIKk9lRu/Tbn/kNCnhgFCmCS', 'parent', 'PH_175', '2025-11-24 12:07:02'),
+(206, 'phuhuynh__176', '$2b$10$2v10OALDsE2SyMOnIVl8K.Sb2Abv7TIKk9lRu/Tbn/kNCnhgFCmCS', 'parent', 'PH_176', '2025-11-24 12:07:02'),
+(207, 'phuhuynh__177', '$2b$10$2v10OALDsE2SyMOnIVl8K.Sb2Abv7TIKk9lRu/Tbn/kNCnhgFCmCS', 'parent', 'PH_177', '2025-11-24 12:07:02'),
+(208, 'phuhuynh__178', '$2b$10$2v10OALDsE2SyMOnIVl8K.Sb2Abv7TIKk9lRu/Tbn/kNCnhgFCmCS', 'parent', 'PH_178', '2025-11-24 12:07:02'),
+(209, 'phuhuynh__179', '$2b$10$2v10OALDsE2SyMOnIVl8K.Sb2Abv7TIKk9lRu/Tbn/kNCnhgFCmCS', 'parent', 'PH_179', '2025-11-24 12:07:02'),
+(210, 'phuhuynh__180', '$2b$10$2v10OALDsE2SyMOnIVl8K.Sb2Abv7TIKk9lRu/Tbn/kNCnhgFCmCS', 'parent', 'PH_180', '2025-11-24 12:07:02'),
+(211, 'phuhuynh__181', '$2b$10$2v10OALDsE2SyMOnIVl8K.Sb2Abv7TIKk9lRu/Tbn/kNCnhgFCmCS', 'parent', 'PH_181', '2025-11-24 12:07:02'),
+(212, 'phuhuynh__182', '$2b$10$2v10OALDsE2SyMOnIVl8K.Sb2Abv7TIKk9lRu/Tbn/kNCnhgFCmCS', 'parent', 'PH_182', '2025-11-24 12:07:02'),
+(213, 'phuhuynh__183', '$2b$10$2v10OALDsE2SyMOnIVl8K.Sb2Abv7TIKk9lRu/Tbn/kNCnhgFCmCS', 'parent', 'PH_183', '2025-11-24 12:07:02'),
+(214, 'phuhuynh__184', '$2b$10$2v10OALDsE2SyMOnIVl8K.Sb2Abv7TIKk9lRu/Tbn/kNCnhgFCmCS', 'parent', 'PH_184', '2025-11-24 12:07:02'),
+(215, 'phuhuynh__185', '$2b$10$2v10OALDsE2SyMOnIVl8K.Sb2Abv7TIKk9lRu/Tbn/kNCnhgFCmCS', 'parent', 'PH_185', '2025-11-24 12:07:02'),
+(216, 'phuhuynh__186', '$2b$10$2v10OALDsE2SyMOnIVl8K.Sb2Abv7TIKk9lRu/Tbn/kNCnhgFCmCS', 'parent', 'PH_186', '2025-11-24 12:07:02'),
+(217, 'phuhuynh__187', '$2b$10$2v10OALDsE2SyMOnIVl8K.Sb2Abv7TIKk9lRu/Tbn/kNCnhgFCmCS', 'parent', 'PH_187', '2025-11-24 12:07:02'),
+(218, 'phuhuynh__188', '$2b$10$2v10OALDsE2SyMOnIVl8K.Sb2Abv7TIKk9lRu/Tbn/kNCnhgFCmCS', 'parent', 'PH_188', '2025-11-24 12:07:02'),
+(219, 'phuhuynh__189', '$2b$10$2v10OALDsE2SyMOnIVl8K.Sb2Abv7TIKk9lRu/Tbn/kNCnhgFCmCS', 'parent', 'PH_189', '2025-11-24 12:07:02'),
+(220, 'phuhuynh__190', '$2b$10$2v10OALDsE2SyMOnIVl8K.Sb2Abv7TIKk9lRu/Tbn/kNCnhgFCmCS', 'parent', 'PH_190', '2025-11-24 12:07:02'),
+(221, 'phuhuynh__191', '$2b$10$2v10OALDsE2SyMOnIVl8K.Sb2Abv7TIKk9lRu/Tbn/kNCnhgFCmCS', 'parent', 'PH_191', '2025-11-24 12:07:02'),
+(222, 'phuhuynh__192', '$2b$10$2v10OALDsE2SyMOnIVl8K.Sb2Abv7TIKk9lRu/Tbn/kNCnhgFCmCS', 'parent', 'PH_192', '2025-11-24 12:07:02'),
+(223, 'phuhuynh__193', '$2b$10$2v10OALDsE2SyMOnIVl8K.Sb2Abv7TIKk9lRu/Tbn/kNCnhgFCmCS', 'parent', 'PH_193', '2025-11-24 12:07:02'),
+(224, 'phuhuynh__194', '$2b$10$2v10OALDsE2SyMOnIVl8K.Sb2Abv7TIKk9lRu/Tbn/kNCnhgFCmCS', 'parent', 'PH_194', '2025-11-24 12:07:02'),
+(225, 'phuhuynh__195', '$2b$10$2v10OALDsE2SyMOnIVl8K.Sb2Abv7TIKk9lRu/Tbn/kNCnhgFCmCS', 'parent', 'PH_195', '2025-11-24 12:07:02'),
+(226, 'phuhuynh__196', '$2b$10$2v10OALDsE2SyMOnIVl8K.Sb2Abv7TIKk9lRu/Tbn/kNCnhgFCmCS', 'parent', 'PH_196', '2025-11-24 12:07:02'),
+(227, 'phuhuynh__197', '$2b$10$2v10OALDsE2SyMOnIVl8K.Sb2Abv7TIKk9lRu/Tbn/kNCnhgFCmCS', 'parent', 'PH_197', '2025-11-24 12:07:02'),
+(228, 'phuhuynh__198', '$2b$10$2v10OALDsE2SyMOnIVl8K.Sb2Abv7TIKk9lRu/Tbn/kNCnhgFCmCS', 'parent', 'PH_198', '2025-11-24 12:07:02'),
+(229, 'phuhuynh__199', '$2b$10$2v10OALDsE2SyMOnIVl8K.Sb2Abv7TIKk9lRu/Tbn/kNCnhgFCmCS', 'parent', 'PH_199', '2025-11-24 12:07:02'),
+(230, 'phuhuynh__200', '$2b$10$2v10OALDsE2SyMOnIVl8K.Sb2Abv7TIKk9lRu/Tbn/kNCnhgFCmCS', 'parent', 'PH_200', '2025-11-24 12:07:02'),
+(231, 'phuhuynh__201', '$2b$10$2v10OALDsE2SyMOnIVl8K.Sb2Abv7TIKk9lRu/Tbn/kNCnhgFCmCS', 'parent', 'PH_201', '2025-11-24 12:07:02'),
+(232, 'phuhuynh__202', '$2b$10$2v10OALDsE2SyMOnIVl8K.Sb2Abv7TIKk9lRu/Tbn/kNCnhgFCmCS', 'parent', 'PH_202', '2025-11-24 12:07:02'),
+(233, 'phuhuynh__203', '$2b$10$2v10OALDsE2SyMOnIVl8K.Sb2Abv7TIKk9lRu/Tbn/kNCnhgFCmCS', 'parent', 'PH_203', '2025-11-24 12:07:02'),
+(234, 'phuhuynh__204', '$2b$10$2v10OALDsE2SyMOnIVl8K.Sb2Abv7TIKk9lRu/Tbn/kNCnhgFCmCS', 'parent', 'PH_204', '2025-11-24 12:07:02'),
+(235, 'phuhuynh__205', '$2b$10$2v10OALDsE2SyMOnIVl8K.Sb2Abv7TIKk9lRu/Tbn/kNCnhgFCmCS', 'parent', 'PH_205', '2025-11-24 12:07:02'),
+(236, 'phuhuynh__206', '$2b$10$2v10OALDsE2SyMOnIVl8K.Sb2Abv7TIKk9lRu/Tbn/kNCnhgFCmCS', 'parent', 'PH_206', '2025-11-24 12:07:02'),
+(237, 'phuhuynh__207', '$2b$10$2v10OALDsE2SyMOnIVl8K.Sb2Abv7TIKk9lRu/Tbn/kNCnhgFCmCS', 'parent', 'PH_207', '2025-11-24 12:07:02'),
+(238, 'phuhuynh__208', '$2b$10$2v10OALDsE2SyMOnIVl8K.Sb2Abv7TIKk9lRu/Tbn/kNCnhgFCmCS', 'parent', 'PH_208', '2025-11-24 12:07:02'),
+(239, 'phuhuynh__209', '$2b$10$2v10OALDsE2SyMOnIVl8K.Sb2Abv7TIKk9lRu/Tbn/kNCnhgFCmCS', 'parent', 'PH_209', '2025-11-24 12:07:02'),
+(240, 'phuhuynh__210', '$2b$10$2v10OALDsE2SyMOnIVl8K.Sb2Abv7TIKk9lRu/Tbn/kNCnhgFCmCS', 'parent', 'PH_210', '2025-11-24 12:07:02'),
+(241, 'phuhuynh__211', '$2b$10$2v10OALDsE2SyMOnIVl8K.Sb2Abv7TIKk9lRu/Tbn/kNCnhgFCmCS', 'parent', 'PH_211', '2025-11-24 12:07:02'),
+(242, 'phuhuynh__212', '$2b$10$2v10OALDsE2SyMOnIVl8K.Sb2Abv7TIKk9lRu/Tbn/kNCnhgFCmCS', 'parent', 'PH_212', '2025-11-24 12:07:02'),
+(243, 'phuhuynh__213', '$2b$10$2v10OALDsE2SyMOnIVl8K.Sb2Abv7TIKk9lRu/Tbn/kNCnhgFCmCS', 'parent', 'PH_213', '2025-11-24 12:07:02'),
+(244, 'phuhuynh__214', '$2b$10$2v10OALDsE2SyMOnIVl8K.Sb2Abv7TIKk9lRu/Tbn/kNCnhgFCmCS', 'parent', 'PH_214', '2025-11-24 12:07:02'),
+(245, 'phuhuynh__215', '$2b$10$2v10OALDsE2SyMOnIVl8K.Sb2Abv7TIKk9lRu/Tbn/kNCnhgFCmCS', 'parent', 'PH_215', '2025-11-24 12:07:02'),
+(246, 'phuhuynh__216', '$2b$10$2v10OALDsE2SyMOnIVl8K.Sb2Abv7TIKk9lRu/Tbn/kNCnhgFCmCS', 'parent', 'PH_216', '2025-11-24 12:07:02'),
+(247, 'phuhuynh__217', '$2b$10$2v10OALDsE2SyMOnIVl8K.Sb2Abv7TIKk9lRu/Tbn/kNCnhgFCmCS', 'parent', 'PH_217', '2025-11-24 12:07:02'),
+(248, 'phuhuynh__218', '$2b$10$2v10OALDsE2SyMOnIVl8K.Sb2Abv7TIKk9lRu/Tbn/kNCnhgFCmCS', 'parent', 'PH_218', '2025-11-24 12:07:02'),
+(249, 'phuhuynh__219', '$2b$10$2v10OALDsE2SyMOnIVl8K.Sb2Abv7TIKk9lRu/Tbn/kNCnhgFCmCS', 'parent', 'PH_219', '2025-11-24 12:07:02'),
+(250, 'phuhuynh__220', '$2b$10$2v10OALDsE2SyMOnIVl8K.Sb2Abv7TIKk9lRu/Tbn/kNCnhgFCmCS', 'parent', 'PH_220', '2025-11-24 12:07:02'),
+(251, 'phuhuynh__221', '$2b$10$2v10OALDsE2SyMOnIVl8K.Sb2Abv7TIKk9lRu/Tbn/kNCnhgFCmCS', 'parent', 'PH_221', '2025-11-24 12:07:02'),
+(252, 'phuhuynh__222', '$2b$10$2v10OALDsE2SyMOnIVl8K.Sb2Abv7TIKk9lRu/Tbn/kNCnhgFCmCS', 'parent', 'PH_222', '2025-11-24 12:07:02'),
+(253, 'phuhuynh__223', '$2b$10$2v10OALDsE2SyMOnIVl8K.Sb2Abv7TIKk9lRu/Tbn/kNCnhgFCmCS', 'parent', 'PH_223', '2025-11-24 12:07:02'),
+(254, 'phuhuynh__224', '$2b$10$2v10OALDsE2SyMOnIVl8K.Sb2Abv7TIKk9lRu/Tbn/kNCnhgFCmCS', 'parent', 'PH_224', '2025-11-24 12:07:02'),
+(255, 'phuhuynh__225', '$2b$10$2v10OALDsE2SyMOnIVl8K.Sb2Abv7TIKk9lRu/Tbn/kNCnhgFCmCS', 'parent', 'PH_225', '2025-11-24 12:07:02'),
+(256, 'phuhuynh__226', '$2b$10$2v10OALDsE2SyMOnIVl8K.Sb2Abv7TIKk9lRu/Tbn/kNCnhgFCmCS', 'parent', 'PH_226', '2025-11-24 12:07:02'),
+(257, 'phuhuynh__227', '$2b$10$2v10OALDsE2SyMOnIVl8K.Sb2Abv7TIKk9lRu/Tbn/kNCnhgFCmCS', 'parent', 'PH_227', '2025-11-24 12:07:02'),
+(258, 'phuhuynh__228', '$2b$10$2v10OALDsE2SyMOnIVl8K.Sb2Abv7TIKk9lRu/Tbn/kNCnhgFCmCS', 'parent', 'PH_228', '2025-11-24 12:07:02'),
+(259, 'phuhuynh__229', '$2b$10$2v10OALDsE2SyMOnIVl8K.Sb2Abv7TIKk9lRu/Tbn/kNCnhgFCmCS', 'parent', 'PH_229', '2025-11-24 12:07:02'),
+(260, 'phuhuynh__230', '$2b$10$2v10OALDsE2SyMOnIVl8K.Sb2Abv7TIKk9lRu/Tbn/kNCnhgFCmCS', 'parent', 'PH_230', '2025-11-24 12:07:02'),
+(261, 'phuhuynh__231', '$2b$10$2v10OALDsE2SyMOnIVl8K.Sb2Abv7TIKk9lRu/Tbn/kNCnhgFCmCS', 'parent', 'PH_231', '2025-11-24 12:07:02'),
+(262, 'phuhuynh__232', '$2b$10$2v10OALDsE2SyMOnIVl8K.Sb2Abv7TIKk9lRu/Tbn/kNCnhgFCmCS', 'parent', 'PH_232', '2025-11-24 12:07:02'),
+(263, 'phuhuynh__233', '$2b$10$2v10OALDsE2SyMOnIVl8K.Sb2Abv7TIKk9lRu/Tbn/kNCnhgFCmCS', 'parent', 'PH_233', '2025-11-24 12:07:02'),
+(264, 'phuhuynh__234', '$2b$10$2v10OALDsE2SyMOnIVl8K.Sb2Abv7TIKk9lRu/Tbn/kNCnhgFCmCS', 'parent', 'PH_234', '2025-11-24 12:07:02'),
+(265, 'phuhuynh__235', '$2b$10$2v10OALDsE2SyMOnIVl8K.Sb2Abv7TIKk9lRu/Tbn/kNCnhgFCmCS', 'parent', 'PH_235', '2025-11-24 12:07:02'),
+(266, 'phuhuynh__236', '$2b$10$2v10OALDsE2SyMOnIVl8K.Sb2Abv7TIKk9lRu/Tbn/kNCnhgFCmCS', 'parent', 'PH_236', '2025-11-24 12:07:02'),
+(267, 'phuhuynh__237', '$2b$10$2v10OALDsE2SyMOnIVl8K.Sb2Abv7TIKk9lRu/Tbn/kNCnhgFCmCS', 'parent', 'PH_237', '2025-11-24 12:07:02'),
+(268, 'phuhuynh__238', '$2b$10$2v10OALDsE2SyMOnIVl8K.Sb2Abv7TIKk9lRu/Tbn/kNCnhgFCmCS', 'parent', 'PH_238', '2025-11-24 12:07:02'),
+(269, 'phuhuynh__239', '$2b$10$2v10OALDsE2SyMOnIVl8K.Sb2Abv7TIKk9lRu/Tbn/kNCnhgFCmCS', 'parent', 'PH_239', '2025-11-24 12:07:02'),
+(270, 'phuhuynh__240', '$2b$10$2v10OALDsE2SyMOnIVl8K.Sb2Abv7TIKk9lRu/Tbn/kNCnhgFCmCS', 'parent', 'PH_240', '2025-11-24 12:07:02'),
+(271, 'phuhuynh__241', '$2b$10$2v10OALDsE2SyMOnIVl8K.Sb2Abv7TIKk9lRu/Tbn/kNCnhgFCmCS', 'parent', 'PH_241', '2025-11-24 12:07:02'),
+(272, 'phuhuynh__242', '$2b$10$2v10OALDsE2SyMOnIVl8K.Sb2Abv7TIKk9lRu/Tbn/kNCnhgFCmCS', 'parent', 'PH_242', '2025-11-24 12:07:02'),
+(273, 'phuhuynh__243', '$2b$10$2v10OALDsE2SyMOnIVl8K.Sb2Abv7TIKk9lRu/Tbn/kNCnhgFCmCS', 'parent', 'PH_243', '2025-11-24 12:07:02'),
+(274, 'phuhuynh__244', '$2b$10$2v10OALDsE2SyMOnIVl8K.Sb2Abv7TIKk9lRu/Tbn/kNCnhgFCmCS', 'parent', 'PH_244', '2025-11-24 12:07:02'),
+(275, 'phuhuynh__245', '$2b$10$2v10OALDsE2SyMOnIVl8K.Sb2Abv7TIKk9lRu/Tbn/kNCnhgFCmCS', 'parent', 'PH_245', '2025-11-24 12:07:02'),
+(276, 'phuhuynh__246', '$2b$10$2v10OALDsE2SyMOnIVl8K.Sb2Abv7TIKk9lRu/Tbn/kNCnhgFCmCS', 'parent', 'PH_246', '2025-11-24 12:07:02'),
+(277, 'phuhuynh__247', '$2b$10$2v10OALDsE2SyMOnIVl8K.Sb2Abv7TIKk9lRu/Tbn/kNCnhgFCmCS', 'parent', 'PH_247', '2025-11-24 12:07:02'),
+(278, 'phuhuynh__248', '$2b$10$2v10OALDsE2SyMOnIVl8K.Sb2Abv7TIKk9lRu/Tbn/kNCnhgFCmCS', 'parent', 'PH_248', '2025-11-24 12:07:02'),
+(279, 'phuhuynh__249', '$2b$10$2v10OALDsE2SyMOnIVl8K.Sb2Abv7TIKk9lRu/Tbn/kNCnhgFCmCS', 'parent', 'PH_249', '2025-11-24 12:07:02'),
+(280, 'phuhuynh__250', '$2b$10$2v10OALDsE2SyMOnIVl8K.Sb2Abv7TIKk9lRu/Tbn/kNCnhgFCmCS', 'parent', 'PH_250', '2025-11-24 12:07:02'),
+(281, 'phuhuynh__251', '$2b$10$2v10OALDsE2SyMOnIVl8K.Sb2Abv7TIKk9lRu/Tbn/kNCnhgFCmCS', 'parent', 'PH_251', '2025-11-24 12:07:02'),
+(282, 'phuhuynh__252', '$2b$10$2v10OALDsE2SyMOnIVl8K.Sb2Abv7TIKk9lRu/Tbn/kNCnhgFCmCS', 'parent', 'PH_252', '2025-11-24 12:07:02'),
+(283, 'phuhuynh__253', '$2b$10$2v10OALDsE2SyMOnIVl8K.Sb2Abv7TIKk9lRu/Tbn/kNCnhgFCmCS', 'parent', 'PH_253', '2025-11-24 12:07:02'),
+(284, 'phuhuynh__254', '$2b$10$2v10OALDsE2SyMOnIVl8K.Sb2Abv7TIKk9lRu/Tbn/kNCnhgFCmCS', 'parent', 'PH_254', '2025-11-24 12:07:02'),
+(285, 'phuhuynh__255', '$2b$10$2v10OALDsE2SyMOnIVl8K.Sb2Abv7TIKk9lRu/Tbn/kNCnhgFCmCS', 'parent', 'PH_255', '2025-11-24 12:07:02'),
+(286, 'phuhuynh__256', '$2b$10$2v10OALDsE2SyMOnIVl8K.Sb2Abv7TIKk9lRu/Tbn/kNCnhgFCmCS', 'parent', 'PH_256', '2025-11-24 12:07:02'),
+(287, 'phuhuynh__257', '$2b$10$2v10OALDsE2SyMOnIVl8K.Sb2Abv7TIKk9lRu/Tbn/kNCnhgFCmCS', 'parent', 'PH_257', '2025-11-24 12:07:02'),
+(288, 'phuhuynh__258', '$2b$10$2v10OALDsE2SyMOnIVl8K.Sb2Abv7TIKk9lRu/Tbn/kNCnhgFCmCS', 'parent', 'PH_258', '2025-11-24 12:07:02'),
+(289, 'phuhuynh__259', '$2b$10$2v10OALDsE2SyMOnIVl8K.Sb2Abv7TIKk9lRu/Tbn/kNCnhgFCmCS', 'parent', 'PH_259', '2025-11-24 12:07:02'),
+(290, 'phuhuynh__260', '$2b$10$2v10OALDsE2SyMOnIVl8K.Sb2Abv7TIKk9lRu/Tbn/kNCnhgFCmCS', 'parent', 'PH_260', '2025-11-24 12:07:02'),
+(291, 'phuhuynh__261', '$2b$10$2v10OALDsE2SyMOnIVl8K.Sb2Abv7TIKk9lRu/Tbn/kNCnhgFCmCS', 'parent', 'PH_261', '2025-11-24 12:07:02'),
+(292, 'phuhuynh__262', '$2b$10$2v10OALDsE2SyMOnIVl8K.Sb2Abv7TIKk9lRu/Tbn/kNCnhgFCmCS', 'parent', 'PH_262', '2025-11-24 12:07:02'),
+(293, 'phuhuynh__263', '$2b$10$2v10OALDsE2SyMOnIVl8K.Sb2Abv7TIKk9lRu/Tbn/kNCnhgFCmCS', 'parent', 'PH_263', '2025-11-24 12:07:02'),
+(294, 'phuhuynh__264', '$2b$10$2v10OALDsE2SyMOnIVl8K.Sb2Abv7TIKk9lRu/Tbn/kNCnhgFCmCS', 'parent', 'PH_264', '2025-11-24 12:07:02'),
+(295, 'phuhuynh__265', '$2b$10$2v10OALDsE2SyMOnIVl8K.Sb2Abv7TIKk9lRu/Tbn/kNCnhgFCmCS', 'parent', 'PH_265', '2025-11-24 12:07:02'),
+(296, 'phuhuynh__266', '$2b$10$2v10OALDsE2SyMOnIVl8K.Sb2Abv7TIKk9lRu/Tbn/kNCnhgFCmCS', 'parent', 'PH_266', '2025-11-24 12:07:02'),
+(297, 'phuhuynh__267', '$2b$10$2v10OALDsE2SyMOnIVl8K.Sb2Abv7TIKk9lRu/Tbn/kNCnhgFCmCS', 'parent', 'PH_267', '2025-11-24 12:07:02'),
+(298, 'phuhuynh__268', '$2b$10$2v10OALDsE2SyMOnIVl8K.Sb2Abv7TIKk9lRu/Tbn/kNCnhgFCmCS', 'parent', 'PH_268', '2025-11-24 12:07:02'),
+(299, 'phuhuynh__269', '$2b$10$2v10OALDsE2SyMOnIVl8K.Sb2Abv7TIKk9lRu/Tbn/kNCnhgFCmCS', 'parent', 'PH_269', '2025-11-24 12:07:02'),
+(300, 'phuhuynh__270', '$2b$10$2v10OALDsE2SyMOnIVl8K.Sb2Abv7TIKk9lRu/Tbn/kNCnhgFCmCS', 'parent', 'PH_270', '2025-11-24 12:07:02'),
+(301, 'phuhuynh__271', '$2b$10$2v10OALDsE2SyMOnIVl8K.Sb2Abv7TIKk9lRu/Tbn/kNCnhgFCmCS', 'parent', 'PH_271', '2025-11-24 12:07:02'),
+(302, 'phuhuynh__272', '$2b$10$2v10OALDsE2SyMOnIVl8K.Sb2Abv7TIKk9lRu/Tbn/kNCnhgFCmCS', 'parent', 'PH_272', '2025-11-24 12:07:02'),
+(303, 'phuhuynh__273', '$2b$10$2v10OALDsE2SyMOnIVl8K.Sb2Abv7TIKk9lRu/Tbn/kNCnhgFCmCS', 'parent', 'PH_273', '2025-11-24 12:07:02'),
+(304, 'phuhuynh__274', '$2b$10$2v10OALDsE2SyMOnIVl8K.Sb2Abv7TIKk9lRu/Tbn/kNCnhgFCmCS', 'parent', 'PH_274', '2025-11-24 12:07:02'),
+(305, 'phuhuynh__275', '$2b$10$2v10OALDsE2SyMOnIVl8K.Sb2Abv7TIKk9lRu/Tbn/kNCnhgFCmCS', 'parent', 'PH_275', '2025-11-24 12:07:03'),
+(306, 'phuhuynh__276', '$2b$10$2v10OALDsE2SyMOnIVl8K.Sb2Abv7TIKk9lRu/Tbn/kNCnhgFCmCS', 'parent', 'PH_276', '2025-11-24 12:07:03'),
+(307, 'phuhuynh__277', '$2b$10$2v10OALDsE2SyMOnIVl8K.Sb2Abv7TIKk9lRu/Tbn/kNCnhgFCmCS', 'parent', 'PH_277', '2025-11-24 12:07:03'),
+(308, 'phuhuynh__278', '$2b$10$2v10OALDsE2SyMOnIVl8K.Sb2Abv7TIKk9lRu/Tbn/kNCnhgFCmCS', 'parent', 'PH_278', '2025-11-24 12:07:03'),
+(309, 'phuhuynh__279', '$2b$10$2v10OALDsE2SyMOnIVl8K.Sb2Abv7TIKk9lRu/Tbn/kNCnhgFCmCS', 'parent', 'PH_279', '2025-11-24 12:07:03'),
+(310, 'phuhuynh__280', '$2b$10$2v10OALDsE2SyMOnIVl8K.Sb2Abv7TIKk9lRu/Tbn/kNCnhgFCmCS', 'parent', 'PH_280', '2025-11-24 12:07:03'),
+(311, 'phuhuynh__281', '$2b$10$2v10OALDsE2SyMOnIVl8K.Sb2Abv7TIKk9lRu/Tbn/kNCnhgFCmCS', 'parent', 'PH_281', '2025-11-24 12:07:03'),
+(312, 'phuhuynh__282', '$2b$10$2v10OALDsE2SyMOnIVl8K.Sb2Abv7TIKk9lRu/Tbn/kNCnhgFCmCS', 'parent', 'PH_282', '2025-11-24 12:07:03'),
+(313, 'phuhuynh__283', '$2b$10$2v10OALDsE2SyMOnIVl8K.Sb2Abv7TIKk9lRu/Tbn/kNCnhgFCmCS', 'parent', 'PH_283', '2025-11-24 12:07:03'),
+(314, 'phuhuynh__284', '$2b$10$2v10OALDsE2SyMOnIVl8K.Sb2Abv7TIKk9lRu/Tbn/kNCnhgFCmCS', 'parent', 'PH_284', '2025-11-24 12:07:03'),
+(315, 'phuhuynh__285', '$2b$10$2v10OALDsE2SyMOnIVl8K.Sb2Abv7TIKk9lRu/Tbn/kNCnhgFCmCS', 'parent', 'PH_285', '2025-11-24 12:07:03'),
+(316, 'phuhuynh__286', '$2b$10$2v10OALDsE2SyMOnIVl8K.Sb2Abv7TIKk9lRu/Tbn/kNCnhgFCmCS', 'parent', 'PH_286', '2025-11-24 12:07:03'),
+(317, 'phuhuynh__287', '$2b$10$2v10OALDsE2SyMOnIVl8K.Sb2Abv7TIKk9lRu/Tbn/kNCnhgFCmCS', 'parent', 'PH_287', '2025-11-24 12:07:03'),
+(318, 'phuhuynh__288', '$2b$10$2v10OALDsE2SyMOnIVl8K.Sb2Abv7TIKk9lRu/Tbn/kNCnhgFCmCS', 'parent', 'PH_288', '2025-11-24 12:07:03'),
+(319, 'phuhuynh__289', '$2b$10$2v10OALDsE2SyMOnIVl8K.Sb2Abv7TIKk9lRu/Tbn/kNCnhgFCmCS', 'parent', 'PH_289', '2025-11-24 12:07:03'),
+(320, 'phuhuynh__290', '$2b$10$2v10OALDsE2SyMOnIVl8K.Sb2Abv7TIKk9lRu/Tbn/kNCnhgFCmCS', 'parent', 'PH_290', '2025-11-24 12:07:03'),
+(321, 'phuhuynh__291', '$2b$10$2v10OALDsE2SyMOnIVl8K.Sb2Abv7TIKk9lRu/Tbn/kNCnhgFCmCS', 'parent', 'PH_291', '2025-11-24 12:07:03'),
+(322, 'phuhuynh__292', '$2b$10$2v10OALDsE2SyMOnIVl8K.Sb2Abv7TIKk9lRu/Tbn/kNCnhgFCmCS', 'parent', 'PH_292', '2025-11-24 12:07:03'),
+(323, 'phuhuynh__293', '$2b$10$2v10OALDsE2SyMOnIVl8K.Sb2Abv7TIKk9lRu/Tbn/kNCnhgFCmCS', 'parent', 'PH_293', '2025-11-24 12:07:03'),
+(324, 'phuhuynh__294', '$2b$10$2v10OALDsE2SyMOnIVl8K.Sb2Abv7TIKk9lRu/Tbn/kNCnhgFCmCS', 'parent', 'PH_294', '2025-11-24 12:07:03'),
+(325, 'phuhuynh__295', '$2b$10$2v10OALDsE2SyMOnIVl8K.Sb2Abv7TIKk9lRu/Tbn/kNCnhgFCmCS', 'parent', 'PH_295', '2025-11-24 12:07:03'),
+(326, 'phuhuynh__296', '$2b$10$2v10OALDsE2SyMOnIVl8K.Sb2Abv7TIKk9lRu/Tbn/kNCnhgFCmCS', 'parent', 'PH_296', '2025-11-24 12:07:03'),
+(327, 'phuhuynh__297', '$2b$10$2v10OALDsE2SyMOnIVl8K.Sb2Abv7TIKk9lRu/Tbn/kNCnhgFCmCS', 'parent', 'PH_297', '2025-11-24 12:07:03'),
+(328, 'phuhuynh__298', '$2b$10$2v10OALDsE2SyMOnIVl8K.Sb2Abv7TIKk9lRu/Tbn/kNCnhgFCmCS', 'parent', 'PH_298', '2025-11-24 12:07:03'),
+(329, 'phuhuynh__299', '$2b$10$2v10OALDsE2SyMOnIVl8K.Sb2Abv7TIKk9lRu/Tbn/kNCnhgFCmCS', 'parent', 'PH_299', '2025-11-24 12:07:03'),
+(330, 'phuhuynh__300', '$2b$10$2v10OALDsE2SyMOnIVl8K.Sb2Abv7TIKk9lRu/Tbn/kNCnhgFCmCS', 'parent', 'PH_300', '2025-11-24 12:07:03');
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `vehicles`
+--
+
+CREATE TABLE `vehicles` (
+  `Id` int(11) NOT NULL,
+  `LicensePlate` varchar(20) NOT NULL,
+  `Model` varchar(100) DEFAULT NULL,
+  `Capacity` int(11) NOT NULL DEFAULT 16 COMMENT 'Số chỗ ngồi của xe',
+  `SpeedKmh` int(11) NOT NULL DEFAULT 40 COMMENT 'Tốc độ trung bình (km/h)',
+  `IsActive` tinyint(1) DEFAULT 1 COMMENT 'Xe có đang hoạt động không'
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+--
+-- Dumping data for table `vehicles`
+--
+
+INSERT INTO `vehicles` (`Id`, `LicensePlate`, `Model`, `Capacity`, `SpeedKmh`, `IsActive`) VALUES
+(1, '51A-123.45', 'Hyundai County 16 chỗ', 16, 50, 1),
+(2, '51B-678.90', 'Toyota Coaster 29 chỗ', 29, 45, 1),
+(3, '51C-555.55', 'Ford Transit 16 chỗ', 16, 55, 1),
+(4, '5D-111.22', 'Mercedes Sprinter 16 chỗ', 16, 50, 1),
+(5, '51E-999.88', 'Hyundai Solati 16 chỗ', 16, 45, 1),
+(6, '51B-420.14', 'Hyundai County 29 chỗ', 29, 45, 1),
+(7, '51B-700.10', 'Hyundai County 29 chỗ', 29, 45, 1),
+(8, '51B-677.11', 'Thaco Town 29 chỗ', 29, 45, 1),
+(9, '51B-863.33', 'Samco Felix 29 chỗ', 29, 45, 1),
+(10, '51B-694.98', 'Thaco Town 29 chỗ', 29, 45, 1),
+(11, '51B-998.59', 'Thaco Town 29 chỗ', 29, 45, 1),
+(12, '51B-234.89', 'Thaco Town 29 chỗ', 29, 45, 1),
+(13, '51B-735.64', 'Hyundai County 29 chỗ', 29, 45, 1),
+(14, '51B-678.12', 'Toyota Coaster 29 chỗ', 29, 45, 1),
+(15, '51B-122.54', 'Thaco Town 29 chỗ', 29, 45, 1),
+(16, '51B-582.53', 'Samco Felix 29 chỗ', 29, 45, 1),
+(17, '51B-771.98', 'Ford Transit 16 chỗ', 16, 45, 1),
+(18, '51B-960.28', 'Thaco Town 29 chỗ', 29, 45, 1),
+(19, '51B-953.45', 'Hyundai County 29 chỗ', 29, 45, 1),
+(20, '51B-293.79', 'Thaco Town 29 chỗ', 29, 45, 1),
+(21, '51B-427.30', 'Thaco Town 29 chỗ', 29, 45, 1),
+(22, '51B-946.62', 'Thaco Town 29 chỗ', 29, 45, 1),
+(23, '51B-841.47', 'Thaco Town 29 chỗ', 29, 45, 1),
+(24, '51B-229.25', 'Ford Transit 16 chỗ', 16, 45, 1),
+(25, '51B-699.13', 'Ford Transit 16 chỗ', 16, 45, 1);
+
+--
+-- Indexes for dumped tables
+--
+
+--
+-- Indexes for table `drivers`
+--
+ALTER TABLE `drivers`
+  ADD PRIMARY KEY (`Id`),
+  ADD UNIQUE KEY `MaBangLai` (`MaBangLai`),
+  ADD UNIQUE KEY `UserId` (`UserId`);
+
+--
+-- Indexes for table `hocsinh`
+--
+ALTER TABLE `hocsinh`
+  ADD PRIMARY KEY (`MaHocSinh`),
+  ADD KEY `idx_phuhuynh` (`MaPhuHuynh`),
+  ADD KEY `idx_location` (`Latitude`,`Longitude`),
+  ADD KEY `idx_trangthai` (`TrangThaiHocTap`);
+
+--
+-- Indexes for table `phuhuynh`
+--
+ALTER TABLE `phuhuynh`
+  ADD PRIMARY KEY (`MaPhuHuynh`),
+  ADD UNIQUE KEY `UserId` (`UserId`);
+
+--
+-- Indexes for table `pickuppoints`
+--
+ALTER TABLE `pickuppoints`
+  ADD PRIMARY KEY (`Id`),
+  ADD KEY `RouteId` (`RouteId`),
+  ADD KEY `idx_order` (`RouteId`,`PointOrder`),
+  ADD KEY `idx_tinhtrang` (`TinhTrangDon`),
+  ADD KEY `MaHocSinh` (`MaHocSinh`);
+
+--
+-- Indexes for table `quanly`
+--
+ALTER TABLE `quanly`
+  ADD PRIMARY KEY (`MaQuanLy`),
+  ADD UNIQUE KEY `UserId` (`UserId`);
+
+--
+-- Indexes for table `routes`
+--
+ALTER TABLE `routes`
+  ADD PRIMARY KEY (`Id`),
+  ADD UNIQUE KEY `MaTuyen` (`MaTuyen`),
+  ADD KEY `DriverId` (`DriverId`),
+  ADD KEY `VehicleId` (`VehicleId`),
+  ADD KEY `idx_status` (`Status`),
+  ADD KEY `idx_location` (`currentLatitude`,`currentLongitude`);
+
+--
+-- Indexes for table `schedules`
+--
+ALTER TABLE `schedules`
+  ADD PRIMARY KEY (`id`),
+  ADD KEY `idx_route` (`route_id`),
+  ADD KEY `idx_date` (`date`),
+  ADD KEY `idx_status` (`status`);
+
+--
+-- Indexes for table `schedule_pickup_status`
+--
+ALTER TABLE `schedule_pickup_status`
+  ADD PRIMARY KEY (`Id`),
+  ADD UNIQUE KEY `unique_schedule_pickup` (`ScheduleId`,`PickupPointId`),
+  ADD KEY `idx_schedule` (`ScheduleId`),
+  ADD KEY `idx_pickuppoint` (`PickupPointId`),
+  ADD KEY `idx_tinhtrang` (`TinhTrangDon`),
+  ADD KEY `idx_schedule_status` (`ScheduleId`,`TinhTrangDon`),
+  ADD KEY `idx_time` (`ThoiGianDonThucTe`);
+
+--
+-- Indexes for table `thongbao`
+--
+ALTER TABLE `thongbao`
+  ADD PRIMARY KEY (`MaThongBao`);
+
+--
+-- Indexes for table `thongbao_phuhuynh`
+--
+ALTER TABLE `thongbao_phuhuynh`
+  ADD PRIMARY KEY (`Id`),
+  ADD UNIQUE KEY `MaThongBao` (`MaThongBao`),
+  ADD KEY `idx_phuhuynh` (`MaPhuHuynh`),
+  ADD KEY `idx_dadoc` (`DaDoc`),
+  ADD KEY `idx_thoigian` (`ThoiGian`);
+
+--
+-- Indexes for table `users`
+--
+ALTER TABLE `users`
+  ADD PRIMARY KEY (`Id`),
+  ADD UNIQUE KEY `Username` (`Username`),
+  ADD KEY `idx_username` (`Username`),
+  ADD KEY `idx_profile` (`ProfileId`,`Role`);
+
+--
+-- Indexes for table `vehicles`
+--
+ALTER TABLE `vehicles`
+  ADD PRIMARY KEY (`Id`),
+  ADD UNIQUE KEY `LicensePlate` (`LicensePlate`);
+
+--
+-- AUTO_INCREMENT for dumped tables
+--
+
+--
+-- AUTO_INCREMENT for table `pickuppoints`
+--
+ALTER TABLE `pickuppoints`
+  MODIFY `Id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=227;
+
+--
+-- AUTO_INCREMENT for table `routes`
+--
+ALTER TABLE `routes`
+  MODIFY `Id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=16;
+
+--
+-- AUTO_INCREMENT for table `schedules`
+--
+ALTER TABLE `schedules`
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=43;
+
+--
+-- AUTO_INCREMENT for table `schedule_pickup_status`
+--
+ALTER TABLE `schedule_pickup_status`
+  MODIFY `Id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=512;
+
+--
+-- AUTO_INCREMENT for table `thongbao_phuhuynh`
+--
+ALTER TABLE `thongbao_phuhuynh`
+  MODIFY `Id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=9;
+
+--
+-- AUTO_INCREMENT for table `users`
+--
+ALTER TABLE `users`
+  MODIFY `Id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=331;
+
+--
+-- AUTO_INCREMENT for table `vehicles`
+--
+ALTER TABLE `vehicles`
+  MODIFY `Id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=26;
+
+--
+-- Constraints for dumped tables
+--
+
+--
+-- Constraints for table `drivers`
+--
+ALTER TABLE `drivers`
+  ADD CONSTRAINT `drivers_ibfk_1` FOREIGN KEY (`UserId`) REFERENCES `users` (`Id`) ON DELETE SET NULL;
+
+--
+-- Constraints for table `hocsinh`
+--
+ALTER TABLE `hocsinh`
+  ADD CONSTRAINT `hocsinh_ibfk_1` FOREIGN KEY (`MaPhuHuynh`) REFERENCES `phuhuynh` (`MaPhuHuynh`) ON DELETE SET NULL;
+
+--
+-- Constraints for table `phuhuynh`
+--
+ALTER TABLE `phuhuynh`
+  ADD CONSTRAINT `fk_phuhuynh_users` FOREIGN KEY (`UserId`) REFERENCES `users` (`Id`) ON DELETE SET NULL;
+
+--
+-- Constraints for table `pickuppoints`
+--
+ALTER TABLE `pickuppoints`
+  ADD CONSTRAINT `pickuppoints_ibfk_1` FOREIGN KEY (`RouteId`) REFERENCES `routes` (`Id`) ON DELETE CASCADE,
+  ADD CONSTRAINT `pickuppoints_ibfk_2` FOREIGN KEY (`MaHocSinh`) REFERENCES `hocsinh` (`MaHocSinh`) ON DELETE SET NULL;
+
+--
+-- Constraints for table `quanly`
+--
+ALTER TABLE `quanly`
+  ADD CONSTRAINT `fk_quanly_users` FOREIGN KEY (`UserId`) REFERENCES `users` (`Id`) ON DELETE SET NULL;
+
+--
+-- Constraints for table `routes`
+--
+ALTER TABLE `routes`
+  ADD CONSTRAINT `routes_ibfk_1` FOREIGN KEY (`DriverId`) REFERENCES `drivers` (`Id`) ON DELETE SET NULL,
+  ADD CONSTRAINT `routes_ibfk_2` FOREIGN KEY (`VehicleId`) REFERENCES `vehicles` (`Id`) ON DELETE SET NULL;
+
+--
+-- Constraints for table `schedules`
+--
+ALTER TABLE `schedules`
+  ADD CONSTRAINT `fk_schedules_routes` FOREIGN KEY (`route_id`) REFERENCES `routes` (`Id`) ON DELETE CASCADE;
+
+--
+-- Constraints for table `schedule_pickup_status`
+--
+ALTER TABLE `schedule_pickup_status`
+  ADD CONSTRAINT `fk_schedule_pickup_point` FOREIGN KEY (`PickupPointId`) REFERENCES `pickuppoints` (`Id`) ON DELETE CASCADE,
+  ADD CONSTRAINT `fk_schedule_pickup_schedule` FOREIGN KEY (`ScheduleId`) REFERENCES `schedules` (`id`) ON DELETE CASCADE;
+
+--
+-- Constraints for table `thongbao_phuhuynh`
+--
+ALTER TABLE `thongbao_phuhuynh`
+  ADD CONSTRAINT `fk_thongbao_ph_phuhuynh` FOREIGN KEY (`MaPhuHuynh`) REFERENCES `phuhuynh` (`MaPhuHuynh`) ON DELETE CASCADE;
+COMMIT;
+
+/*!40101 SET CHARACTER_SET_CLIENT=@OLD_CHARACTER_SET_CLIENT */;
+/*!40101 SET CHARACTER_SET_RESULTS=@OLD_CHARACTER_SET_RESULTS */;
+/*!40101 SET COLLATION_CONNECTION=@OLD_COLLATION_CONNECTION */;

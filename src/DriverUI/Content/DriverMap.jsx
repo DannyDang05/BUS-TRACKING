@@ -17,7 +17,7 @@ import RefreshIcon from '@mui/icons-material/Refresh';
 import RouteIcon from '@mui/icons-material/Route';
 import PlaceIcon from '@mui/icons-material/Place';
 import DirectionsBusIcon from '@mui/icons-material/DirectionsBus';
-import { getAllRoutesWithPoints, getActiveSimulations } from '../../service/apiService';
+import { getAllRoutesWithPoints, getActiveSimulations, getScheduleStudents } from '../../service/apiService';
 
 const DriverMap = ({ scheduleId, routeId }) => {
     const mapRef = useRef();
@@ -86,15 +86,49 @@ const DriverMap = ({ scheduleId, routeId }) => {
         try {
             console.log('🗺️ Fetching route data for scheduleId:', scheduleId, 'routeId:', routeId);
             
-            // Fetch all routes with pickup points
+            // QUAN TRỌNG: Lấy pickup points từ schedule (có trạng thái đúng)
+            const scheduleResponse = await getScheduleStudents(scheduleId);
+            const pickupPoints = (scheduleResponse.data || []).map(p => ({
+                pickupPointId: p.pickupPointId,
+                Id: p.pickupPointId,
+                MaHocSinh: p.studentId,
+                PointOrder: p.PointOrder,
+                address: p.pickupAddress,
+                Latitude: p.Latitude,
+                Longitude: p.Longitude,
+                latitude: p.Latitude,
+                longitude: p.Longitude,
+                TinhTrangDon: p.status,
+                status: p.status,
+                studentName: p.studentName,
+                class: p.studentClass,
+                studentId: p.studentId
+            }));
+            
+            console.log('📍 Pickup points from schedule:', pickupPoints.length, pickupPoints);
+            
+            // Lấy thông tin route cơ bản
             const response = await getAllRoutesWithPoints();
             const routes = response.data || [];
-            console.log('📍 Total routes fetched:', routes.length);
             
             let currentRoute = routes.find(r => r.routeId === routeId);
             
             if (currentRoute) {
                 console.log('✅ Found route:', currentRoute.routeName);
+                
+                // Ghi đè pickup points với dữ liệu từ schedule (có trạng thái đúng)
+                currentRoute.pickupPoints = pickupPoints;
+                
+                // Tính lại số lượng đã đón/trả từ schedule_pickup_status
+                currentRoute.pickedUp = pickupPoints.filter(p => p.status === 'Đã đón' && p.MaHocSinh).length;
+                currentRoute.droppedOff = pickupPoints.filter(p => p.status === 'Đã trả' && p.MaHocSinh).length;
+                currentRoute.totalStudents = pickupPoints.filter(p => p.MaHocSinh).length;
+                
+                console.log('📊 Stats from schedule:', {
+                    total: currentRoute.totalStudents,
+                    pickedUp: currentRoute.pickedUp,
+                    droppedOff: currentRoute.droppedOff
+                });
                 
                 // Try to get realtime position from active simulation
                 try {
@@ -320,7 +354,7 @@ const DriverMap = ({ scheduleId, routeId }) => {
 
         // Compare and update only changed pickup points
         newPoints.forEach((point) => {
-            const pointId = point.Id || point.id;
+            const pointId = point.pickupPointId || point.Id || point.id;
             const status = point.TinhTrangDon || point.status || 'Chưa đón';
             
             // Find existing marker for this point
@@ -441,7 +475,7 @@ const DriverMap = ({ scheduleId, routeId }) => {
                 .addTo(mapRef.current);
 
             // Store point ID and status for tracking changes
-            marker._pointId = point.Id || point.id;
+            marker._pointId = point.pickupPointId || point.Id || point.id;
             marker._status = status;
 
             el.querySelector('div').addEventListener('mouseenter', () => {

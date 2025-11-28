@@ -162,14 +162,15 @@ const DetailSchedule = () => {
 
     const handleStartTrip = async () => {
         try {
-            // Update schedule status
-            await updateScheduleStatus(scheduleId, 2); // 2 = Đang chạy
+            // Update schedule status to "Đang chạy"
+            await updateScheduleStatus(scheduleId, 'Đang chạy');
             
             // Start simulation (xe sẽ tự động di chuyển theo route)
             await startTripSimulation(scheduleId);
             
             toast.success('Đã bắt đầu hành trình! Xe đang di chuyển theo tuyến đường.');
-            // Có thể reload lại page hoặc update state
+            // Reload để cập nhật UI
+            setTimeout(() => window.location.reload(), 1500);
         } catch (err) {
             console.error('Error starting trip:', err);
             toast.error('Không thể bắt đầu hành trình. Vui lòng thử lại.');
@@ -193,7 +194,7 @@ const DetailSchedule = () => {
         if (!currentStudent) return;
 
         try {
-            await updatePickupStatus(currentStudent.pickupPointId, newStatus);
+            await updatePickupStatus(scheduleId, currentStudent.pickupPointId, newStatus);
             
             // Cập nhật state local
             setStudents(prevStudents =>
@@ -216,7 +217,7 @@ const DetailSchedule = () => {
     const handleMarkAllAs = async (status) => {
         try {
             const updatePromises = students.map(student => 
-                updatePickupStatus(student.pickupPointId, status)
+                updatePickupStatus(scheduleId, student.pickupPointId, status)
             );
             
             await Promise.all(updatePromises);

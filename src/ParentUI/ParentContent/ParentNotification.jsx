@@ -13,32 +13,93 @@ import {
 import { bindMenu } from 'material-ui-popup-state';
 import { getParentNotifications, markNotificationRead, markAllNotificationsRead } from '../../service/apiService';
 
+// Yêu cầu permission cho browser notification
+if ('Notification' in window && Notification.permission === 'default') {
+    Notification.requestPermission();
+}
+
 const ParentNotification = ({ popupState }) => {
     const [notifications, setNotifications] = useState([]);
     const [loading, setLoading] = useState(false);
     const [unreadCount, setUnreadCount] = useState(0);
+    const [previousCount, setPreviousCount] = useState(0);
     
-    // Giả sử parentId từ localStorage hoặc auth context
-    const parentId = 'PH001'; // Thay bằng giá trị thật
+    // Lấy parentId từ localStorage
+    const user = JSON.parse(localStorage.getItem('bus_user'));
+    const parentId = user?.profileId || null;
 
+    // Fetch khi mở popup
     useEffect(() => {
         if (popupState.isOpen) {
             fetchNotifications();
         }
     }, [popupState.isOpen]);
+    
+    // Auto-refresh mỗi 30s và hiển thị toast khi có thông báo mới
+    useEffect(() => {
+        if (!parentId) return;
+        
+        const interval = setInterval(() => {
+            fetchNotificationsQuietly();
+        }, 30000); // 30 giây
+        
+        return () => clearInterval(interval);
+    }, [parentId, previousCount]);
 
     const fetchNotifications = async () => {
         try {
             setLoading(true);
-            const response = await getParentNotifications(parentId, 1, 20);
+            console.log('🔍 Fetching notifications for parent:', parentId);
+            const response = await getParentNotifications(parentId, 1, 10);
+            console.log('📦 API Response:', response);
             const notifs = response.data || [];
+            console.log(`✅ Received ${notifs.length} notifications:`, notifs);
             setNotifications(notifs);
-            setUnreadCount(notifs.filter(n => !n.is_read).length);
+            const newUnreadCount = notifs.filter(n => !n.is_read).length;
+            setUnreadCount(newUnreadCount);
+            setPreviousCount(notifs.length);
         } catch (err) {
             console.error('❌ Error fetching notifications:', err);
         } finally {
             setLoading(false);
         }
+    };
+    
+    // Fetch im lặng cho polling (không hiển thị loading)
+    const fetchNotificationsQuietly = async () => {
+        try {
+            const response = await getParentNotifications(parentId, 1, 10);
+            const notifs = response.data || [];
+            const newUnreadCount = notifs.filter(n => !n.is_read).length;
+            
+            console.log(`🔄 Polling: ${notifs.length} notifications, ${newUnreadCount} unread`);
+            
+            // Nếu có thông báo mới hơn trước
+            if (notifs.length > previousCount && notifs.length > 0) {
+                console.log('🆕 New notification detected!');
+                // Toast handled by HeaderParent
+            }
+            
+            setNotifications(notifs);
+            setUnreadCount(newUnreadCount);
+            setPreviousCount(notifs.length);
+        } catch (err) {
+            console.error('❌ Error fetching notifications quietly:', err);
+        }
+    };
+    
+    // Hiển thị toast notification
+    const showToast = (message, type = 'info') => {
+        // Sử dụng browser notification API
+        if ('Notification' in window && Notification.permission === 'granted') {
+            new Notification('Bus Tracking', {
+                body: message,
+                icon: '/favicon.ico',
+                badge: '/favicon.ico'
+            });
+        }
+        // TODO: Nếu có toast library (react-toastify), sử dụng ở đây
+        console.log(`🔔 ${message}`);
     };
 
     const handleMarkRead = async (notificationId) => {
@@ -97,58 +158,76 @@ const ParentNotification = ({ popupState }) => {
             PaperProps={{
                 sx: {
                     mt: 1.5,
-                    width: '380px',
+                    width: '400px',
+                    maxWidth: '95vw',
                     borderRadius: '12px',
                     boxShadow: '0 8px 30px rgba(0,0,0,0.12)',
-                    maxHeight: '500px',
-                    overflowY: 'auto',
-                    p: 1
+                    maxHeight: '80vh',
+                    overflow: 'hidden',
+                    display: 'flex',
+                    flexDirection: 'column',
+                    p: 0
                 }
             }}
         >
             {/* Header */}
-            <Box sx={{ px: 2, py: 1, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                <Typography variant="h6" sx={{ fontWeight: 'bold' }}>
+            <Box sx={{ px: 2, py: 1.5, display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexShrink: 0 }}>
+                <Typography variant="subtitle1" sx={{ fontWeight: 'bold', fontSize: '1.1rem' }}>
                     Thông báo
                 </Typography>
-                <Button 
-                    variant="contained" 
-                    color="primary" 
-                    size="small"
-                    onClick={handleMarkAllRead} 
-                    disabled={unreadCount === 0} 
-                    sx={{
-                        borderRadius: '20px',
-                        minWidth: '80px',
-                        fontSize: '0.75rem',
-                        px: 1.5,
-                        py: 0.5
-                    }}
-                >
-                    {unreadCount > 0 ? (
-                        <Badge badgeContent={unreadCount} color="error" sx={{ mr: 1 }}>
-                            <span style={{ fontSize: '0.75rem' }}>Đọc tất cả</span>
-                        </Badge>
-                    ) : 'Đã đọc hết'}
-                </Button>
+                {unreadCount > 0 && (
+                    <Button 
+                        variant="text" 
+                        color="primary" 
+                        size="small"
+                        onClick={handleMarkAllRead}
+                        sx={{
+                            fontSize: '0.8rem',
+                            px: 1,
+                            py: 0.5
+                        }}
+                    >
+                        Đọc hết ({unreadCount})
+                    </Button>
+                )}
             </Box>
-            <Divider sx={{ mb: 1 }} />
+            <Divider />
 
-            {/* Loading */}
-            {loading && (
-                <Box sx={{ display: 'flex', justifyContent: 'center', py: 3 }}>
-                    <CircularProgress size={30} />
-                </Box>
-            )}
+            {/* Scrollable Content */}
+            <Box sx={{ 
+                flex: 1,
+                overflowY: 'auto',
+                px: 1,
+                py: 1,
+                '&::-webkit-scrollbar': {
+                    width: '6px'
+                },
+                '&::-webkit-scrollbar-track': {
+                    background: 'transparent'
+                },
+                '&::-webkit-scrollbar-thumb': {
+                    background: '#BDBDBD',
+                    borderRadius: '10px'
+                },
+                '&::-webkit-scrollbar-thumb:hover': {
+                    background: '#9E9E9E'
+                }
+            }}>
+                {/* Loading */}
+                {loading && (
+                    <Box sx={{ display: 'flex', justifyContent: 'center', py: 3 }}>
+                        <CircularProgress size={30} />
+                    </Box>
+                )}
 
-            {/* Notifications List */}
-            {!loading && notifications.length === 0 && (
-                <Typography sx={{ px: 2, py: 3, color: 'text.secondary', textAlign: 'center' }}>
-                    Không có thông báo mới
-                </Typography>
-            )}
+                {/* Notifications List */}
+                {!loading && notifications.length === 0 && (
+                    <Typography sx={{ px: 2, py: 3, color: 'text.secondary', textAlign: 'center' }}>
+                        Không có thông báo mới
+                    </Typography>
+                )}
 
-            {!loading && notifications.map((notification) => (
+                {!loading && notifications.map((notification) => (
                 <MenuItem 
                     key={notification.notification_id} 
                     onClick={() => {
@@ -190,8 +269,14 @@ const ParentNotification = ({ popupState }) => {
                         variant="body2" 
                         sx={{ 
                             color: notification.is_read ? 'text.secondary' : 'text.primary', 
-                            lineHeight: 1.4,
-                            pl: 3.5
+                            lineHeight: 1.5,
+                            pl: 3.5,
+                            wordBreak: 'break-word',
+                            overflow: 'hidden',
+                            textOverflow: 'ellipsis',
+                            display: '-webkit-box',
+                            WebkitLineClamp: 2,
+                            WebkitBoxOrient: 'vertical'
                         }}
                     >
                         {notification.message}
@@ -204,10 +289,11 @@ const ParentNotification = ({ popupState }) => {
                         {getTimeAgo(notification.created_at)}
                     </Typography>
                 </MenuItem>
-            ))}
+                ))}
+            </Box>
 
-            <Divider sx={{ mt: 1 }} />
-            <Box sx={{ p: 1, textAlign: 'center' }}>
+            <Divider />
+            <Box sx={{ p: 1, textAlign: 'center', flexShrink: 0 }}>
                 <Button 
                     variant="text" 
                     size="small" 

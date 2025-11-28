@@ -1,7 +1,11 @@
 import { pool } from "../config/connectDB.js";
+import parentNotificationService from "../service/ParentNotificationService.js";
 
 // Store active simulations
 const activeSimulations = new Map();
+
+// Track which pickup points have been processed (to avoid duplicate notifications)
+const processedPickups = new Map();
 
 // START /api/v1/simulation/start-trip
 const startTripSimulation = async (req, res) => {
@@ -27,18 +31,22 @@ const startTripSimulation = async (req, res) => {
     const schedule = schedules[0];
     const routeId = schedule.routeId;
 
-    // Get pickup points for this route (ordered)
+    // Get pickup points for this SCHEDULE (from schedule_pickup_status, not pickuppoints)
     const [pickupPoints] = await pool.query(`
       SELECT 
         p.Id,
+        p.MaHocSinh,
         p.PointOrder,
         p.Latitude,
         p.Longitude,
-        p.DiaChi
+        p.DiaChi,
+        sps.TinhTrangDon,
+        sps.ScheduleId
       FROM pickuppoints p
-      WHERE p.RouteId = ?
+      INNER JOIN schedule_pickup_status sps ON sps.PickupPointId = p.Id
+      WHERE sps.ScheduleId = ?
       ORDER BY p.PointOrder ASC
-    `, [routeId]);
+    `, [scheduleId]);
 
     if (pickupPoints.length === 0) {
       return res.status(400).json({ errorCode: 3, message: 'Tuyến không có điểm đón nào' });
@@ -153,7 +161,7 @@ const stopTripSimulation = async (req, res) => {
 };
 
 // SIMULATION LOGIC
-const startSimulation = (scheduleId, routeId, routeCoordinates, pickupPoints) => {
+const startSimulation = async (scheduleId, routeId, routeCoordinates, pickupPoints) => {
   let currentIndex = 0;
   const totalPoints = routeCoordinates.length;
   const updateInterval = 2000; // Update every 2 seconds
@@ -162,12 +170,33 @@ const startSimulation = (scheduleId, routeId, routeCoordinates, pickupPoints) =>
   console.log(`🚍 Starting simulation for schedule ${scheduleId}, route ${routeId}`);
   console.log(`   Total coordinates: ${totalPoints}, Steps per update: ${stepsPerUpdate}`);
 
+  // CẬP NHẬT VỊ TRÍ ĐẦU TIÊN NGAY LẬP TỨC
+  if (routeCoordinates.length > 0) {
+    const [lng, lat] = routeCoordinates[0];
+    try {
+      await pool.query(
+        'UPDATE routes SET currentLatitude = ?, currentLongitude = ?, lastUpdated = NOW() WHERE Id = ?',
+        [lat, lng, routeId]
+      );
+      console.log(`✅ Initial position set: [${lat}, ${lng}]`);
+    } catch (error) {
+      console.error('Error setting initial position:', error);
+    }
+  }
+
   const intervalId = setInterval(async () => {
     if (currentIndex >= totalPoints) {
       // Simulation complete
       console.log(`✅ Simulation complete for schedule ${scheduleId}`);
       clearInterval(intervalId);
       activeSimulations.delete(scheduleId);
+      
+      // Cleanup processed pickups for this schedule
+      for (const key of processedPickups.keys()) {
+        if (key.startsWith(`${scheduleId}_`)) {
+          processedPickups.delete(key);
+        }
+      }
 
       // Update final status
       try {
@@ -189,15 +218,134 @@ const startSimulation = (scheduleId, routeId, routeCoordinates, pickupPoints) =>
         [lat, lng, routeId]
       );
 
-      // Check if near any pickup point (auto-update status)
+      // Check if near any pickup point (proximity notifications + auto-update status)
       for (const point of pickupPoints) {
+        // Bỏ qua điểm trường (MaHocSinh = NULL)
+        if (!point.MaHocSinh) continue;
+        
         const distance = calculateDistance(lat, lng, point.Latitude, point.Longitude);
-        if (distance < 0.05) { // Within 50 meters
-          // Auto-mark as picked up
-          await pool.query(
-            'UPDATE pickuppoints SET TinhTrangDon = ?, ThoiGianDonThucTe = NOW() WHERE Id = ? AND TinhTrangDon = ?',
-            ['Đã đón', point.Id, 'Chưa đón']
-          );
+        const distanceMeters = distance * 1000; // Convert km to meters
+        
+        // Lấy thông tin parent và student
+        const [studentInfo] = await pool.query(
+          `SELECT hs.MaPhuHuynh as parent_id, hs.HoTen as student_name, pp.DiaChi as pickup_address
+           FROM pickuppoints pp
+           JOIN hocsinh hs ON pp.MaHocSinh = hs.MaHocSinh
+           WHERE pp.Id = ?`,
+          [point.Id]
+        );
+        
+        if (studentInfo.length === 0) continue;
+        const { parent_id, student_name, pickup_address } = studentInfo[0];
+        
+        // Thông báo "đang đến gần" (< 500m, >= 100m)
+        if (distanceMeters < 500 && distanceMeters >= 100) {
+          const notifyKey = `approaching_${scheduleId}_${point.Id}`;
+          if (!processedPickups.has(notifyKey)) {
+            // Check status trước khi gửi thông báo
+            const [statusCheck] = await pool.query(
+              'SELECT TinhTrangDon FROM schedule_pickup_status WHERE ScheduleId = ? AND PickupPointId = ?',
+              [scheduleId, point.Id]
+            );
+            const currentStatus = statusCheck.length > 0 ? statusCheck[0].TinhTrangDon : 'Chưa đón';
+            
+            if (!currentStatus || currentStatus === 'Chưa đón') {
+              await parentNotificationService.sendNotificationIfNotSent(
+                parent_id,
+                'approaching',
+                `🚌 Xe sắp tới điểm đón ${student_name}!`,
+                `Xe còn cách khoảng ${Math.round(distanceMeters)}m, vui lòng chuẩn bị đón con nhé!`,
+                scheduleId,
+                point.Id
+              );
+              processedPickups.set(notifyKey, Date.now());
+              console.log(`📢 Sent "approaching" notification to parent ${parent_id}`);
+            }
+          }
+        }
+        
+        // Thông báo "đã đến" (< 100m, >= 50m)
+        if (distanceMeters < 100 && distanceMeters >= 50) {
+          const notifyKey = `arrived_${scheduleId}_${point.Id}`;
+          if (!processedPickups.has(notifyKey)) {
+            // Check status trước khi gửi thông báo
+            const [statusCheck] = await pool.query(
+              'SELECT TinhTrangDon FROM schedule_pickup_status WHERE ScheduleId = ? AND PickupPointId = ?',
+              [scheduleId, point.Id]
+            );
+            const currentStatus = statusCheck.length > 0 ? statusCheck[0].TinhTrangDon : 'Chưa đón';
+            
+            if (!currentStatus || currentStatus === 'Chưa đón') {
+              await parentNotificationService.sendNotificationIfNotSent(
+                parent_id,
+                'arrived',
+                `📍 Xe đã đến điểm đón ${student_name}!`,
+                `Xe bus hiện đang ở rất gần (${Math.round(distanceMeters)}m), con có thể lên xe ngay!`,
+                scheduleId,
+                point.Id
+              );
+              processedPickups.set(notifyKey, Date.now());
+              console.log(`📢 Sent "arrived" notification to parent ${parent_id}`);
+            }
+          }
+        }
+        
+        // Tự động đánh dấu "Đã đón" (< 50m)
+        const pickupKey = `pickup_${scheduleId}_${point.Id}`;
+        if (distanceMeters < 50 && !processedPickups.has(pickupKey)) {
+          const now = new Date().toISOString().slice(0, 19).replace('T', ' ');
+          
+          try {
+            // Kiểm tra trạng thái hiện tại
+            const [existing] = await pool.query(
+              'SELECT TinhTrangDon FROM schedule_pickup_status WHERE ScheduleId = ? AND PickupPointId = ?',
+              [scheduleId, point.Id]
+            );
+            
+            const currentStatus = existing.length > 0 ? existing[0].TinhTrangDon : null;
+            
+            // Chỉ cập nhật nếu chưa đón hoặc chưa có record
+            if (!currentStatus || currentStatus === 'Chưa đón') {
+              if (existing.length > 0) {
+                // Update existing record
+                await pool.query(
+                  `UPDATE schedule_pickup_status 
+                   SET TinhTrangDon = ?, ThoiGianDonThucTe = ?
+                   WHERE ScheduleId = ? AND PickupPointId = ?`,
+                  ['Đã đón', now, scheduleId, point.Id]
+                );
+              } else {
+                // Insert new record
+                await pool.query(
+                  `INSERT INTO schedule_pickup_status 
+                   (ScheduleId, PickupPointId, TinhTrangDon, ThoiGianDonThucTe)
+                   VALUES (?, ?, ?, ?)`,
+                  [scheduleId, point.Id, 'Đã đón', now]
+                );
+              }
+              
+              console.log(`✅ Auto-marked student at pickup point ${point.Id} as "Đã đón"`);
+              
+              // Gửi thông báo "đã đón"
+              const currentTime = new Date().toLocaleTimeString('vi-VN', { hour: '2-digit', minute: '2-digit' });
+              
+              await parentNotificationService.sendNotificationIfNotSent(
+                parent_id,
+                'picked_up',
+                `✅ ${student_name} đã lên xe an toàn`,
+                `Con đã được tài xế đón tại ${pickup_address || 'điểm đón'} lúc ${currentTime}`,
+                scheduleId,
+                point.Id
+              );
+              
+              console.log(`📢 Sent "picked up" notification to parent ${parent_id}`);
+              
+              // Đánh dấu đã xử lý
+              processedPickups.set(pickupKey, Date.now());
+            }
+          } catch (error) {
+            console.error(`❌ Error auto-updating pickup status for point ${point.Id}:`, error);
+          }
         }
       }
 

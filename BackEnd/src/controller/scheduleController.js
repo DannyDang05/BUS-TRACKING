@@ -1,4 +1,6 @@
 import { pool } from "../config/connectDB.js";
+import { checkAndCompleteSchedule } from "./scheduleStatusHelper.js";
+import ParentNotificationService from "../service/ParentNotificationService.js";
 
 /**
  * GET /api/v1/schedules/driver/:driverId
@@ -11,6 +13,7 @@ const getDriverSchedules = async (req, res) => {
 
   try {
     // Lấy schedules của tài xế TỪ HÔM NAY TRỞ ĐI (không hiển thị lịch cũ)
+    // Đếm trạng thái từ schedule_pickup_status, KHÔNG PHẢI từ pickuppoints
     const [schedules] = await pool.query(`
       SELECT 
         s.id AS scheduleId,
@@ -24,28 +27,31 @@ const getDriverSchedules = async (req, res) => {
         v.LicensePlate,
         v.Model AS vehicleModel,
         COUNT(DISTINCT CASE WHEN pp.MaHocSinh IS NOT NULL THEN pp.Id END) AS totalStudents,
-        SUM(CASE WHEN pp.TinhTrangDon = 'Đã đón' THEN 1 ELSE 0 END) AS pickedUpCount,
-        SUM(CASE WHEN pp.TinhTrangDon = 'Đã trả' THEN 1 ELSE 0 END) AS droppedOffCount
+        SUM(CASE WHEN sps.TinhTrangDon = 'Đã đón' THEN 1 ELSE 0 END) AS pickedUpCount,
+        SUM(CASE WHEN sps.TinhTrangDon = 'Đã trả' THEN 1 ELSE 0 END) AS droppedOffCount
       FROM schedules s
       INNER JOIN routes r ON s.route_id = r.Id
       LEFT JOIN vehicles v ON r.VehicleId = v.Id
       LEFT JOIN pickuppoints pp ON r.Id = pp.RouteId
+      LEFT JOIN schedule_pickup_status sps ON sps.ScheduleId = s.id AND sps.PickupPointId = pp.Id
       WHERE r.DriverId = ? AND s.date >= ?
       GROUP BY s.id, s.date, s.start_time, s.shift, s.status, r.Id, r.MaTuyen, r.Name, v.LicensePlate, v.Model
       ORDER BY s.date ASC, s.start_time ASC
     `, [driverId, today]);
 
-    // Map status code to text
+    // Map status text from DB
     const statusMap = {
-      1: 'Sắp diễn ra',
-      2: 'Đang chạy',
-      3: 'Hoàn thành',
-      4: 'Hủy'
+      'Chưa phân công': 'Chưa phân công',
+      'Sắp diễn ra': 'Sắp diễn ra',
+      'Đang chạy': 'Đang chạy',
+      'Hoàn thành': 'Hoàn thành',
+      'Đã hủy': 'Đã hủy',
+      'Đã phân công': 'Đã phân công'
     };
 
     const formattedSchedules = schedules.map(sch => ({
       ...sch,
-      statusText: statusMap[sch.status] || 'Không xác định',
+      statusText: statusMap[sch.status] || sch.status || 'Không xác định',
       pickedUpCount: sch.pickedUpCount || 0,
       droppedOffCount: sch.droppedOffCount || 0
     }));
@@ -67,14 +73,15 @@ const getDriverSchedules = async (req, res) => {
 /**
  * GET /api/v1/schedules/:scheduleId/students
  * Lấy danh sách học sinh trên tuyến của schedule
+ * Bao gồm cả trạng thái đón/trả từ bảng schedule_pickup_status
  */
 const getScheduleStudents = async (req, res) => {
   const scheduleId = req.params.scheduleId;
 
   try {
-    // Lấy route_id từ schedule
+    // Lấy route_id và thông tin schedule
     const [scheduleRows] = await pool.query(
-      'SELECT route_id FROM schedules WHERE id = ?',
+      'SELECT route_id, shift, status FROM schedules WHERE id = ?',
       [scheduleId]
     );
 
@@ -86,6 +93,8 @@ const getScheduleStudents = async (req, res) => {
     }
 
     const routeId = scheduleRows[0].route_id;
+    const shift = scheduleRows[0].shift;
+    const scheduleStatus = scheduleRows[0].status;
 
     // Lấy thông tin route
     const [routeInfo] = await pool.query(`
@@ -95,12 +104,16 @@ const getScheduleStudents = async (req, res) => {
       WHERE r.Id = ?
     `, [routeId]);
 
-    // Lấy danh sách học sinh với điểm đón theo thứ tự
+    // Lấy TẤT CẢ điểm đón theo thứ tự (BAO GỒM ĐIỂM TRƯỜNG có MaHocSinh = NULL)
+    // LUÔN lấy trạng thái từ schedule_pickup_status (không fallback về pickuppoints)
     const [students] = await pool.query(`
       SELECT 
         pp.Id AS pickupPointId,
+        pp.MaHocSinh,
         pp.PointOrder,
-        pp.TinhTrangDon AS status,
+        COALESCE(sps.TinhTrangDon, 'Chưa đón') AS status,
+        sps.ThoiGianDonThucTe AS actualPickupTime,
+        sps.GhiChu AS note,
         pp.Latitude,
         pp.Longitude,
         pp.DiaChi AS pickupAddress,
@@ -110,11 +123,12 @@ const getScheduleStudents = async (req, res) => {
         ph.HoTen AS parentName,
         ph.SoDienThoai AS parentPhone
       FROM pickuppoints pp
-      INNER JOIN hocsinh hs ON pp.MaHocSinh = hs.MaHocSinh
+      LEFT JOIN hocsinh hs ON pp.MaHocSinh = hs.MaHocSinh
       LEFT JOIN phuhuynh ph ON hs.MaPhuHuynh = ph.MaPhuHuynh
+      LEFT JOIN schedule_pickup_status sps ON sps.PickupPointId = pp.Id AND sps.ScheduleId = ?
       WHERE pp.RouteId = ?
       ORDER BY pp.PointOrder ASC
-    `, [routeId]);
+    `, [scheduleId, routeId]);
 
     // Add route info to each student record
     const studentsWithRouteInfo = students.map(s => ({
@@ -122,7 +136,9 @@ const getScheduleStudents = async (req, res) => {
       routeId: routeId,
       routeCode: routeInfo[0]?.MaTuyen || null,
       routeName: routeInfo[0]?.Name || null,
-      licensePlate: routeInfo[0]?.LicensePlate || null
+      licensePlate: routeInfo[0]?.LicensePlate || null,
+      shift: shift,
+      scheduleStatus: scheduleStatus
     }));
 
     return res.status(200).json({
@@ -145,16 +161,40 @@ const getScheduleStudents = async (req, res) => {
  */
 const updateScheduleStatus = async (req, res) => {
   const scheduleId = req.params.scheduleId;
-  const { status } = req.body; // 1: Sắp diễn ra, 2: Đang chạy, 3: Hoàn thành, 4: Hủy
+  const { status } = req.body; // 'Chưa phân công', 'Sắp diễn ra', 'Đang chạy', 'Hoàn thành', 'Đã hủy'
 
-  if (![1, 2, 3, 4].includes(status)) {
+  const validStatuses = ['Chưa phân công', 'Sắp diễn ra', 'Đang chạy', 'Hoàn thành', 'Đã hủy', 'Đã phân công'];
+  if (!validStatuses.includes(status)) {
     return res.status(400).json({
       errorCode: 1,
-      message: 'Trạng thái không hợp lệ. Chỉ chấp nhận 1, 2, 3, 4.'
+      message: 'Trạng thái không hợp lệ. Chỉ chấp nhận: ' + validStatuses.join(', ')
     });
   }
 
   try {
+    // Nếu status là "Đang chạy", kiểm tra xem schedule có thể bắt đầu không
+    if (status === 'Đang chạy') {
+      const [scheduleData] = await pool.query(
+        'SELECT status FROM schedules WHERE id = ?',
+        [scheduleId]
+      );
+      
+      if (scheduleData.length === 0) {
+        return res.status(404).json({
+          errorCode: 3,
+          message: 'Không tìm thấy lịch trình.'
+        });
+      }
+
+      const currentStatus = scheduleData[0].status;
+      if (!['Đã phân công', 'Sắp diễn ra'].includes(currentStatus)) {
+        return res.status(400).json({
+          errorCode: 2,
+          message: 'Chỉ có thể bắt đầu lịch trình có trạng thái "Đã phân công" hoặc "Sắp diễn ra".'
+        });
+      }
+    }
+
     const [result] = await pool.query(
       'UPDATE schedules SET status = ? WHERE id = ?',
       [status, scheduleId]
@@ -165,6 +205,21 @@ const updateScheduleStatus = async (req, res) => {
         errorCode: 3,
         message: 'Không tìm thấy lịch trình.'
       });
+    }
+
+    // Nếu status là "Đang chạy", gửi thông báo cho phụ huynh
+    if (status === 'Đang chạy') {
+      ParentNotificationService.notifyTripStart(scheduleId);
+    }
+
+    // Nếu status là "Hoàn thành", cập nhật end_time
+    if (status === 'Hoàn thành') {
+      const now = new Date();
+      const endTime = now.toTimeString().split(' ')[0];
+      await pool.query(
+        'UPDATE schedules SET end_time = ? WHERE id = ?',
+        [endTime, scheduleId]
+      );
     }
 
     return res.status(200).json({
@@ -281,7 +336,7 @@ const getScheduleById = async (req, res) => {
 
 /**
  * POST /api/v1/schedules
- * Tạo schedule mới
+ * Tạo schedule mới và tự động tạo pickup status records
  */
 const createSchedule = async (req, res) => {
   const { route_id, date, start_time, shift, status } = req.body;
@@ -293,23 +348,59 @@ const createSchedule = async (req, res) => {
     });
   }
 
+  const connection = await pool.getConnection();
   try {
+    await connection.beginTransaction();
+
     // Log để debug
     console.log('📅 Creating schedule:', { date, start_time, shift, status });
     
-    const [result] = await pool.query(
+    // 1. Tạo schedule
+    const [result] = await connection.query(
       'INSERT INTO schedules (route_id, date, start_time, shift, status) VALUES (?, ?, ?, ?, ?)',
-      [route_id, date, start_time, shift || 'Sáng', status || 'Sắp diễn ra']
+      [route_id, date, start_time, shift || 'Sáng', status || 'Chưa phân công']
     );
+    
+    const scheduleId = result.insertId;
+
+    // 2. Tạo pickup status records cho TẤT CẢ điểm (bao gồm điểm trường)
+    const [pickupPoints] = await connection.query(
+      'SELECT Id, MaHocSinh, PointOrder FROM pickuppoints WHERE RouteId = ? ORDER BY PointOrder ASC',
+      [route_id]
+    );
+
+    if (pickupPoints.length > 0) {
+      for (const point of pickupPoints) {
+        // Xác định trạng thái ban đầu
+        let initialStatus = 'Chưa đón';
+        if (!point.MaHocSinh) {
+          // Điểm trường: Xuất phát (PointOrder = 0) hoặc Điểm cuối (PointOrder lớn nhất)
+          initialStatus = point.PointOrder === 0 ? 'Xuất phát' : 'Điểm cuối';
+        }
+        
+        await connection.query(
+          `INSERT INTO schedule_pickup_status (ScheduleId, PickupPointId, TinhTrangDon) 
+           VALUES (?, ?, ?)`,
+          [scheduleId, point.Id, initialStatus]
+        );
+      }
+      console.log(`✅ Đã tạo ${pickupPoints.length} bản ghi pickup status cho schedule ${scheduleId} (bao gồm điểm trường)`);
+    }
+
+    await connection.commit();
     
     return res.status(201).json({ 
       errorCode: 0, 
       message: 'Tạo lịch trình thành công!', 
-      scheduleId: result.insertId 
+      scheduleId: scheduleId,
+      pickupPointsCount: pickupPoints.length
     });
   } catch (error) {
+    await connection.rollback();
     console.error('Error in createSchedule:', error);
     return res.status(500).json({ errorCode: -1, message: 'Lỗi server.' });
+  } finally {
+    connection.release();
   }
 };
 
@@ -390,7 +481,13 @@ const assignDriverToRoute = async (req, res) => {
       [driverId, routeId]
     );
 
-    // 2. Tạo schedule ca sáng (nếu có)
+    // 2. Lấy danh sách TẤT CẢ pickup points trên route (bao gồm điểm trường)
+    const [pickupPoints] = await connection.query(
+      'SELECT Id, MaHocSinh, PointOrder FROM pickuppoints WHERE RouteId = ? ORDER BY PointOrder ASC',
+      [routeId]
+    );
+
+    // 3. Tạo schedule ca sáng (nếu có)
     let morningScheduleId = null;
     if (morningStartTime) {
       const [morningResult] = await connection.query(`
@@ -398,9 +495,24 @@ const assignDriverToRoute = async (req, res) => {
         VALUES (?, ?, ?, 'Sáng', 'Đã phân công')
       `, [routeId, date, morningStartTime]);
       morningScheduleId = morningResult.insertId;
+
+      // Tạo pickup status records cho ca sáng (bao gồm điểm trường)
+      if (pickupPoints.length > 0) {
+        for (const point of pickupPoints) {
+          let initialStatus = 'Chưa đón';
+          if (!point.MaHocSinh) {
+            initialStatus = point.PointOrder === 0 ? 'Xuất phát' : 'Điểm cuối';
+          }
+          await connection.query(
+            `INSERT INTO schedule_pickup_status (ScheduleId, PickupPointId, TinhTrangDon) 
+             VALUES (?, ?, ?)`,
+            [morningScheduleId, point.Id, initialStatus]
+          );
+        }
+      }
     }
 
-    // 3. Tạo schedule ca chiều (nếu có)
+    // 4. Tạo schedule ca chiều (nếu có)
     let afternoonScheduleId = null;
     if (afternoonStartTime) {
       const [afternoonResult] = await connection.query(`
@@ -408,6 +520,21 @@ const assignDriverToRoute = async (req, res) => {
         VALUES (?, ?, ?, 'Chiều', 'Đã phân công')
       `, [routeId, date, afternoonStartTime]);
       afternoonScheduleId = afternoonResult.insertId;
+
+      // Tạo pickup status records cho ca chiều (bao gồm điểm trường)
+      if (pickupPoints.length > 0) {
+        for (const point of pickupPoints) {
+          let initialStatus = 'Chưa đón';
+          if (!point.MaHocSinh) {
+            initialStatus = point.PointOrder === 0 ? 'Xuất phát' : 'Điểm cuối';
+          }
+          await connection.query(
+            `INSERT INTO schedule_pickup_status (ScheduleId, PickupPointId, TinhTrangDon) 
+             VALUES (?, ?, ?)`,
+            [afternoonScheduleId, point.Id, initialStatus]
+          );
+        }
+      }
     }
 
     await connection.commit();
@@ -521,21 +648,57 @@ const generateDaySchedules = async (req, res) => {
       );
 
       if (existing.length === 0) {
+        // Lấy TẤT CẢ pickup points của route (bao gồm điểm trường)
+        const [pickupPoints] = await connection.query(
+          'SELECT Id, MaHocSinh, PointOrder FROM pickuppoints WHERE RouteId = ? ORDER BY PointOrder ASC',
+          [route.Id]
+        );
+
         // Tạo ca sáng
-        await connection.query(
+        const [morningResult] = await connection.query(
           `INSERT INTO schedules (route_id, date, start_time, shift, status) 
            VALUES (?, ?, '07:00:00', 'Sáng', 'Chưa phân công')`,
           [route.Id, date]
         );
         createdCount++;
 
+        // Tạo pickup status cho ca sáng (bao gồm điểm trường)
+        if (pickupPoints.length > 0) {
+          for (const point of pickupPoints) {
+            let initialStatus = 'Chưa đón';
+            if (!point.MaHocSinh) {
+              initialStatus = point.PointOrder === 0 ? 'Xuất phát' : 'Điểm cuối';
+            }
+            await connection.query(
+              `INSERT INTO schedule_pickup_status (ScheduleId, PickupPointId, TinhTrangDon) 
+               VALUES (?, ?, ?)`,
+              [morningResult.insertId, point.Id, initialStatus]
+            );
+          }
+        }
+
         // Tạo ca chiều
-        await connection.query(
+        const [afternoonResult] = await connection.query(
           `INSERT INTO schedules (route_id, date, start_time, shift, status) 
            VALUES (?, ?, '16:00:00', 'Chiều', 'Chưa phân công')`,
           [route.Id, date]
         );
         createdCount++;
+
+        // Tạo pickup status cho ca chiều (bao gồm điểm trường)
+        if (pickupPoints.length > 0) {
+          for (const point of pickupPoints) {
+            let initialStatus = 'Chưa đón';
+            if (!point.MaHocSinh) {
+              initialStatus = point.PointOrder === 0 ? 'Xuất phát' : 'Điểm cuối';
+            }
+            await connection.query(
+              `INSERT INTO schedule_pickup_status (ScheduleId, PickupPointId, TinhTrangDon) 
+               VALUES (?, ?, ?)`,
+              [afternoonResult.insertId, point.Id, initialStatus]
+            );
+          }
+        }
       }
     }
 

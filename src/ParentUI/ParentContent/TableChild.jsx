@@ -46,7 +46,7 @@ const TableChild = () => {
     const [error, setError] = useState(null);
 
     // Giả sử parentId được lấy từ localStorage hoặc context
-    const parentId = 'PH001'; // Thay bằng giá trị thật từ auth
+    const parentId = JSON.parse(localStorage.getItem('bus_user')) || null; 
 
     useEffect(() => {
         fetchChildrenData();
@@ -55,7 +55,7 @@ const TableChild = () => {
     const fetchChildrenData = async () => {
         try {
             setLoading(true);
-            const response = await getChildrenRoutes(parentId);
+            const response = await getChildrenRoutes(parentId.profileId);
             setStudents(response.data || []);
             setError(null);
         } catch (err) {

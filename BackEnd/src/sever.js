@@ -3,17 +3,18 @@ import bodyParser from "body-parser";
 import viewEngine from "./config/viewEngine.js";
 import initWebRouter from "./route/web.js";
 import initAPIRouter from "./route/Api.js";
-import { checkConnection } from "./config/connectDB.js"; // Import hàm check
+import { checkConnection } from "./config/connectDB.js";
 import cookieParser from "cookie-parser";
 import helmet from "helmet";
 import path from "path";
 import cors from "cors";
 import dotenv from "dotenv";
-import { createServer } from 'http'; // ✅ Thêm HTTP server
-import { initWebSocket } from "./service/WebsocketService.js"; // ✅ Thêm WS
+import { createServer } from 'http';
+import { initSocketIO } from "./service/SocketService.js";
+import parentNotificationService from "./service/ParentNotificationService.js";
 
 dotenv.config();
-await checkConnection(); // ✅ Kiểm tra kết nối DB khi khởi động
+await checkConnection();
 
 const app = express();
 const __dirname = path.resolve();
@@ -37,12 +38,16 @@ viewEngine(app);
 initWebRouter(app);
 initAPIRouter(app);
 
-// ✅ Cấu hình Server (HTTP + WebSocket)
+// ✅ Cấu hình Server (HTTP + Socket.IO)
 const port = process.env.PORT || 6969;
-const server = createServer(app); // Tạo HTTP server từ app Express
+const server = createServer(app);
 
-initWebSocket(server); // Khởi tạo WebSocket Server
+initSocketIO(server);
 
 server.listen(port, () => {
-  console.log(`✅ Server (HTTP & WS) đang chạy tại http://localhost:${port}`);
+  console.log(`✅ Server (HTTP & Socket.IO) running on http://localhost:${port}`);
+  console.log(`✅ Using in-memory storage for bus locations`);
+  
+  // Khởi động Parent Notification Service
+  parentNotificationService.start(60000); // Check mỗi 60 giây
 });

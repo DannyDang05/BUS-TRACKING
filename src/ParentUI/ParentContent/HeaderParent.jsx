@@ -5,18 +5,75 @@ import {
 import { FaPowerOff } from "react-icons/fa6";
 import Menu from '@mui/material/Menu';
 import MenuItem from '@mui/material/MenuItem';
+import { Badge } from '@mui/material';
 import PopupState, { bindTrigger, bindMenu } from 'material-ui-popup-state';
-import React, { useState } from 'react'; // Đã loại bỏ useEffect, useCallback
+import React, { useState, useEffect } from 'react';
 import './Parent.scss'
 import ParentDialogInfo from './ParentDialogInfo';
 import { IoNotificationsOutline } from "react-icons/io5";
 import { IoIosRefresh } from "react-icons/io";
 import ParentNotification from './ParentNotification';
+import { getParentNotifications } from '../../service/apiService';
 
 const HeaderParent = (props) => {
     // Chỉ giữ state cho Dialog (sử dụng truyền props)
     const [infoModal, setInfoModal] = useState(false);
-    // ĐÃ LOẠI BỎ const [notificationModal, setNotificationModal] = useState(false) vì không cần thiết
+    const [unreadCount, setUnreadCount] = useState(0);
+    const [previousCount, setPreviousCount] = useState(0);
+    
+    const user = JSON.parse(localStorage.getItem('bus_user'));
+    const parentId = user?.profileId || null;
+
+    const getNotificationIcon = (type) => {
+        const typeStr = String(type || '').toLowerCase();
+        if (typeStr.includes('gần') || typeStr.includes('approaching')) return '⚠️';
+        if (typeStr.includes('đến') || typeStr.includes('arrived')) return '🎉';
+        if (typeStr.includes('trễ') || typeStr.includes('delay')) return '⏰';
+        if (typeStr.includes('hoàn thành') || typeStr.includes('completed')) return '✅';
+        if (typeStr.includes('bắt đầu') || typeStr.includes('start')) return '🚌';
+        return '📢';
+    };
+
+    const showToast = (message) => {
+        if ('Notification' in window && Notification.permission === 'granted') {
+            new Notification('Bus Tracking', {
+                body: message,
+                icon: '/favicon.ico',
+            });
+        }
+    };
+
+    useEffect(() => {
+        if ('Notification' in window && Notification.permission === 'default') {
+            Notification.requestPermission();
+        }
+    }, []);
+
+    useEffect(() => {
+        if (!parentId) return;
+        
+        const fetchUnreadCount = async () => {
+            try {
+                const response = await getParentNotifications(parentId, 1, 20);
+                const notifs = response.data || [];
+                const count = notifs.filter(n => !n.is_read).length;
+                
+                if (notifs.length > previousCount && notifs.length > 0 && previousCount !== 0) {
+                    const latestNotif = notifs[0];
+                    showToast(`${getNotificationIcon(latestNotif.type)} ${latestNotif.message}`);
+                }
+
+                setUnreadCount(count);
+                setPreviousCount(notifs.length);
+            } catch (err) {
+                console.error('Error fetching notifications:', err);
+            }
+        };
+
+        fetchUnreadCount();
+        const interval = setInterval(fetchUnreadCount, 30000);
+        return () => clearInterval(interval);
+    }, [parentId, previousCount]);
 
     let userName = 'Nguyễn Thị Lan';
 
@@ -55,7 +112,9 @@ const HeaderParent = (props) => {
                                     {...bindTrigger(notificationPopupState)} // Gắn trigger
                                     style={{ cursor: 'pointer' }}
                                 >
-                                    <IoNotificationsOutline className="action-icon" />
+                                    <Badge badgeContent={unreadCount} color="error">
+                                        <IoNotificationsOutline className="action-icon" />
+                                    </Badge>
                                 </div>
 
                                 {/* TRUYỀN POPUPSTATE XUỐNG ĐỂ MỞ MENU */}

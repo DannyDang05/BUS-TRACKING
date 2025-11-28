@@ -8,7 +8,7 @@ import PhoneIcon from '@mui/icons-material/Phone';
 import EmailIcon from '@mui/icons-material/Email';
 import HomeIcon from '@mui/icons-material/Home';
 import ChildCareIcon from '@mui/icons-material/ChildCare';
-import { getChildrenRoutes } from '../../service/apiService';
+import { getChildrenRoutes, getParentInfo } from '../../service/apiService';
 
 const ParentDialogInfo = ({ infoModal, setInfoModal }) => {
   const handleClose = () => setInfoModal(false);
@@ -28,8 +28,15 @@ const ParentDialogInfo = ({ infoModal, setInfoModal }) => {
   const fetchParentData = async () => {
     try {
       setLoading(true);
-      const response = await getChildrenRoutes(parentId);
-      const children = response.data || [];
+      
+      // Fetch parent info and children in parallel
+      const [parentInfoRes, childrenRes] = await Promise.all([
+        getParentInfo(parentId),
+        getChildrenRoutes(parentId)
+      ]);
+      
+      const parentInfo = parentInfoRes.data || {};
+      const children = childrenRes.data || [];
       
       // Get unique children list
       const uniqueChildren = children.reduce((acc, curr) => {
@@ -40,11 +47,9 @@ const ParentDialogInfo = ({ infoModal, setInfoModal }) => {
       }, []);
 
       setParentData({
-        Id: parentId,
-        FullName: "Nguyễn Thị Lan",
-        PhoneNumber: "0987 654 321",
-        Email: "lanthi@gmail.com",
-        Address: "123 Nguyễn Văn Linh, Q5, TP.HCM",
+        ...parentInfo,
+        Email: parentInfo.Username ? `${parentInfo.Username}@bustracking.com` : 'N/A',
+        Address: children[0]?.StudentAddress || 'Chưa cập nhật',
         Children: uniqueChildren
       });
     } catch (err) {

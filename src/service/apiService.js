@@ -161,8 +161,9 @@ export const getScheduleStudents = (scheduleId) => apiService.get(`/schedules/${
 // Cập nhật trạng thái schedule (Bắt đầu hành trình/Hoàn thành)
 export const updateScheduleStatus = (scheduleId, status) => apiService.put(`/schedules/${scheduleId}/status`, { status });
 
-// Cập nhật trạng thái đón/trả học sinh
-export const updatePickupStatus = (pickupPointId, status) => apiService.put(`/pickuppoints/${pickupPointId}/status`, { status });
+// Cập nhật trạng thái đón/trả học sinh cho schedule cụ thể (schedule_pickup_status)
+export const updatePickupStatus = (scheduleId, pickupPointId, status, note = null) => 
+  apiService.put(`/pickuppoints/${scheduleId}/${pickupPointId}/status`, { status, note });
 
 // Báo cáo sự cố từ tài xế
 export const reportIssue = (issueData) => apiService.post('/notifications/report-issue', issueData);
@@ -173,6 +174,7 @@ export const stopTripSimulation = (scheduleId) => apiService.post('/simulation/s
 export const getActiveSimulations = () => apiService.get('/simulation/active');
 
 // --- API PHỤ HUYNH (Parent) ---
+export const getParentInfo = (parentId) => apiService.get(`/parent/info/${parentId}`);
 export const getChildrenRoutes = (parentId) => apiService.get(`/parent/children/${parentId}`);
 export const getParentNotifications = (parentId, page, limit) => {
     const params = new URLSearchParams();
@@ -184,5 +186,6 @@ export const getParentNotifications = (parentId, page, limit) => {
 export const markNotificationRead = (notificationId) => apiService.post(`/parent/notifications/${notificationId}/mark-read`);
 export const markAllNotificationsRead = (parentId) => apiService.post(`/parent/notifications/mark-all-read/${parentId}`);
 export const getVehicleTracking = (studentId) => apiService.get(`/parent/vehicle-tracking/${studentId}`);
+export const getVehicleETA = (studentId) => apiService.get(`/parent/vehicle-eta/${studentId}`);
 
 export default apiService;

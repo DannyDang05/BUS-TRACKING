@@ -4,11 +4,16 @@ import {
   getParentNotifications, 
   markNotificationRead,
   markAllNotificationsRead,
-  getVehicleTracking 
+  getVehicleTracking,
+  getParentInfo,
+  getVehicleETA
 } from '../controller/parentController.js';
 import verifyToken from "../middleWare/authMiddleware.js";
 
 const router = express.Router();
+
+// GET /api/v1/parent/info/:parentId - Lấy thông tin phụ huynh
+router.get('/info/:parentId', verifyToken, getParentInfo);
 
 // GET /api/v1/parent/children/:parentId - Lấy danh sách con và tuyến xe
 router.get('/children/:parentId', verifyToken, getChildrenRoutes);
@@ -24,5 +29,8 @@ router.post('/notifications/mark-all-read/:parentId', verifyToken, markAllNotifi
 
 // GET /api/v1/parent/vehicle-tracking/:studentId - Tracking xe bus
 router.get('/vehicle-tracking/:studentId', verifyToken, getVehicleTracking);
+
+// GET /api/v1/parent/vehicle-eta/:studentId - Lấy ETA chính xác
+router.get('/vehicle-eta/:studentId', verifyToken, getVehicleETA);
 
 export default router;
