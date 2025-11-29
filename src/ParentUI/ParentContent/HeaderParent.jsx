@@ -8,18 +8,22 @@ import MenuItem from '@mui/material/MenuItem';
 import { Badge } from '@mui/material';
 import PopupState, { bindTrigger, bindMenu } from 'material-ui-popup-state';
 import React, { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
+import { toast } from 'react-toastify';
 import './Parent.scss'
 import ParentDialogInfo from './ParentDialogInfo';
 import { IoNotificationsOutline } from "react-icons/io5";
 import { IoIosRefresh } from "react-icons/io";
 import ParentNotification from './ParentNotification';
-import { getParentNotifications } from '../../service/apiService';
+import { getParentNotifications, getParentInfo } from '../../service/apiService';
 
 const HeaderParent = (props) => {
+    const navigate = useNavigate();
     // Chỉ giữ state cho Dialog (sử dụng truyền props)
     const [infoModal, setInfoModal] = useState(false);
     const [unreadCount, setUnreadCount] = useState(0);
     const [previousCount, setPreviousCount] = useState(0);
+    const [parentName, setParentName] = useState('');
     
     const user = JSON.parse(localStorage.getItem('bus_user'));
     const parentId = user?.profileId || null;
@@ -49,6 +53,26 @@ const HeaderParent = (props) => {
         }
     }, []);
 
+    // Lấy thông tin phụ huynh
+    useEffect(() => {
+        if (!parentId) return;
+        
+        const fetchParentInfo = async () => {
+            try {
+                const response = await getParentInfo(parentId);
+                console.log('Parent Info Response:', response); // Debug
+                if (response.errorCode === 0 && response.data) {
+                    setParentName(response.data.FullName || 'Phụ huynh');
+                }
+            } catch (err) {
+                console.error('Error fetching parent info:', err);
+                setParentName('Phụ huynh');
+            }
+        };
+
+        fetchParentInfo();
+    }, [parentId]);
+
     useEffect(() => {
         if (!parentId) return;
         
@@ -75,13 +99,18 @@ const HeaderParent = (props) => {
         return () => clearInterval(interval);
     }, [parentId, previousCount]);
 
-    let userName = 'Nguyễn Thị Lan';
-
-    // Hàm giả định cho Refresh
+    // Hàm refresh
     const handleRefresh = () => {
-        // Thực hiện logic làm mới dữ liệu
-        console.log("Refreshing data...");
-        // window.location.reload(); // Hoặc làm mới dữ liệu cục bộ
+        window.location.reload();
+    };
+
+    // Hàm đăng xuất
+    const handleLogout = (popupState) => {
+        popupState.close();
+        localStorage.removeItem('bus_token');
+        localStorage.removeItem('bus_user');
+        toast.success('Đăng xuất thành công!');
+        navigate('/login');
     };
 
 
@@ -132,13 +161,13 @@ const HeaderParent = (props) => {
                                     {...bindTrigger(popupState)}
                                 >
                                     <FaUserCircle className="user-avatar-icon" />
-                                    <span className="user-name">{userName}</span>
+                                    <span className="user-name">{parentName || 'Phụ huynh'}</span>
                                 </div>
                                 <Menu {...bindMenu(popupState)}>
                                     <MenuItem onClick={() => { setInfoModal(true); popupState.close(); }}>
                                         <FaInfo size="1.2em" className="power-off" /> Thông tin
                                     </MenuItem>
-                                    <MenuItem /* onClick={() => handleLogout(popupState)} */>
+                                    <MenuItem onClick={() => handleLogout(popupState)}>
                                         <FaPowerOff size="1.2em" className="power-off" /> Đăng xuất
                                     </MenuItem>
                                 </Menu>

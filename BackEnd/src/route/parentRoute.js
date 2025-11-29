@@ -6,7 +6,9 @@ import {
   markAllNotificationsRead,
   getVehicleTracking,
   getParentInfo,
-  getVehicleETA
+  getVehicleETA,
+  getParentSchedules,
+  requestAbsence
 } from '../controller/parentController.js';
 import verifyToken from "../middleWare/authMiddleware.js";
 
@@ -17,6 +19,12 @@ router.get('/info/:parentId', verifyToken, getParentInfo);
 
 // GET /api/v1/parent/children/:parentId - Lấy danh sách con và tuyến xe
 router.get('/children/:parentId', verifyToken, getChildrenRoutes);
+
+// GET /api/v1/parent/schedules/:parentId - Lấy lịch trình của con
+router.get('/schedules/:parentId', verifyToken, getParentSchedules);
+
+// POST /api/v1/parent/schedules/:scheduleId/absence - Xin nghỉ học
+router.post('/schedules/:scheduleId/absence', verifyToken, requestAbsence);
 
 // GET /api/v1/parent/notifications/:parentId - Lấy thông báo
 router.get('/notifications/:parentId', verifyToken, getParentNotifications);

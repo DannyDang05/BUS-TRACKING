@@ -12,19 +12,26 @@ import {
     Alert,
     Stack,
     Divider,
-    Badge
+    Badge,
+    Dialog,
+    DialogTitle,
+    DialogContent,
+    DialogActions,
+    TextField
 } from '@mui/material';
 import {
     DirectionsBus,
     LocationOn,
-    Notifications,
-    Schedule,
+    EventBusy,
     CheckCircle,
     Warning,
-    Person
+    Person,
+    CancelPresentation,
+    Schedule
 } from '@mui/icons-material';
 import { useNavigate } from 'react-router-dom';
-import { getChildrenRoutes } from '../../service/apiService';
+import { getChildrenRoutes, requestAbsence } from '../../service/apiService';
+import { toast } from 'react-toastify';
 import '../ParentContent/Parent.scss';
 
 const ParentDashboard = () => {
@@ -32,6 +39,9 @@ const ParentDashboard = () => {
     const [students, setStudents] = useState([]);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
+    const [openAbsenceDialog, setOpenAbsenceDialog] = useState(false);
+    const [selectedStudent, setSelectedStudent] = useState(null);
+    const [absenceReason, setAbsenceReason] = useState('');
 
     const parentId = JSON.parse(localStorage.getItem('bus_user'))?.profileId || null;
 
@@ -91,6 +101,40 @@ const ParentDashboard = () => {
             return `Ca ${student.Shift} - ${student.StartTime || 'N/A'}`;
         }
         return 'Chưa có lịch';
+    };
+
+    // Xử lý báo vắng
+    const handleOpenAbsenceDialog = (student) => {
+        setSelectedStudent(student);
+        setOpenAbsenceDialog(true);
+        setAbsenceReason('');
+    };
+
+    const handleCloseAbsenceDialog = () => {
+        setOpenAbsenceDialog(false);
+        setSelectedStudent(null);
+        setAbsenceReason('');
+    };
+
+    const handleSubmitAbsence = async () => {
+        if (!selectedStudent || !selectedStudent.schedule_id || !selectedStudent.pickup_point_id) {
+            toast.error('Không đủ thông tin để báo vắng');
+            return;
+        }
+
+        try {
+            await requestAbsence(selectedStudent.schedule_id, {
+                pickupPointId: selectedStudent.pickup_point_id,
+                reason: absenceReason || 'Phụ huynh xin nghỉ'
+            });
+            
+            toast.success(`Đã báo vắng cho ${selectedStudent.StudentName} thành công!`);
+            handleCloseAbsenceDialog();
+            fetchChildrenData(); // Reload data
+        } catch (error) {
+            console.error('Error requesting absence:', error);
+            toast.error('Không thể gửi đơn xin nghỉ');
+        }
     };
 
     if (loading && students.length === 0) {
@@ -223,25 +267,37 @@ const ParentDashboard = () => {
                                         >
                                             Xem Bản đồ
                                         </Button>
-                                        <Button
-                                            variant="outlined"
-                                            startIcon={
-                                                <Badge badgeContent={student.unreadNotifications || 0} color="error">
-                                                    <Notifications />
-                                                </Badge>
-                                            }
-                                            onClick={() => navigate(`/parent/notifications`)}
-                                            sx={{
-                                                borderColor: '#667eea',
-                                                color: '#667eea',
-                                                '&:hover': {
-                                                    borderColor: '#764ba2',
-                                                    background: 'rgba(102, 126, 234, 0.05)'
-                                                }
-                                            }}
-                                        >
-                                            Thông báo
-                                        </Button>
+                                        {student.PickupStatus === 'Vắng mặt' ? (
+                                            <Button
+                                                variant="outlined"
+                                                startIcon={<CancelPresentation />}
+                                                disabled
+                                                fullWidth
+                                                sx={{
+                                                    borderColor: '#f44336',
+                                                    color: '#f44336'
+                                                }}
+                                            >
+                                                Đã báo vắng
+                                            </Button>
+                                        ) : (
+                                            <Button
+                                                variant="outlined"
+                                                startIcon={<EventBusy />}
+                                                fullWidth
+                                                onClick={() => handleOpenAbsenceDialog(student)}
+                                                sx={{
+                                                    borderColor: '#ff9800',
+                                                    color: '#ff9800',
+                                                    '&:hover': {
+                                                        borderColor: '#f57c00',
+                                                        background: 'rgba(255, 152, 0, 0.05)'
+                                                    }
+                                                }}
+                                            >
+                                                Báo vắng
+                                            </Button>
+                                        )}
                                     </Stack>
                                 </CardContent>
                             </Card>
@@ -249,6 +305,66 @@ const ParentDashboard = () => {
                     );
                 })}
             </Grid>
+
+            {/* Dialog Báo Vắng */}
+            <Dialog 
+                open={openAbsenceDialog} 
+                onClose={handleCloseAbsenceDialog} 
+                maxWidth="sm" 
+                fullWidth
+            >
+                <DialogTitle>
+                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                        <EventBusy color="error" />
+                        <Typography variant="h6">Báo Vắng Học</Typography>
+                    </Box>
+                </DialogTitle>
+                <DialogContent>
+                    {selectedStudent && (
+                        <Box sx={{ mb: 2 }}>
+                            <Alert severity="warning" sx={{ mb: 2 }}>
+                                <Typography variant="body2" sx={{ mb: 1 }}>
+                                    <strong>Học sinh:</strong> {selectedStudent.StudentName}
+                                </Typography>
+                                <Typography variant="body2" sx={{ mb: 1 }}>
+                                    <strong>Lớp:</strong> {selectedStudent.Class}
+                                </Typography>
+                                <Typography variant="body2" sx={{ mb: 1 }}>
+                                    <strong>Ca:</strong> {getWeekSchedule(selectedStudent)}
+                                </Typography>
+                                <Typography variant="body2">
+                                    <strong>Điểm đón:</strong> {selectedStudent.PickupAddress}
+                                </Typography>
+                            </Alert>
+                            <TextField
+                                autoFocus
+                                margin="dense"
+                                label="Lý do nghỉ học (tùy chọn)"
+                                type="text"
+                                fullWidth
+                                multiline
+                                rows={3}
+                                value={absenceReason}
+                                onChange={(e) => setAbsenceReason(e.target.value)}
+                                placeholder="Ví dụ: Con bị ốm, có việc gia đình..."
+                            />
+                        </Box>
+                    )}
+                </DialogContent>
+                <DialogActions>
+                    <Button onClick={handleCloseAbsenceDialog} color="inherit">
+                        Hủy
+                    </Button>
+                    <Button 
+                        onClick={handleSubmitAbsence} 
+                        variant="contained" 
+                        color="error"
+                        startIcon={<EventBusy />}
+                    >
+                        Xác nhận báo vắng
+                    </Button>
+                </DialogActions>
+            </Dialog>
         </Box>
     );
 };

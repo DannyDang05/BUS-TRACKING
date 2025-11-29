@@ -16,14 +16,15 @@ const ParentDialogInfo = ({ infoModal, setInfoModal }) => {
   const [parentData, setParentData] = useState(null);
   const [loading, setLoading] = useState(false);
   
-  // Giả sử parentId từ localStorage hoặc auth
-  const parentId = 'PH001';
+  // Lấy parentId từ localStorage
+  const user = JSON.parse(localStorage.getItem('bus_user'));
+  const parentId = user?.profileId || null;
 
   useEffect(() => {
-    if (infoModal) {
+    if (infoModal && parentId) {
       fetchParentData();
     }
-  }, [infoModal]);
+  }, [infoModal, parentId]);
 
   const fetchParentData = async () => {
     try {
@@ -48,8 +49,6 @@ const ParentDialogInfo = ({ infoModal, setInfoModal }) => {
 
       setParentData({
         ...parentInfo,
-        Email: parentInfo.Username ? `${parentInfo.Username}@bustracking.com` : 'N/A',
-        Address: children[0]?.StudentAddress || 'Chưa cập nhật',
         Children: uniqueChildren
       });
     } catch (err) {
@@ -132,10 +131,10 @@ const ParentDialogInfo = ({ infoModal, setInfoModal }) => {
                   <EmailIcon color="action" />
                   <Box>
                     <Typography variant="caption" color="text.secondary">
-                      Email
+                      Tài khoản
                     </Typography>
                     <Typography variant="body1" fontWeight="500">
-                      {parentData.Email}
+                      {parentData.Username || 'N/A'}
                     </Typography>
                   </Box>
                 </Stack>
@@ -144,10 +143,10 @@ const ParentDialogInfo = ({ infoModal, setInfoModal }) => {
                   <HomeIcon color="action" />
                   <Box>
                     <Typography variant="caption" color="text.secondary">
-                      Địa chỉ
+                      Mã phụ huynh
                     </Typography>
                     <Typography variant="body1" fontWeight="500">
-                      {parentData.Address}
+                      {parentData.Id || 'N/A'}
                     </Typography>
                   </Box>
                 </Stack>
@@ -195,18 +194,29 @@ const ParentDialogInfo = ({ infoModal, setInfoModal }) => {
                         <Stack direction="row" spacing={1}>
                           {child.RouteName && (
                             <Chip 
-                              label={child.RouteName}
+                              label={`🚌 ${child.RouteName}`}
                               size="small"
                               color="info"
                               variant="outlined"
                             />
                           )}
-                          {child.VehicleNumber && (
+                          {child.LicensePlate && (
                             <Chip 
-                              label={child.VehicleNumber}
+                              label={child.LicensePlate}
                               size="small"
                               color="success"
                               variant="outlined"
+                            />
+                          )}
+                          {child.PickupStatus && (
+                            <Chip 
+                              label={child.PickupStatus}
+                              size="small"
+                              color={
+                                child.PickupStatus === 'Đã đón' ? 'success' : 
+                                child.PickupStatus === 'Vắng mặt' ? 'error' : 
+                                'warning'
+                              }
                             />
                           )}
                         </Stack>

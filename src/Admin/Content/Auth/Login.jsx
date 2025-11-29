@@ -41,7 +41,9 @@ const Login = () => {
                 if (res.user.role === 'admin' || res.user.Role === 'admin') {
                     setTimeout(() => navigate('/'), 800);
                 } else if (res.user.role === 'driver' || res.user.Role === 'driver') {
-                    setTimeout(() => navigate('/driver'), 800);
+                    setTimeout(() => navigate('/driver'), 800);}
+                else if (res.user.role === 'parent' || res.user.Role === 'parent') {
+                    setTimeout(() => navigate('/parent'), 800);
                 } else {
                     setTimeout(() => navigate('/'), 800);
                 }

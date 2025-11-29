@@ -176,6 +176,8 @@ export const getActiveSimulations = () => apiService.get('/simulation/active');
 // --- API PHỤ HUYNH (Parent) ---
 export const getParentInfo = (parentId) => apiService.get(`/parent/info/${parentId}`);
 export const getChildrenRoutes = (parentId) => apiService.get(`/parent/children/${parentId}`);
+export const getParentSchedules = (parentId) => apiService.get(`/parent/schedules/${parentId}`);
+export const requestAbsence = (scheduleId, data) => apiService.post(`/parent/schedules/${scheduleId}/absence`, data);
 export const getParentNotifications = (parentId, page, limit) => {
     const params = new URLSearchParams();
     if (page) params.append('page', page);

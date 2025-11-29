@@ -1,5 +1,145 @@
 import { pool } from "../config/connectDB.js";
 
+// GET /api/v1/parent/schedules/:parentId
+// Lấy lịch trình của học sinh theo phụ huynh
+const getParentSchedules = async (req, res) => {
+  const parentId = req.params.parentId;
+  const today = new Date().toISOString().split('T')[0];
+
+  try {
+    const [schedules] = await pool.query(`
+      SELECT 
+        s.id AS scheduleId,
+        s.date,
+        s.start_time AS startTime,
+        s.shift,
+        s.status,
+        r.Id AS routeId,
+        r.MaTuyen AS routeCode,
+        r.Name AS routeName,
+        v.LicensePlate,
+        d.FullName AS driverName,
+        d.PhoneNumber AS driverPhone,
+        hs.MaHocSinh AS studentId,
+        hs.HoTen AS studentName,
+        pp.Id AS pickupPointId,
+        pp.DiaChi AS pickupAddress,
+        sps.TinhTrangDon AS pickupStatus,
+        sps.ThoiGianDonThucTe AS actualPickupTime
+      FROM schedules s
+      INNER JOIN routes r ON s.route_id = r.Id
+      LEFT JOIN vehicles v ON r.VehicleId = v.Id
+      LEFT JOIN drivers d ON r.DriverId = d.Id
+      LEFT JOIN pickuppoints pp ON r.Id = pp.RouteId
+      LEFT JOIN hocsinh hs ON pp.MaHocSinh = hs.MaHocSinh
+      LEFT JOIN schedule_pickup_status sps ON sps.ScheduleId = s.id AND sps.PickupPointId = pp.Id
+      WHERE hs.MaPhuHuynh = ? AND s.date >= ? AND hs.MaHocSinh IS NOT NULL
+      ORDER BY s.date ASC, s.start_time ASC
+    `, [parentId, today]);
+
+    return res.status(200).json({
+      errorCode: 0,
+      message: 'OK',
+      data: schedules
+    });
+  } catch (e) {
+    console.error('❌ Error getting parent schedules:', e);
+    return res.status(500).json({ errorCode: -1, message: 'Lỗi server.' });
+  }
+};
+
+// POST /api/v1/parent/schedules/:scheduleId/absence
+// Xin nghỉ học cho một lịch trình
+const requestAbsence = async (req, res) => {
+  const scheduleId = req.params.scheduleId;
+  const { pickupPointId, reason } = req.body;
+
+  if (!pickupPointId) {
+    return res.status(400).json({ errorCode: 1, message: 'Thiếu pickupPointId' });
+  }
+
+  try {
+    // 1. Lấy thông tin học sinh, phụ huynh, schedule
+    const [studentInfo] = await pool.query(`
+      SELECT 
+        hs.MaHocSinh,
+        hs.HoTen as student_name,
+        hs.MaPhuHuynh as parent_id,
+        ph.HoTen as parent_name,
+        pp.DiaChi as pickup_address,
+        s.date as schedule_date,
+        s.shift,
+        s.start_time,
+        r.Name as route_name
+      FROM pickuppoints pp
+      JOIN hocsinh hs ON pp.MaHocSinh = hs.MaHocSinh
+      JOIN phuhuynh ph ON hs.MaPhuHuynh = ph.MaPhuHuynh
+      JOIN schedules s ON s.id = ?
+      JOIN routes r ON s.route_id = r.Id
+      WHERE pp.Id = ?
+    `, [scheduleId, pickupPointId]);
+
+    if (studentInfo.length === 0) {
+      return res.status(404).json({ errorCode: 2, message: 'Không tìm thấy thông tin học sinh' });
+    }
+
+    const student = studentInfo[0];
+    const reasonText = reason || 'Phụ huynh xin nghỉ';
+
+    // 2. Cập nhật schedule_pickup_status
+    const [existing] = await pool.query(
+      'SELECT * FROM schedule_pickup_status WHERE ScheduleId = ? AND PickupPointId = ?',
+      [scheduleId, pickupPointId]
+    );
+
+    if (existing.length > 0) {
+      // Update existing
+      await pool.query(
+        `UPDATE schedule_pickup_status 
+         SET TinhTrangDon = 'Vắng mặt', GhiChu = ?
+         WHERE ScheduleId = ? AND PickupPointId = ?`,
+        [reasonText, scheduleId, pickupPointId]
+      );
+    } else {
+      // Insert new
+      await pool.query(
+        `INSERT INTO schedule_pickup_status 
+         (ScheduleId, PickupPointId, TinhTrangDon, GhiChu)
+         VALUES (?, ?, 'Vắng mặt', ?)`,
+        [scheduleId, pickupPointId, reasonText]
+      );
+    }
+
+    // 3. Tạo thông báo cho Admin trong bảng thongbao
+    const notificationCode = `ABSENCE_${Date.now()}`;
+    const scheduleDate = new Date(student.schedule_date).toLocaleDateString('vi-VN');
+    const notificationContent = `📋 Đơn xin nghỉ học - ${student.student_name}\n\n` +
+      `Phụ huynh ${student.parent_name} xin cho học sinh ${student.student_name} nghỉ học.\n\n` +
+      `📅 Ngày: ${scheduleDate}\n` +
+      `🕐 Ca: ${student.shift} - ${student.start_time}\n` +
+      `🚌 Tuyến: ${student.route_name}\n` +
+      `📍 Điểm đón: ${student.pickup_address}\n` +
+      `📝 Lý do: ${reasonText}`;
+
+    await pool.query(
+      `INSERT INTO thongbao 
+       (MaThongBao, NoiDung, LoaiThongBao, ThoiGian)
+       VALUES (?, ?, 'Vắng mặt', NOW())`,
+      [notificationCode, notificationContent]
+    );
+
+    console.log(`✅ Created absence notification for admin: ${student.student_name}`);
+
+    return res.status(200).json({
+      errorCode: 0,
+      message: 'Đã gửi đơn xin nghỉ thành công'
+    });
+  } catch (e) {
+    console.error('❌ Error requesting absence:', e);
+    return res.status(500).json({ errorCode: -1, message: 'Lỗi server.' });
+  }
+};
+
 // GET /api/v1/parent/children/:parentId
 // Lấy danh sách con và tuyến xe của phụ huynh
 const getChildrenRoutes = async (req, res) => {
@@ -444,5 +584,7 @@ export {
   markAllNotificationsRead,
   getVehicleTracking,
   getParentInfo,
-  getVehicleETA
+  getVehicleETA,
+  getParentSchedules,
+  requestAbsence
 };
