@@ -225,12 +225,23 @@ const RouteMapViewer = ({ open, onClose, routeId }) => {
       .addTo(map);
     markersRef.current.push(schoolMarker);
 
+    // ❌ LỌC BỎ các điểm có trạng thái "Vắng mặt" (nếu có thông tin status)
+    // NOTE: Admin route viewer chỉ hiển thị route tĩnh, không có real-time status
+    // Để lọc theo schedule, cần pass scheduleId vào component này
+    const activePts = pts.filter(p => {
+      // Nếu không có thông tin status, hiển thị tất cả
+      const status = p.TinhTrangDon || p.status || p.pickup_status;
+      return !status || status !== 'Vắng mặt';
+    });
+
+    console.log(`🗺️ Displaying ${activePts.length}/${pts.length} pickup points (excluded absent students)`);
+
     // Calculate or use existing optimized order
-    const order = optimizedOrder.length > 0 ? optimizedOrder : findShortestPath(pts);
+    const order = optimizedOrder.length > 0 ? optimizedOrder : findShortestPath(activePts);
     
-    // Tọa độ điểm đón học sinh
+    // Tọa độ điểm đón học sinh (chỉ các điểm active)
     const studentCoords = order.map(idx => {
-      const p = pts[idx];
+      const p = activePts[idx];
       return [parseFloat(p.Longitude), parseFloat(p.Latitude)];
     }).filter(c => Number.isFinite(c[0]) && Number.isFinite(c[1]));
 
@@ -240,9 +251,9 @@ const RouteMapViewer = ({ open, onClose, routeId }) => {
 
     console.log('Drawing map with coords:', coords, 'Order:', order);
 
-    // Add markers với icon nhỏ gọn 30px
+    // Add markers với icon nhỏ gọn 30px (chỉ cho các điểm active)
     order.forEach((originalIdx, displayIdx) => {
-      const p = pts[originalIdx];
+      const p = activePts[originalIdx];
       const lng = parseFloat(p.Longitude);
       const lat = parseFloat(p.Latitude);
       

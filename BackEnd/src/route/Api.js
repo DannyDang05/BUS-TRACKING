@@ -10,6 +10,7 @@ import pickuppointRoute from "./pickuppointRoute.js";
 import scheduleRoute from "./scheduleRoute.js";
 import simulationRoute from "./simulationRoute.js";
 import parentRoute from "./parentRoute.js";
+import userRoute from "./userRoute.js";
 
 const router = express.Router();
 
@@ -17,6 +18,7 @@ const initAPIRouter = (app) => {
   
   // Gắn các module vào router v1
   router.use("/v1/auth", authRoute);
+  router.use("/v1/users", userRoute);
   router.use("/v1/drivers", driverRoute);
   router.use("/v1/students", studentRoute);
   router.use("/v1/tracking", trackingRoute);

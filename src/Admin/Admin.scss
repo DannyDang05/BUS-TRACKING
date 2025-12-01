@@ -175,7 +175,8 @@ $winter-dark: #00546e;
     .admin-main {
         flex-grow: 1;
         position: relative;
-        overflow: hidden;
+        overflow-y: auto;
+        overflow-x: hidden;
         border-radius: 12px;
         background: rgba(255, 255, 255, 0.9);
         // backdrop-filter: blur(10px);

@@ -215,11 +215,11 @@ const ParentMap = (props) => {
         // Initial fetch để lấy route data
         fetchRouteData();
 
-        // Polling GPS mỗi 3 giây
+        // Polling GPS mỗi 1 giây cho mượt hơn
         const pollInterval = setInterval(() => {
             console.log('🔄 Polling GPS update...');
             fetchRouteData();
-        }, 3000);
+        }, 1000);
 
         return () => {
             clearInterval(pollInterval);

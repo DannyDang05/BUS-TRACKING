@@ -8,7 +8,8 @@ import {
   getParentInfo,
   getVehicleETA,
   getParentSchedules,
-  requestAbsence
+  requestAbsence,
+  addStudent
 } from '../controller/parentController.js';
 import verifyToken from "../middleWare/authMiddleware.js";
 
@@ -40,5 +41,8 @@ router.get('/vehicle-tracking/:studentId', verifyToken, getVehicleTracking);
 
 // GET /api/v1/parent/vehicle-eta/:studentId - Lấy ETA chính xác
 router.get('/vehicle-eta/:studentId', verifyToken, getVehicleETA);
+
+// POST /api/v1/parent/add-student - Thêm học sinh mới
+router.post('/add-student', verifyToken, addStudent);
 
 export default router;

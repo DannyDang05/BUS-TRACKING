@@ -37,7 +37,7 @@ const login = async (req, res) => {
     let driverInfo = null;
     if (user.Role === 'driver') {
       const [driverRows] = await pool.query(
-        'SELECT Id, FullName, PhoneNumber FROM drivers WHERE UserId = ?',
+        'SELECT Id, FullName, PhoneNumber, MaBangLai FROM drivers WHERE UserId = ?',
         [user.Id]
       );
       if (driverRows.length > 0) {
@@ -75,6 +75,7 @@ const login = async (req, res) => {
       responseUser.driverId = driverInfo.Id;
       responseUser.driverName = driverInfo.FullName;
       responseUser.phoneNumber = driverInfo.PhoneNumber;
+      responseUser.licenseNumber = driverInfo.MaBangLai;
     }
 
     return res.status(200).json({

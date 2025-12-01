@@ -190,4 +190,15 @@ export const markAllNotificationsRead = (parentId) => apiService.post(`/parent/n
 export const getVehicleTracking = (studentId) => apiService.get(`/parent/vehicle-tracking/${studentId}`);
 export const getVehicleETA = (studentId) => apiService.get(`/parent/vehicle-eta/${studentId}`);
 
+// --- API TÀI XẾ (Driver) ---
+export const getDriverNotifications = (driverId, page, limit) => {
+    const params = new URLSearchParams();
+    if (page) params.append('page', page);
+    if (limit) params.append('limit', limit);
+    const qs = params.toString();
+    return apiService.get(`/drivers/notifications/${driverId}${qs ? `?${qs}` : ''}`);
+};
+export const markDriverNotificationRead = (notificationId) => apiService.post(`/drivers/notifications/${notificationId}/mark-read`);
+export const markAllDriverNotificationsRead = (driverId) => apiService.post(`/drivers/notifications/mark-all-read/${driverId}`);
+
 export default apiService;

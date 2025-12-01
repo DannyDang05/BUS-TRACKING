@@ -19,7 +19,7 @@ import {
 
 import { useLanguage } from './Shared/LanguageContext';
 
-import { FaMapMarkerAlt, FaGem, FaList, FaGithub, FaRegLaughWink, FaHeart } from 'react-icons/fa';
+import { FaMapMarkerAlt, FaGem, FaList, FaGithub, FaRegLaughWink, FaHeart, FaUserCog } from 'react-icons/fa';
 import { PiStudentBold } from "react-icons/pi";
 import { TbUserFilled } from "react-icons/tb";
 
@@ -74,6 +74,11 @@ const SideBarAdmin = (props) => {
                     <Menu>
                             <MenuItem className="notification-container" icon={<IoMdNotifications color="#00838f" size={"24px"} />}>
                                 <Link to="/notifications">{t('notification')}</Link>
+                            </MenuItem>
+                    </Menu>
+                    <Menu>
+                            <MenuItem className="user-container" icon={<FaUserCog color="#00838f" size={"24px"} />}>
+                                <Link to="/users">Tài khoản</Link>
                             </MenuItem>
                     </Menu>
                 </SidebarContent>

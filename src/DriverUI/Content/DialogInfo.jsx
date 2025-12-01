@@ -5,11 +5,14 @@ import LocalShippingIcon from '@mui/icons-material/LocalShipping';
 
 const DialogInfo = ({ infoModal, setInfoModal}) => {
   const handleClose = () => setInfoModal(false);
+  
+  // Lấy thông tin driver từ localStorage
+  const user = JSON.parse(localStorage.getItem('bus_user'));
   const selectedDriver = {
-    Id: "TX-007",
-    FullName: "Lê Văn Tám",
-    MaBangLai: "DL123456789",
-    PhoneNumber: "0987 654 321",
+    Id: user?.driverId || user?.profileId || "N/A",
+    FullName: user?.driverName || user?.fullName || user?.username || "N/A",
+    MaBangLai: user?.licenseNumber || "N/A",
+    PhoneNumber: user?.phoneNumber || user?.phone || "N/A",
   };
   return (
     <Dialog

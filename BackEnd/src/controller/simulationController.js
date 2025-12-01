@@ -32,6 +32,7 @@ const startTripSimulation = async (req, res) => {
     const routeId = schedule.routeId;
 
     // Get pickup points for this SCHEDULE (from schedule_pickup_status, not pickuppoints)
+    // LỌC BỎ các điểm có TinhTrangDon = 'Vắng' để không đi qua điểm học sinh vắng mặt
     const [pickupPoints] = await pool.query(`
       SELECT 
         p.Id,
@@ -44,9 +45,12 @@ const startTripSimulation = async (req, res) => {
         sps.ScheduleId
       FROM pickuppoints p
       INNER JOIN schedule_pickup_status sps ON sps.PickupPointId = p.Id
-      WHERE sps.ScheduleId = ?
+      WHERE sps.ScheduleId = ? 
+        AND (p.MaHocSinh IS NULL OR sps.TinhTrangDon != 'Vắng')
       ORDER BY p.PointOrder ASC
     `, [scheduleId]);
+    
+    console.log(`📍 Active pickup points (excluding absent students): ${pickupPoints.length}`);
 
     if (pickupPoints.length === 0) {
       return res.status(400).json({ errorCode: 3, message: 'Tuyến không có điểm đón nào' });
@@ -77,15 +81,32 @@ const startTripSimulation = async (req, res) => {
 
       console.log(`🚗 Fetching route for chunk ${i + 1}/${chunks.length} (${chunk.length} points)`);
 
-      const response = await fetch(directionsUrl);
-      const directionsData = await response.json();
+      try {
+        // Add timeout for fetch request (5 seconds)
+        const controller = new AbortController();
+        const timeoutId = setTimeout(() => controller.abort(), 5000);
+        
+        const response = await fetch(directionsUrl, { 
+          signal: controller.signal,
+          headers: {
+            'Content-Type': 'application/json'
+          }
+        });
+        clearTimeout(timeoutId);
+        
+        const directionsData = await response.json();
 
-      if (directionsData.code === 'Ok' && directionsData.routes && directionsData.routes.length > 0) {
-        const chunkCoords = directionsData.routes[0].geometry.coordinates;
-        allCoordinates = allCoordinates.concat(chunkCoords);
-        console.log(`✅ Got ${chunkCoords.length} coordinates for chunk ${i + 1}`);
-      } else {
-        console.warn(`⚠️ Failed to get route for chunk ${i + 1}, using straight lines`);
+        if (directionsData.code === 'Ok' && directionsData.routes && directionsData.routes.length > 0) {
+          const chunkCoords = directionsData.routes[0].geometry.coordinates;
+          allCoordinates = allCoordinates.concat(chunkCoords);
+          console.log(`✅ Got ${chunkCoords.length} coordinates for chunk ${i + 1}`);
+        } else {
+          console.warn(`⚠️ Failed to get route for chunk ${i + 1}, using straight lines`);
+          allCoordinates = allCoordinates.concat(chunk.map(p => [p.Longitude, p.Latitude]));
+        }
+      } catch (error) {
+        console.error(`❌ Error fetching route for chunk ${i + 1}:`, error.message);
+        console.log(`⚠️ Using fallback straight line coordinates for chunk ${i + 1}`);
         allCoordinates = allCoordinates.concat(chunk.map(p => [p.Longitude, p.Latitude]));
       }
     }
@@ -164,8 +185,8 @@ const stopTripSimulation = async (req, res) => {
 const startSimulation = async (scheduleId, routeId, routeCoordinates, pickupPoints) => {
   let currentIndex = 0;
   const totalPoints = routeCoordinates.length;
-  const updateInterval = 2000; // Update every 2 seconds
-  const stepsPerUpdate = Math.max(1, Math.floor(totalPoints / 5000)); // Even smaller steps = much slower movement
+  const updateInterval = 1000; // Update every 1 second
+  const stepsPerUpdate = Math.max(2, Math.floor(totalPoints / 1000)); // Larger steps = shorter distance per update
 
   console.log(`🚍 Starting simulation for schedule ${scheduleId}, route ${routeId}`);
   console.log(`   Total coordinates: ${totalPoints}, Steps per update: ${stepsPerUpdate}`);

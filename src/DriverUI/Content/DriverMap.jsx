@@ -365,7 +365,7 @@ const DriverMap = ({ scheduleId, routeId }) => {
                 let bgColor = '#ff9800'; // Chưa đón
                 if (status === 'Đã đón') bgColor = '#4caf50';
                 if (status === 'Đã trả') bgColor = '#2196f3';
-                if (status === 'Vắng mặt') bgColor = '#f44336';
+                if (status === 'Vắng') bgColor = '#f44336';
 
                 const markerElement = existingMarker.getElement();
                 const markerDiv = markerElement.querySelector('div');
@@ -399,6 +399,12 @@ const DriverMap = ({ scheduleId, routeId }) => {
             const isSchool = !point.MaHocSinh; // Điểm trường không có MaHocSinh
             
             if (!longitude || !latitude) return;
+            
+            // ❌ BỎ QUA điểm có trạng thái "Vắng" (trừ điểm trường)
+            if (!isSchool && status === 'Vắng') {
+                console.log(`⏭️ Skipping absent student at point ${order}`);
+                return;
+            }
 
             const el = document.createElement('div');
             
@@ -427,7 +433,7 @@ const DriverMap = ({ scheduleId, routeId }) => {
                 let bgColor = '#ff9800'; // Chưa đón
                 if (status === 'Đã đón') bgColor = '#4caf50';
                 if (status === 'Đã trả') bgColor = '#2196f3';
-                if (status === 'Vắng mặt') bgColor = '#f44336';
+                if (status === 'Vắng') bgColor = '#f44336';
 
                 el.innerHTML = `
                     <div style="
@@ -507,12 +513,21 @@ const DriverMap = ({ scheduleId, routeId }) => {
         const points = route.pickupPoints || [];
         if (points.length === 0) return;
 
+        // ❌ LỌC BỎ học sinh có trạng thái "Vắng" (giữ lại điểm trường)
+        const activePoints = points.filter(p => {
+            const status = p.TinhTrangDon || p.status || 'Chưa đón';
+            const isSchool = !p.MaHocSinh;
+            return isSchool || status !== 'Vắng';
+        });
+
+        console.log(`🛣️ Drawing route with ${activePoints.length}/${points.length} points (excluded absent students)`);
+
         // Sắp xếp điểm theo PointOrder (bao gồm cả điểm trường từ backend)
-        const sortedPoints = points.sort((a, b) => 
+        const sortedPoints = activePoints.sort((a, b) => 
             (a.PointOrder || 0) - (b.PointOrder || 0)
         );
         
-        // Tạo waypoints từ pickupPoints (đã bao gồm điểm trường từ backend)
+        // Tạo waypoints từ pickupPoints (đã bao gồm điểm trường từ backend, loại trừ vắng mặt)
         let waypoints = [];
         sortedPoints.forEach(p => {
             const lng = p.Longitude || p.longitude;
@@ -618,7 +633,7 @@ const DriverMap = ({ scheduleId, routeId }) => {
             
             const interval = setInterval(() => {
                 fetchRouteData();
-            }, 5000); // Refresh every 5 seconds (slower polling)
+            }, 1000); // Refresh every 1 second for smooth tracking
 
             return () => clearInterval(interval);
         }

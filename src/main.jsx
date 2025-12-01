@@ -37,9 +37,11 @@ import ParentDashboard from './ParentUI/ParentContent/ParentDashboard.jsx';
 import ParentMap from './ParentUI/ParentContent/ParentMap.jsx';
 import ParentNotification from './ParentUI/ParentContent/ParentNotification.jsx';
 import ParentSchedule from './ParentUI/ParentContent/ParentSchedule.jsx';
+import AddStudent from './ParentUI/ParentContent/AddStudent.jsx';
 import Notification from './Admin/Content/Notification/Notification.jsx';
 import CreateNotificationModal from './Admin/Content/Notification/CreateNotificationModal.jsx';
 import UpdateNotificationModal from './Admin/Content/Notification/UpdateNotificationModal.jsx';
+import UserManagement from './Admin/Content/User/UserManagement.jsx';
 createRoot(document.getElementById('root')).render(
   <StrictMode>
     <LanguageProvider>
@@ -71,6 +73,7 @@ createRoot(document.getElementById('root')).render(
               <Route path='notifications' element={<Notification />} />
               <Route path="notifications/create-notification" element={<CreateNotificationModal />} />
               <Route path="notifications/update-notification/:id" element={<UpdateNotificationModal />} />
+              <Route path='users' element={<UserManagement />} />
             </Route>
           </Route>
           {/* Public routes */}
@@ -87,6 +90,7 @@ createRoot(document.getElementById('root')).render(
               <Route path="map/:studentId" element={<ParentMap/>}/>
               <Route path="notifications" element={<ParentNotification/>}/>
               <Route path="schedule" element={<ParentSchedule/>}/>
+              <Route path="add-student" element={<AddStudent/>}/>
           </Route>
         </Routes>
       </BrowserRouter>

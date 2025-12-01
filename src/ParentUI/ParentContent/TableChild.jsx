@@ -30,7 +30,7 @@ const getStatusColor = (status) => {
             return 'success.main';
         case 'Chưa đón':
             return 'warning.main';
-        case 'Vắng mặt':
+        case 'Vắng':
             return 'error.main';
         default:
             return 'text.primary';
@@ -103,6 +103,15 @@ const TableChild = () => {
 
     return (
         <div className='parent-table'>
+            <Box sx={{ mb: 2, display: 'flex', justifyContent: 'flex-end' }}>
+                <Button
+                    variant="contained"
+                    color="primary"
+                    onClick={() => navigate('/parent/add-student')}
+                >
+                    + Thêm Học Sinh
+                </Button>
+            </Box>
             <TableContainer component={Paper} elevation={3}>
                 <Table aria-label="student list table">
                     <TableHead>

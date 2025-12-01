@@ -34,7 +34,7 @@ const getStatusColor = (status) => {
             return 'success';
         case 'Chưa đón':
             return 'warning';
-        case 'Vắng mặt':
+        case 'Vắng':
             return 'error';
         case 'Đang chạy':
             return 'info';
@@ -197,7 +197,7 @@ const ParentSchedule = () => {
                                                 </Box>
                                             </TableCell>
                                             <TableCell>
-                                                {schedule.pickupStatus === 'Vắng mặt' ? (
+                                                {schedule.pickupStatus === 'Vắng' ? (
                                                     <Chip 
                                                         icon={<CancelIcon />}
                                                         label="Đã xin nghỉ" 

@@ -214,7 +214,7 @@ const ParentDialogInfo = ({ infoModal, setInfoModal }) => {
                               size="small"
                               color={
                                 child.PickupStatus === 'Đã đón' ? 'success' : 
-                                child.PickupStatus === 'Vắng mặt' ? 'error' : 
+                                child.PickupStatus === 'Vắng' ? 'error' : 
                                 'warning'
                               }
                             />

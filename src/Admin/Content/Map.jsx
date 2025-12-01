@@ -75,33 +75,43 @@ const Map = (props) => {
     }, [collapsed]);
 
     // Fetch all routes (including non-running ones)
-    const fetchAllRoutes = async () => {
+    const fetchAllRoutes = async (isInitialLoad = false) => {
         try {
-            setLoading(true);
+            if (isInitialLoad) setLoading(true);
+            
             const response = await getAllRoutesWithPoints();
             const routesData = response.data || [];
-            setAllRoutes(routesData);
             
-            // Filter running vehicles for the running view
+            // Only update state if this is initial load or data changed significantly
+            if (isInitialLoad) {
+                setAllRoutes(routesData);
+                const runningVehicles = routesData.filter(route => 
+                    route.latitude && route.longitude && 
+                    (route.status?.toLowerCase().includes('chạy') || route.status?.toLowerCase() === 'running')
+                );
+                setVehicles(runningVehicles);
+                setError(null);
+            }
+            
+            // Always update markers (smooth position updates)
             const runningVehicles = routesData.filter(route => 
                 route.latitude && route.longitude && 
                 (route.status?.toLowerCase().includes('chạy') || route.status?.toLowerCase() === 'running')
             );
-            setVehicles(runningVehicles);
             
-            // Update markers based on current view mode
             if (viewMode === 'running') {
                 updateMapMarkers(runningVehicles);
             } else {
                 updateMapMarkers(routesData);
             }
             
-            setError(null);
         } catch (err) {
             console.error('Error fetching routes:', err);
-            setError('Không thể tải dữ liệu tuyến xe. Vui lòng thử lại.');
+            if (isInitialLoad) {
+                setError('Không thể tải dữ liệu tuyến xe. Vui lòng thử lại.');
+            }
         } finally {
-            setLoading(false);
+            if (isInitialLoad) setLoading(false);
         }
     };
 
@@ -123,15 +133,12 @@ const Map = (props) => {
         }
     };
 
-    // Update markers on map
+    // Update markers on map (optimized to only update position, not recreate)
     const updateMapMarkers = (routeData) => {
         if (!mapRef.current) return;
 
-        // Remove old markers
-        Object.values(markersRef.current).forEach(marker => marker.remove());
-        markersRef.current = {};
+        const currentRouteIds = new Set();
 
-        // Add new markers
         routeData.forEach(route => {
             // For non-running routes, use first pickup point as location if no current location
             let lat = route.latitude;
@@ -148,7 +155,15 @@ const Map = (props) => {
             
             if (!lat || !lng) return;
 
-            // Create custom marker element
+            currentRouteIds.add(route.routeId);
+
+            // If marker exists, just update position (smooth animation)
+            if (markersRef.current[route.routeId]) {
+                markersRef.current[route.routeId].setLngLat([lng, lat]);
+                return;
+            }
+
+            // Create custom marker element only if new
             const el = document.createElement('div');
             el.className = 'custom-marker';
             el.style.width = '40px';
@@ -194,6 +209,14 @@ const Map = (props) => {
                 });
             });
         });
+
+        // Remove markers that no longer exist in data
+        Object.keys(markersRef.current).forEach(routeId => {
+            if (!currentRouteIds.has(parseInt(routeId))) {
+                markersRef.current[routeId].remove();
+                delete markersRef.current[routeId];
+            }
+        });
     };
 
     // Get status color
@@ -215,12 +238,12 @@ const Map = (props) => {
 
     // Fetch locations on mount and set interval
     useEffect(() => {
-        fetchVehicleLocations();
+        fetchAllRoutes(true); // Initial load with loading state
         
-        // Auto refresh every 3 seconds for smooth tracking
+        // Auto refresh every 1 second for smooth tracking (without loading state)
         const interval = setInterval(() => {
-            fetchVehicleLocations();
-        }, 3000);
+            fetchAllRoutes(false); // Silent updates, only update markers
+        }, 1000);
 
         return () => clearInterval(interval);
     }, []);

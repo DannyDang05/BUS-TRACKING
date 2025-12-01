@@ -130,4 +130,107 @@ const deleteDriver = async (req, res) => {
     }
 };
 
-export { getAllDrivers, createNewDriver, getDriverDetail, updateDriver, deleteDriver };
+// GET /api/v1/driver/notifications/:driverId
+// Lấy thông báo cho tài xế
+const getDriverNotifications = async (req, res) => {
+  const driverId = req.params.driverId;
+  const page = Math.max(parseInt(req.query.page) || 1, 1);
+  const limit = Math.max(parseInt(req.query.limit) || 20, 1);
+  const offset = (page - 1) * limit;
+
+  try {
+    console.log('🔍 getDriverNotifications called with driverId:', driverId);
+    
+    // Lấy tất cả thông báo của tài xế từ bảng thongbao_taixe
+    const sql = `
+      SELECT 
+        tb.Id as notification_id,
+        tb.MaThongBao as code,
+        tb.NoiDung as message,
+        tb.LoaiThongBao as type,
+        tb.ThoiGian as created_at,
+        tb.DaDoc as is_read
+      FROM thongbao_taixe tb
+      WHERE tb.MaTaiXe = ?
+      ORDER BY tb.ThoiGian DESC
+      LIMIT ? OFFSET ?
+    `;
+
+    const [rows] = await pool.query(sql, [driverId, limit, offset]);
+    console.log(`✅ Found ${rows.length} notifications for driver ${driverId}:`, rows);
+
+    // Count total
+    const [countRows] = await pool.query(
+      'SELECT COUNT(*) as total FROM thongbao_taixe WHERE MaTaiXe = ?',
+      [driverId]
+    );
+    const totalItems = countRows[0].total || 0;
+    const totalPages = Math.ceil(totalItems / limit);
+
+    return res.status(200).json({
+      errorCode: 0,
+      message: 'OK',
+      data: rows,
+      meta: {
+        totalItems,
+        totalPages,
+        currentPage: page,
+        pageSize: limit
+      }
+    });
+  } catch (e) {
+    console.error('❌ Error getting driver notifications:', e);
+    return res.status(500).json({ errorCode: -1, message: 'Lỗi server.' });
+  }
+};
+
+// POST /api/v1/driver/notifications/:notificationId/mark-read
+// Đánh dấu thông báo đã đọc
+const markDriverNotificationRead = async (req, res) => {
+  const notificationId = req.params.notificationId;
+
+  try {
+    const [result] = await pool.query(
+      'UPDATE thongbao_taixe SET DaDoc = 1 WHERE Id = ?',
+      [notificationId]
+    );
+
+    if (result.affectedRows === 0) {
+      return res.status(404).json({ errorCode: 3, message: 'Không tìm thấy thông báo.' });
+    }
+
+    return res.status(200).json({ errorCode: 0, message: 'Đã đánh dấu đọc.' });
+  } catch (e) {
+    console.error('❌ Error marking driver notification read:', e);
+    return res.status(500).json({ errorCode: -1, message: 'Lỗi server.' });
+  }
+};
+
+// POST /api/v1/driver/notifications/mark-all-read/:driverId
+// Đánh dấu tất cả thông báo đã đọc
+const markAllDriverNotificationsRead = async (req, res) => {
+  const driverId = req.params.driverId;
+
+  try {
+    await pool.query(
+      'UPDATE thongbao_taixe SET DaDoc = 1 WHERE MaTaiXe = ? AND DaDoc = 0',
+      [driverId]
+    );
+
+    return res.status(200).json({ errorCode: 0, message: 'Đã đánh dấu tất cả đọc.' });
+  } catch (e) {
+    console.error('❌ Error marking all driver notifications read:', e);
+    return res.status(500).json({ errorCode: -1, message: 'Lỗi server.' });
+  }
+};
+
+export { 
+  getAllDrivers, 
+  createNewDriver, 
+  getDriverDetail, 
+  updateDriver, 
+  deleteDriver,
+  getDriverNotifications,
+  markDriverNotificationRead,
+  markAllDriverNotificationsRead
+};

@@ -14,17 +14,26 @@ const getParentSchedules = async (req, res) => {
         s.start_time AS startTime,
         s.shift,
         s.status,
+        CASE 
+          WHEN s.status = 1 THEN 'Đã phân công'
+          WHEN s.status = 2 THEN 'Sắp diễn ra'
+          WHEN s.status = 3 THEN 'Đang chạy'
+          WHEN s.status = 4 THEN 'Hoàn thành'
+          WHEN s.status = 5 THEN 'Hủy'
+          ELSE 'Không xác định'
+        END AS statusText,
         r.Id AS routeId,
         r.MaTuyen AS routeCode,
         r.Name AS routeName,
-        v.LicensePlate,
+        v.LicensePlate AS licensePlate,
         d.FullName AS driverName,
         d.PhoneNumber AS driverPhone,
         hs.MaHocSinh AS studentId,
         hs.HoTen AS studentName,
+        hs.Lop AS className,
         pp.Id AS pickupPointId,
         pp.DiaChi AS pickupAddress,
-        sps.TinhTrangDon AS pickupStatus,
+        COALESCE(sps.TinhTrangDon, 'Chưa đón') AS pickupStatus,
         sps.ThoiGianDonThucTe AS actualPickupTime
       FROM schedules s
       INNER JOIN routes r ON s.route_id = r.Id
@@ -86,31 +95,39 @@ const requestAbsence = async (req, res) => {
     const student = studentInfo[0];
     const reasonText = reason || 'Phụ huynh xin nghỉ';
 
-    // 2. Cập nhật schedule_pickup_status
-    const [existing] = await pool.query(
-      'SELECT * FROM schedule_pickup_status WHERE ScheduleId = ? AND PickupPointId = ?',
-      [scheduleId, pickupPointId]
+    // 2. Cập nhật schedule_pickup_status với INSERT ON DUPLICATE KEY UPDATE
+    const [updateResult] = await pool.query(
+      `INSERT INTO schedule_pickup_status 
+       (ScheduleId, PickupPointId, TinhTrangDon, GhiChu)
+       VALUES (?, ?, 'Vắng', ?)
+       ON DUPLICATE KEY UPDATE 
+       TinhTrangDon = 'Vắng', 
+       GhiChu = VALUES(GhiChu)`,
+      [scheduleId, pickupPointId, reasonText]
     );
 
-    if (existing.length > 0) {
-      // Update existing
-      await pool.query(
-        `UPDATE schedule_pickup_status 
-         SET TinhTrangDon = 'Vắng mặt', GhiChu = ?
-         WHERE ScheduleId = ? AND PickupPointId = ?`,
-        [reasonText, scheduleId, pickupPointId]
-      );
-    } else {
-      // Insert new
-      await pool.query(
-        `INSERT INTO schedule_pickup_status 
-         (ScheduleId, PickupPointId, TinhTrangDon, GhiChu)
-         VALUES (?, ?, 'Vắng mặt', ?)`,
-        [scheduleId, pickupPointId, reasonText]
-      );
-    }
+    console.log(`✅ Updated absence status for schedule ${scheduleId}, pickup point ${pickupPointId}:`, updateResult);
+    
+    // Verify the update
+    const [verifyResult] = await pool.query(
+      'SELECT TinhTrangDon, GhiChu FROM schedule_pickup_status WHERE ScheduleId = ? AND PickupPointId = ?',
+      [scheduleId, pickupPointId]
+    );
+    console.log('📋 Verified status in DB:', verifyResult[0]);
 
-    // 3. Tạo thông báo cho Admin trong bảng thongbao
+    // 3. Lấy thông tin tài xế phụ trách tuyến này
+    const [driverInfo] = await pool.query(`
+      SELECT d.Id as driver_id, d.FullName as driver_name
+      FROM schedules s
+      JOIN routes r ON s.route_id = r.Id
+      LEFT JOIN drivers d ON r.DriverId = d.Id
+      WHERE s.id = ?
+    `, [scheduleId]);
+
+    const driverId = driverInfo.length > 0 ? driverInfo[0].driver_id : null;
+    const driverName = driverInfo.length > 0 ? driverInfo[0].driver_name : null;
+
+    // 4. Tạo thông báo cho Admin trong bảng thongbao
     const notificationCode = `ABSENCE_${Date.now()}`;
     const scheduleDate = new Date(student.schedule_date).toLocaleDateString('vi-VN');
     const notificationContent = `📋 Đơn xin nghỉ học - ${student.student_name}\n\n` +
@@ -129,6 +146,28 @@ const requestAbsence = async (req, res) => {
     );
 
     console.log(`✅ Created absence notification for admin: ${student.student_name}`);
+
+    // 5. Tạo thông báo cho Tài xế (nếu có tài xế được phân công)
+    if (driverId) {
+      const driverNotificationCode = `DRIVER_ABSENCE_${Date.now()}`;
+      const driverNotificationContent = `👤 Học sinh vắng mặt - ${student.student_name}\n\n` +
+        `Học sinh ${student.student_name} đã xin nghỉ học.\n\n` +
+        `📅 Ngày: ${scheduleDate}\n` +
+        `🕐 Ca: ${student.shift} - ${student.start_time}\n` +
+        `🚌 Tuyến: ${student.route_name}\n` +
+        `📍 Điểm đón: ${student.pickup_address}\n` +
+        `📝 Lý do: ${reasonText}\n\n` +
+        `⚠️ Bạn không cần đến điểm đón này.`;
+
+      await pool.query(
+        `INSERT INTO thongbao_taixe 
+         (MaThongBao, MaTaiXe, NoiDung, LoaiThongBao, ThoiGian)
+         VALUES (?, ?, ?, 'Vắng mặt', NOW())`,
+        [driverNotificationCode, driverId, driverNotificationContent]
+      );
+
+      console.log(`✅ Created absence notification for driver ${driverName} (${driverId})`);
+    }
 
     return res.status(200).json({
       errorCode: 0,
@@ -577,6 +616,66 @@ function calculateDelay(startTime, lastUpdate) {
   return Math.max(0, diffMins);
 }
 
+// POST /api/v1/parent/add-student
+// Thêm học sinh mới
+const addStudent = async (req, res) => {
+  const { hoTen, lop, diaChi, kinhDo, viDo, maPhuHuynh } = req.body;
+
+  // Validate required fields
+  if (!hoTen || !lop || !diaChi || !maPhuHuynh) {
+    return res.status(400).json({
+      errorCode: 1,
+      message: 'Thiếu thông tin bắt buộc'
+    });
+  }
+
+  if (!kinhDo || !viDo) {
+    return res.status(400).json({
+      errorCode: 2,
+      message: 'Thiếu tọa độ địa chỉ'
+    });
+  }
+
+  try {
+    // Generate unique student ID: HS_YYYYMMDD_XXXX
+    const now = new Date();
+    const dateStr = now.toISOString().split('T')[0].replace(/-/g, ''); // YYYYMMDD
+    
+    // Get last student ID for today
+    const [lastStudent] = await pool.query(
+      'SELECT MaHocSinh FROM hocsinh WHERE MaHocSinh LIKE ? ORDER BY MaHocSinh DESC LIMIT 1',
+      [`HS_${dateStr}_%`]
+    );
+
+    let sequence = 1;
+    if (lastStudent.length > 0) {
+      const lastId = lastStudent[0].MaHocSinh;
+      const lastSeq = parseInt(lastId.split('_')[2]) || 0;
+      sequence = lastSeq + 1;
+    }
+
+    const maHocSinh = `HS_${dateStr}_${String(sequence).padStart(4, '0')}`;
+
+    // Insert new student
+    await pool.query(`
+      INSERT INTO hocsinh (MaHocSinh, HoTen, Lop, DiaChi, Latitude, Longitude, MaPhuHuynh, TrangThaiHocTap)
+      VALUES (?, ?, ?, ?, ?, ?, ?, 'Dang hoc')
+    `, [maHocSinh, hoTen, lop, diaChi, viDo, kinhDo, maPhuHuynh]);
+
+    return res.status(201).json({
+      errorCode: 0,
+      message: 'Thêm học sinh thành công',
+      data: { maHocSinh }
+    });
+  } catch (error) {
+    console.error('Error adding student:', error);
+    return res.status(500).json({
+      errorCode: -1,
+      message: 'Lỗi server'
+    });
+  }
+};
+
 export { 
   getChildrenRoutes, 
   getParentNotifications, 
@@ -586,5 +685,6 @@ export {
   getParentInfo,
   getVehicleETA,
   getParentSchedules,
-  requestAbsence
+  requestAbsence,
+  addStudent
 };
