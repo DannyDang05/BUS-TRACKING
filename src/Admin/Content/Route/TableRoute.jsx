@@ -18,7 +18,7 @@ import ConfirmDialog from '../../Shared/ConfirmDialog';
 import { useLanguage } from '../../Shared/LanguageContext';
 
 const TableRoute = (props) => {
-  const { rowSelected, setRowSelected, refreshTrigger, onAssignDriver } = props;
+  const { rowSelected, setRowSelected, refreshTrigger } = props;
   const navigate = useNavigate();
   const [routes, setRoutes] = useState([]);
   const [totalCount, setTotalCount] = useState(0);
@@ -42,48 +42,18 @@ const TableRoute = (props) => {
     navigate(`/routes/${routeId}/points`);
   };
 
-  const handleRowClick = (route) => {
-    // Open assign driver modal when clicking on route
-    if (onAssignDriver) {
-      onAssignDriver(route);
-    }
-  };
-
   const columns = [
-    { field: 'Id', headerName: 'ID', width: 100 },
-    { field: 'MaTuyen', headerName: 'Mã Tuyến', width: 200 },
-    { field: 'Name', headerName: 'Tên Tuyến', width: 300 },
-    { field: 'DriverId', headerName: 'Tài Xế', width: 200 },
-    { field: 'VehicleId', headerName: 'Xe', width: 150 },
-    { field: 'Status', headerName: 'Trạng Thái', width: 200 },
+    { field: 'Id', headerName: 'ID', width: 80 },
+    { field: 'MaTuyen', headerName: 'Mã Tuyến', width: 180 },
+    { field: 'VehicleId', headerName: 'ID Xe', width: 150 },
+    { field: 'TotalDistance', headerName: 'Tổng Quãng Đường', width: 200 },
+    { field: 'EstimatedTime', headerName: 'Thời Gian Ước Tính', width: 200 },
     {
       field: 'actions',
       headerName: 'Hành Động',
-      width: 250,
+      width: 200,
       sortable: false,
-      filterable: false,
-      renderCell: (params) => (
-        <div className="action-flex">
-          <Tooltip title={t('managePickup') || 'Quản lý điểm đón'}>
-            <IconButton
-              size="small"
-              onClick={() => handleManagePickupPoints(params.row.Id)}
-              sx={{ color: '#FF5733', '&:hover': { bgcolor: '#fff3f0' } }}
-            >
-              <LocationIcon fontSize="small" />
-            </IconButton>
-          </Tooltip>
-          <Tooltip title="Xem trên bản đồ">
-            <IconButton
-              size="small"
-              onClick={() => handleViewMap(params.row.Id)}
-              sx={{ color: 'primary.main' }}
-            >
-              <MapIcon fontSize="small" />
-            </IconButton>
-          </Tooltip>
-        </div>
-      )
+      filterable: false
     }
   ];
 
@@ -129,35 +99,30 @@ const TableRoute = (props) => {
             {totalCount} {t('results')}
           </div>
         </div>
-        <TableContainer>
+        <TableContainer sx={{ overflow: 'visible' }}>
           <Table className="custom-table">
             <TableHead>
               <TableRow>
                 <TableCell>ID</TableCell>
-                <TableCell>{t('MaTuyen') || 'Mã Tuyến'}</TableCell>
-                <TableCell>{t('Name') || 'Tên Tuyến'}</TableCell>
-                <TableCell>{t('Driver') || 'Tài Xế'}</TableCell>
-                <TableCell>{t('vehicle') || 'Xe'}</TableCell>
-                <TableCell>{t('status') || 'Trạng Thái'}</TableCell>
-                <TableCell>{t('action') || 'Hành Động'}</TableCell>
+                <TableCell>Mã Tuyến</TableCell>
+                <TableCell>ID Xe</TableCell>
+                <TableCell>Tổng Quãng Đường</TableCell>
+                <TableCell>Thời Gian Ước Tính</TableCell>
+                <TableCell>Hành Động</TableCell>
               </TableRow>
             </TableHead>
             <TableBody>
               {loading ? (
-                <TableRow><TableCell colSpan={7} className="table-empty">⏳ {t('loading')}</TableCell></TableRow>
+                <TableRow><TableCell colSpan={6} className="table-empty">⏳ {t('loading')}</TableCell></TableRow>
               ) : displayed.length === 0 ? (
-                <TableRow><TableCell colSpan={7} className="table-empty">{t('noData')}</TableCell></TableRow>
+                <TableRow><TableCell colSpan={6} className="table-empty">{t('noData')}</TableCell></TableRow>
               ) : (
                 displayed.map((r) => (
                   <TableRow 
                     key={r.Id}
-                    onClick={() => handleRowClick(r)}
                     sx={{
-                      cursor: 'pointer',
                       '&:hover': {
-                        backgroundColor: 'rgba(0, 151, 167, 0.08)',
-                        transform: 'scale(1.01)',
-                        transition: 'all 0.2s ease'
+                        backgroundColor: 'rgba(0, 151, 167, 0.08)'
                       }
                     }}
                   >
@@ -175,61 +140,28 @@ const TableRoute = (props) => {
                         )}
                       </Box>
                     </TableCell>
-                    <TableCell>{r.Name}</TableCell>
                     <TableCell>
-                      {r.DriverId ? (
-                        <Chip 
-                          label={`ID: ${r.DriverId}`} 
-                          size="small" 
-                          color="primary"
-                          sx={{ fontSize: '0.75rem' }}
-                        />
-                      ) : (
-                        <Chip 
-                          label="Chưa phân công" 
-                          size="small" 
-                          color="warning"
-                          sx={{ fontSize: '0.75rem' }}
-                        />
-                      )}
+                      {r.VehicleId || 'Chưa có'}
                     </TableCell>
                     <TableCell>
-                      {r.VehicleId ? (
-                        <Chip 
-                          label={`ID: ${r.VehicleId}`} 
-                          size="small" 
-                          color="success"
-                          sx={{ fontSize: '0.75rem' }}
-                        />
-                      ) : (
-                        <Chip 
-                          label="Chưa phân xe" 
-                          size="small" 
-                          color="warning"
-                          sx={{ fontSize: '0.75rem' }}
-                        />
-                      )}
+                      {r.TotalDistance ? `${parseFloat(r.TotalDistance).toFixed(2)} km` : 'N/A'}
                     </TableCell>
                     <TableCell>
-                      <Chip 
-                        label={r.Status} 
-                        size="small"
-                        color={r.Status === 'Đang chạy' ? 'success' : 'default'}
-                      />
+                      {r.EstimatedTime ? `${Math.round(r.EstimatedTime)} phút` : 'N/A'}
                     </TableCell>
-                    <TableCell onClick={(e) => e.stopPropagation()}>
+                    <TableCell>
                       <div className="table-actions">
-                        <Tooltip title={t('managePickup') || 'Quản lý điểm đón'}>
+                        <Tooltip title="Quản lý điểm đón">
                           <IconButton size="small" onClick={() => handleManagePickupPoints(r.Id)} sx={{ color: '#FF5733' }}>
                             <LocationIcon fontSize="small" />
                           </IconButton>
                         </Tooltip>
-                        <Tooltip title={t('viewOnMap') || 'Xem trên bản đồ'}>
+                        <Tooltip title="Xem trên bản đồ">
                           <IconButton size="small" onClick={() => handleViewMap(r.Id)} sx={{ color: 'primary.main' }}>
                             <MapIcon fontSize="small" />
                           </IconButton>
                         </Tooltip>
-                        <Tooltip title={t('delete') || 'Xóa tuyến'}>
+                        <Tooltip title="Xóa tuyến">
                           <IconButton size="small" onClick={(e) => { e.stopPropagation(); setConfirmTarget(r.Id); setConfirmOpen(true); }} sx={{ color: 'error.main' }}>
                             <DeleteIcon fontSize="small" />
                           </IconButton>

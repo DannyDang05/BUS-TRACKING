@@ -59,6 +59,7 @@ const DetailSchedule = () => {
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
     const [showMap, setShowMap] = useState(false);
+    const [forceRefresh, setForceRefresh] = useState(0);
 
     // STATE CHO MENU CẬP NHẬT TRẠNG THÁI
     const [anchorEl, setAnchorEl] = useState(null);
@@ -169,8 +170,8 @@ const DetailSchedule = () => {
             await startTripSimulation(scheduleId);
             
             toast.success('Đã bắt đầu hành trình! Xe đang di chuyển theo tuyến đường.');
-            // Reload để cập nhật UI
-            setTimeout(() => window.location.reload(), 1500);
+            // Tự động hiện bản đồ để theo dõi
+            setShowMap(true);
         } catch (err) {
             console.error('Error starting trip:', err);
             toast.error('Không thể bắt đầu hành trình. Vui lòng thử lại.');
@@ -205,6 +206,9 @@ const DetailSchedule = () => {
                 )
             );
             
+            // Trigger refresh map để cập nhật marker
+            setForceRefresh(prev => prev + 1);
+            
             toast.success(`Đã cập nhật trạng thái: ${newStatus}`);
             handleCloseMenu();
         } catch (err) {
@@ -225,6 +229,9 @@ const DetailSchedule = () => {
             setStudents(prevStudents =>
                 prevStudents.map(student => ({ ...student, Status: status }))
             );
+            
+            // Trigger refresh map để cập nhật marker
+            setForceRefresh(prev => prev + 1);
             
             toast.success(`Đã cập nhật tất cả học sinh: ${status}`);
         } catch (err) {
@@ -320,6 +327,7 @@ const DetailSchedule = () => {
                         <DriverMap 
                             scheduleId={scheduleId} 
                             routeId={routeInfo?.routeId || parseInt(scheduleId)}
+                            forceRefresh={forceRefresh}
                         />
                     </Box>
                 </Paper>

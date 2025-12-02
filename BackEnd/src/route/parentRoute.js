@@ -9,11 +9,19 @@ import {
   getVehicleETA,
   getParentSchedules,
   requestAbsence,
-  addStudent
+  addStudent,
+  createNewParent,
+  updateParent
 } from '../controller/parentController.js';
 import verifyToken from "../middleWare/authMiddleware.js";
 
 const router = express.Router();
+
+// POST /api/v1/parents - Tạo phụ huynh mới (không cần verify token vì gọi từ admin)
+router.post('/s', createNewParent);
+
+// PUT /api/v1/parents/:id - Cập nhật phụ huynh
+router.put('/s/:id', updateParent);
 
 // GET /api/v1/parent/info/:parentId - Lấy thông tin phụ huynh
 router.get('/info/:parentId', verifyToken, getParentInfo);

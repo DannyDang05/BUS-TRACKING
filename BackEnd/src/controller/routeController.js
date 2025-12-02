@@ -21,7 +21,7 @@ const getAllRoutes = async (req, res) => {
     const [countRows] = await pool.query(countSql, params);
     const totalItems = countRows[0].total || 0;
 
-    const dataSql = `SELECT Id, MaTuyen, Name, DriverId, VehicleId, Status FROM routes ${where} ORDER BY Id LIMIT ? OFFSET ?`;
+    const dataSql = `SELECT Id, MaTuyen, Name, DriverId, VehicleId, Status, TotalDistance, EstimatedTime FROM routes ${where} ORDER BY Id LIMIT ? OFFSET ?`;
     const dataParams = params.concat([limit, offset]);
     const [rows] = await pool.query(dataSql, dataParams);
 
@@ -66,7 +66,7 @@ const getRouteDetail = async (req, res) => {
   const id = req.params.id;
   try {
     const [rows] = await pool.query(
-      'SELECT Id, MaTuyen, Name, DriverId, VehicleId, Status FROM routes WHERE Id = ?', [id]
+      'SELECT Id, MaTuyen, Name, DriverId, VehicleId, Status, TotalDistance, EstimatedTime FROM routes WHERE Id = ?', [id]
     );
     if (rows.length === 0) {
       return res.status(404).json({ errorCode: 3, message: 'Không tìm thấy tuyến.' });

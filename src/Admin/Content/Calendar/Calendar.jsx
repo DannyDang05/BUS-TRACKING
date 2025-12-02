@@ -13,6 +13,7 @@ import { useState, useEffect } from "react";
 import { getAllRoutes, getAllSchedules, createSchedule } from '../../../service/apiService';
 import { toast } from 'react-toastify';
 import AssignRouteDriverModal from './AssignRouteDriverModal';
+import EditScheduleModal from './EditScheduleModal';
 
 const Calendar = () => {
     const navigate = useNavigate();
@@ -26,6 +27,9 @@ const Calendar = () => {
     const [assignModalOpen, setAssignModalOpen] = useState(false);
     const [selectedRoute, setSelectedRoute] = useState(null);
     const [selectedDate, setSelectedDate] = useState(null);
+    const [selectedShift, setSelectedShift] = useState(null);
+    const [editModalOpen, setEditModalOpen] = useState(false);
+    const [selectedSchedule, setSelectedSchedule] = useState(null);
     
     // Lấy thứ 2 của tuần
     function getMonday(date) {
@@ -90,10 +94,11 @@ const Calendar = () => {
         }
     };
     
-    const handleOpenAssignModal = (route, date, e) => {
+    const handleOpenAssignModal = (route, date, shift, e) => {
         if (e) e.stopPropagation();
         setSelectedRoute(route);
         setSelectedDate(date);
+        setSelectedShift(shift);
         setAssignModalOpen(true);
     };
     
@@ -101,10 +106,26 @@ const Calendar = () => {
         setAssignModalOpen(false);
         setSelectedRoute(null);
         setSelectedDate(null);
+        setSelectedShift(null);
     };
     
-    const handleAssignSuccess = async (driverId, vehicleId, morningStartTime, afternoonStartTime) => {
-        // Tạo 2 schedules (sáng + chiều) trong DB
+    const handleOpenEditModal = (schedule, e) => {
+        if (e) e.stopPropagation();
+        setSelectedSchedule(schedule);
+        setEditModalOpen(true);
+    };
+    
+    const handleCloseEditModal = () => {
+        setEditModalOpen(false);
+        setSelectedSchedule(null);
+    };
+    
+    const handleEditSuccess = () => {
+        fetchData();
+    };
+    
+    const handleAssignSuccess = async (driverId, vehicleId, startTime) => {
+        // Tạo schedule cho ca đã chọn
         try {
             // Format ngày đúng (tránh timezone UTC làm lùi ngày)
             const year = selectedDate.getFullYear();
@@ -112,30 +133,18 @@ const Calendar = () => {
             const day = String(selectedDate.getDate()).padStart(2, '0');
             const dateStr = `${year}-${month}-${day}`;
             
-            // Tạo ca sáng
-            const morningData = {
+            // Tạo schedule cho ca đã chọn
+            const scheduleData = {
                 route_id: selectedRoute.Id,
                 date: dateStr,
-                start_time: morningStartTime || '07:00:00',
-                shift: 'Sáng',
+                start_time: startTime || (selectedShift === 'Sáng' ? '07:00:00' : '16:00:00'),
+                shift: selectedShift,
                 status: 'Đã phân công'
             };
             
-            // Tạo ca chiều
-            const afternoonData = {
-                route_id: selectedRoute.Id,
-                date: dateStr,
-                start_time: afternoonStartTime || '16:00:00',
-                shift: 'Chiều',
-                status: 'Đã phân công'
-            };
+            await createSchedule(scheduleData);
             
-            await Promise.all([
-                createSchedule(morningData),
-                createSchedule(afternoonData)
-            ]);
-            
-            toast.success('Đã phân công tài xế và tạo 2 ca (sáng + chiều)!');
+            toast.success(`Đã phân công ca ${selectedShift} thành công!`);
             handleCloseAssignModal();
             
             // Refresh data
@@ -176,7 +185,7 @@ const Calendar = () => {
     };
 
     return (
-        <Box sx={{ padding: '20px', height: '100%', overflowY: 'auto', background: 'linear-gradient(135deg, #e8f4f8 0%, #d4e8f0 100%)' }}>
+        <Box sx={{ padding: '20px', background: 'linear-gradient(135deg, #e8f4f8 0%, #d4e8f0 100%)' }}>
             {/* Header */}
             <Box sx={{ 
               marginBottom: '24px',
@@ -301,111 +310,285 @@ const Calendar = () => {
                       )}
                     </Box>
                     
-                    {/* Routes List */}
+                    {/* Schedules List - Hiển thị 2 ca cho mỗi tuyến */}
                     <Box sx={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
                       {loading ? (
                         <Typography sx={{ fontSize: '0.85rem', color: '#999', textAlign: 'center' }}>
                           Đang tải...
                         </Typography>
-                      ) : routes.length > 0 ? (
-                        routes.map((route) => {
-                          const schedulesForDay = getSchedulesForRouteAndDate(route.Id, day);
-                          const hasSchedule = schedulesForDay.length > 0;
+                      ) : (() => {
+                          // Lấy tất cả schedules cho ngày này
+                          const year = day.getFullYear();
+                          const month = String(day.getMonth() + 1).padStart(2, '0');
+                          const dayStr = String(day.getDate()-1).padStart(2, '0');
+                          const dateStr = `${year}-${month}-${dayStr}`;
                           
-                          return (
-                            <Card
-                              key={route.Id}
-                              onClick={(e) => !hasSchedule && handleOpenAssignModal(route, day, e)}
-                              sx={{
-                                padding: '10px',
-                                cursor: hasSchedule ? 'default' : 'pointer',
-                                background: hasSchedule 
-                                  ? 'linear-gradient(135deg, #c8e6c9 0%, #a5d6a7 100%)'
-                                  : 'linear-gradient(135deg, #e0f7fa 0%, #b2ebf2 100%)',
-                                borderRadius: '8px',
-                                border: hasSchedule ? '1px solid #66bb6a' : '1px solid #80deea',
-                                position: 'relative',
-                                transition: 'all 0.2s ease',
-                                '&:hover': {
-                                  transform: hasSchedule ? 'none' : 'scale(1.02)',
-                                  boxShadow: hasSchedule ? undefined : '0 4px 12px rgba(0, 151, 167, 0.3)'
-                                }
-                              }}
-                            >
-                              <Box sx={{ display: 'flex', alignItems: 'center', gap: '6px', marginBottom: '4px' }}>
-                                <FaBus color="#0097a7" size={14} />
-                                <Typography sx={{ fontSize: '0.9rem', fontWeight: 'bold', color: '#00838f' }}>
-                                  {route.MaTuyen}
-                                </Typography>
-                              </Box>
-                              
-                              <Typography sx={{ fontSize: '0.8rem', color: '#555', marginBottom: '6px' }}>
-                                {route.Name}
-                              </Typography>
-                              
-                              {/* Schedule Status - Hiển thị cả 2 ca */}
-                              {hasSchedule ? (
-                                <Box>
-                                  {schedulesForDay.map((schedule, idx) => (
-                                    <Box 
-                                      key={schedule.id}
-                                      sx={{ 
-                                        marginBottom: idx < schedulesForDay.length - 1 ? '8px' : 0,
-                                        paddingBottom: idx < schedulesForDay.length - 1 ? '8px' : 0,
-                                        borderBottom: idx < schedulesForDay.length - 1 ? '1px dashed #81c784' : 'none'
-                                      }}
-                                    >
-                                      <Chip 
-                                        icon={<FaUserTie size={10} />}
-                                        label={schedule.shift === 'Sáng' ? '🌅 Ca sáng' : '🌆 Ca chiều'}
-                                        size="small"
-                                        sx={{ 
-                                          fontSize: '0.65rem',
-                                          height: '20px',
-                                          background: schedule.shift === 'Sáng' ? '#4caf50' : '#ff9800',
-                                          color: '#fff',
-                                          marginBottom: '4px',
-                                          fontWeight: 'bold'
-                                        }}
-                                      />
-                                      {schedule.start_time && (
-                                        <Typography sx={{ fontSize: '0.7rem', color: '#0097a7', fontWeight: 'bold' }}>
-                                          ⏰ {schedule.start_time}
-                                        </Typography>
-                                      )}
-                                      {schedule.driverName && (
-                                        <Typography sx={{ fontSize: '0.7rem', color: '#2e7d32' }}>
-                                          👨‍✈️ {schedule.driverName}
-                                        </Typography>
-                                      )}
-                                      {schedule.licensePlate && (
-                                        <Typography sx={{ fontSize: '0.7rem', color: '#2e7d32' }}>
-                                          🚌 {schedule.licensePlate}
-                                        </Typography>
-                                      )}
-                                    </Box>
-                                  ))}
-                                </Box>
-                              ) : (
-                                <Chip 
-                                  label="Chưa phân công" 
-                                  size="small"
-                                  sx={{ 
-                                    fontSize: '0.65rem',
-                                    height: '20px',
-                                    background: '#ff9800',
-                                    color: '#fff'
+                          const schedulesForDay = schedules.filter(s => {
+                            const scheduleDateStr = s.date.split('T')[0];
+                            return scheduleDateStr === dateStr;
+                          });
+                          
+                          // Tạo Map: route_id -> { morning: schedule | null, afternoon: schedule | null }
+                          const routeScheduleMap = new Map();
+                          
+                          // Thêm tất cả các tuyến hiện có
+                          routes.forEach(route => {
+                            routeScheduleMap.set(route.Id, { morning: null, afternoon: null, route });
+                          });
+                          
+                          // Fill schedules vào map
+                          schedulesForDay.forEach(schedule => {
+                            if (routeScheduleMap.has(schedule.route_id)) {
+                              const entry = routeScheduleMap.get(schedule.route_id);
+                              if (schedule.shift === 'Sáng') {
+                                entry.morning = schedule;
+                              } else if (schedule.shift === 'Chiều') {
+                                entry.afternoon = schedule;
+                              }
+                            }
+                          });
+                          
+                          // Render cards cho mỗi ca
+                          const cards = [];
+                          routeScheduleMap.forEach((entry, routeId) => {
+                            const { route, morning, afternoon } = entry;
+                            
+                            // Card ca sáng
+                            if (morning) {
+                              // Đã có schedule sáng - hiển thị thông tin
+                              cards.push(
+                                <Card
+                                  key={`${routeId}-morning`}
+                                  onClick={(e) => handleOpenEditModal(morning, e)}
+                                  sx={{
+                                    padding: '10px',
+                                    background: 'linear-gradient(135deg, #c8e6c9 0%, #a5d6a7 100%)',
+                                    borderRadius: '8px',
+                                    border: '1px solid #66bb6a',
+                                    cursor: 'pointer',
+                                    transition: 'all 0.2s ease',
+                                    '&:hover': {
+                                      transform: 'scale(1.02)',
+                                      boxShadow: '0 4px 12px rgba(76, 175, 80, 0.3)'
+                                    }
                                   }}
-                                />
-                              )}
-                            </Card>
+                                >
+                                  <Box sx={{ display: 'flex', alignItems: 'center', gap: '6px', marginBottom: '6px' }}>
+                                    <FaBus color="#0097a7" size={14} />
+                                    <Typography sx={{ fontSize: '0.9rem', fontWeight: 'bold', color: '#00838f' }}>
+                                      {morning.routeCode}
+                                    </Typography>
+                                  </Box>
+                                  <Typography sx={{ fontSize: '0.8rem', color: '#555', marginBottom: '8px' }}>
+                                    {morning.routeName}
+                                  </Typography>
+                                  <Chip 
+                                    label="☀️ Ca sáng"
+                                    size="small"
+                                    sx={{ 
+                                      fontSize: '0.65rem',
+                                      height: '22px',
+                                      background: 'linear-gradient(135deg, #ffa726 0%, #ff9800 100%)',
+                                      color: '#fff',
+                                      marginBottom: '4px',
+                                      fontWeight: 'bold',
+                                      boxShadow: '0 2px 6px rgba(0, 0, 0, 0.15)'
+                                    }}
+                                  />
+                                  {morning.start_time && (
+                                    <Typography sx={{ fontSize: '0.7rem', color: '#0097a7', fontWeight: 'bold', mt: 0.5 }}>
+                                      ⏰ {morning.start_time}
+                                    </Typography>
+                                  )}
+                                  {morning.driverName && (
+                                    <Typography sx={{ fontSize: '0.7rem', color: '#2e7d32' }}>
+                                      👨‍✈️ {morning.driverName}
+                                    </Typography>
+                                  )}
+                                  {morning.licensePlate && (
+                                    <Typography sx={{ fontSize: '0.7rem', color: '#2e7d32' }}>
+                                      🚌 {morning.licensePlate}
+                                    </Typography>
+                                  )}
+                                </Card>
+                              );
+                            } else {
+                              // Chưa có schedule sáng - hiển thị card chưa phân công
+                              cards.push(
+                                <Card
+                                  key={`${routeId}-morning`}
+                                  onClick={(e) => handleOpenAssignModal(route, day, 'Sáng', e)}
+                                  sx={{
+                                    padding: '10px',
+                                    cursor: 'pointer',
+                                    background: 'linear-gradient(135deg, #fff8e1 0%, #ffecb3 100%)',
+                                    borderRadius: '8px',
+                                    border: '1px solid #ffb74d',
+                                    transition: 'all 0.2s ease',
+                                    '&:hover': {
+                                      transform: 'scale(1.02)',
+                                      boxShadow: '0 4px 12px rgba(255, 152, 0, 0.3)'
+                                    }
+                                  }}
+                                >
+                                  <Box sx={{ display: 'flex', alignItems: 'center', gap: '6px', marginBottom: '6px' }}>
+                                    <FaBus color="#0097a7" size={14} />
+                                    <Typography sx={{ fontSize: '0.9rem', fontWeight: 'bold', color: '#00838f' }}>
+                                      {route.MaTuyen}
+                                    </Typography>
+                                  </Box>
+                                  <Typography sx={{ fontSize: '0.8rem', color: '#555', marginBottom: '8px' }}>
+                                    {route.Name}
+                                  </Typography>
+                                  <Chip 
+                                    label="☀️ Ca sáng"
+                                    size="small"
+                                    sx={{ 
+                                      fontSize: '0.65rem',
+                                      height: '22px',
+                                      background: 'linear-gradient(135deg, #ffa726 0%, #ff9800 100%)',
+                                      color: '#fff',
+                                      marginBottom: '4px',
+                                      fontWeight: 'bold',
+                                      boxShadow: '0 2px 6px rgba(0, 0, 0, 0.15)'
+                                    }}
+                                  />
+                                  <Chip 
+                                    label="Chưa phân công" 
+                                    size="small"
+                                    sx={{ 
+                                      fontSize: '0.65rem',
+                                      height: '20px',
+                                      background: '#ff9800',
+                                      color: '#fff'
+                                    }}
+                                  />
+                                </Card>
+                              );
+                            }
+                            
+                            // Card ca chiều
+                            if (afternoon) {
+                              // Đã có schedule chiều - hiển thị thông tin
+                              cards.push(
+                                <Card
+                                  key={`${routeId}-afternoon`}
+                                  onClick={(e) => handleOpenEditModal(afternoon, e)}
+                                  sx={{
+                                    padding: '10px',
+                                    background: 'linear-gradient(135deg, #c8e6c9 0%, #a5d6a7 100%)',
+                                    borderRadius: '8px',
+                                    border: '1px solid #66bb6a',
+                                    cursor: 'pointer',
+                                    transition: 'all 0.2s ease',
+                                    '&:hover': {
+                                      transform: 'scale(1.02)',
+                                      boxShadow: '0 4px 12px rgba(76, 175, 80, 0.3)'
+                                    }
+                                  }}
+                                >
+                                  <Box sx={{ display: 'flex', alignItems: 'center', gap: '6px', marginBottom: '6px' }}>
+                                    <FaBus color="#0097a7" size={14} />
+                                    <Typography sx={{ fontSize: '0.9rem', fontWeight: 'bold', color: '#00838f' }}>
+                                      {afternoon.routeCode}
+                                    </Typography>
+                                  </Box>
+                                  <Typography sx={{ fontSize: '0.8rem', color: '#555', marginBottom: '8px' }}>
+                                    {afternoon.routeName}
+                                  </Typography>
+                                  <Chip 
+                                    label="🌙 Ca chiều"
+                                    size="small"
+                                    sx={{ 
+                                      fontSize: '0.65rem',
+                                      height: '22px',
+                                      background: 'linear-gradient(135deg, #42a5f5 0%, #1e88e5 100%)',
+                                      color: '#fff',
+                                      marginBottom: '4px',
+                                      fontWeight: 'bold',
+                                      boxShadow: '0 2px 6px rgba(0, 0, 0, 0.15)'
+                                    }}
+                                  />
+                                  {afternoon.start_time && (
+                                    <Typography sx={{ fontSize: '0.7rem', color: '#0097a7', fontWeight: 'bold', mt: 0.5 }}>
+                                      ⏰ {afternoon.start_time}
+                                    </Typography>
+                                  )}
+                                  {afternoon.driverName && (
+                                    <Typography sx={{ fontSize: '0.7rem', color: '#2e7d32' }}>
+                                      👨‍✈️ {afternoon.driverName}
+                                    </Typography>
+                                  )}
+                                  {afternoon.licensePlate && (
+                                    <Typography sx={{ fontSize: '0.7rem', color: '#2e7d32' }}>
+                                      🚌 {afternoon.licensePlate}
+                                    </Typography>
+                                  )}
+                                </Card>
+                              );
+                            } else {
+                              // Chưa có schedule chiều - hiển thị card chưa phân công
+                              cards.push(
+                                <Card
+                                  key={`${routeId}-afternoon`}
+                                  onClick={(e) => handleOpenAssignModal(route, day, 'Chiều', e)}
+                                  sx={{
+                                    padding: '10px',
+                                    cursor: 'pointer',
+                                    background: 'linear-gradient(135deg, #e3f2fd 0%, #bbdefb 100%)',
+                                    borderRadius: '8px',
+                                    border: '1px solid #64b5f6',
+                                    transition: 'all 0.2s ease',
+                                    '&:hover': {
+                                      transform: 'scale(1.02)',
+                                      boxShadow: '0 4px 12px rgba(33, 150, 243, 0.3)'
+                                    }
+                                  }}
+                                >
+                                  <Box sx={{ display: 'flex', alignItems: 'center', gap: '6px', marginBottom: '6px' }}>
+                                    <FaBus color="#0097a7" size={14} />
+                                    <Typography sx={{ fontSize: '0.9rem', fontWeight: 'bold', color: '#00838f' }}>
+                                      {route.MaTuyen}
+                                    </Typography>
+                                  </Box>
+                                  <Typography sx={{ fontSize: '0.8rem', color: '#555', marginBottom: '8px' }}>
+                                    {route.Name}
+                                  </Typography>
+                                  <Chip 
+                                    label="🌙 Ca chiều"
+                                    size="small"
+                                    sx={{ 
+                                      fontSize: '0.65rem',
+                                      height: '22px',
+                                      background: 'linear-gradient(135deg, #42a5f5 0%, #1e88e5 100%)',
+                                      color: '#fff',
+                                      marginBottom: '4px',
+                                      fontWeight: 'bold',
+                                      boxShadow: '0 2px 6px rgba(0, 0, 0, 0.15)'
+                                    }}
+                                  />
+                                  <Chip 
+                                    label="Chưa phân công" 
+                                    size="small"
+                                    sx={{ 
+                                      fontSize: '0.65rem',
+                                      height: '20px',
+                                      background: '#2196f3',
+                                      color: '#fff'
+                                    }}
+                                  />
+                                </Card>
+                              );
+                            }
+                          });
+                          
+                          return cards.length > 0 ? cards : (
+                            <Typography sx={{ fontSize: '0.85rem', color: '#999', textAlign: 'center', marginTop: '20px' }}>
+                              Chưa có tuyến
+                            </Typography>
                           );
-                        })
-                      ) : (
-                        <Typography sx={{ fontSize: '0.85rem', color: '#999', textAlign: 'center', marginTop: '20px' }}>
-                          Không có tuyến
-                        </Typography>
-                      )}
+                        })()
+                      }
                     </Box>
                   </Card>
                 );
@@ -418,7 +601,16 @@ const Calendar = () => {
                 onClose={handleCloseAssignModal}
                 route={selectedRoute}
                 date={selectedDate}
+                shift={selectedShift}
                 onSuccess={handleAssignSuccess}
+            />
+            
+            {/* Edit Schedule Modal */}
+            <EditScheduleModal
+                open={editModalOpen}
+                onClose={handleCloseEditModal}
+                schedule={selectedSchedule}
+                onSuccess={handleEditSuccess}
             />
         </Box>
     )

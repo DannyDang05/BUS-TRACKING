@@ -4,7 +4,9 @@ import {
   createNotification,
   getNotificationDetail,
   deleteNotification,
-  reportIssue
+  reportIssue,
+  getAllDriversForNotification,
+  getAllParentsForNotification
 } from "../controller/notificationController.js";
 import verifyToken from "../middleWare/authMiddleware.js";
 import requireRole from "../middleWare/requireRole.js";
@@ -19,6 +21,8 @@ router.use(verifyToken, requireRole('admin'));
 
 router.get("/", getAllNotifications);
 router.post("/", createNotification);
+router.get("/recipients/drivers", getAllDriversForNotification);
+router.get("/recipients/parents", getAllParentsForNotification);
 router.get("/:id", getNotificationDetail);
 router.delete("/:id", deleteNotification);
 

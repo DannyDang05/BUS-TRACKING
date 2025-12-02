@@ -15,7 +15,6 @@ import { IoIosSearch } from "react-icons/io";
 import { FaPlus, FaRoute } from "react-icons/fa";
 import { AutoAwesome } from "@mui/icons-material";
 import TableRoute from "./TableRoute";
-import AssignDriverModal from "./AssignDriverModal";
 import { useLanguage } from '../../Shared/LanguageContext';
 import { useNavigate } from "react-router-dom"
 import { useState } from "react";
@@ -26,19 +25,7 @@ const Routee = () => {
     const [filter, setFilter] = useState("id")
     const [isOptimizing, setIsOptimizing] = useState(false)
     const [refreshTrigger, setRefreshTrigger] = useState(0)
-    const [assignModalOpen, setAssignModalOpen] = useState(false)
-    const [selectedRoute, setSelectedRoute] = useState(null)
     const navigate = useNavigate();
-    
-    const handleOpenAssignModal = (route) => {
-        setSelectedRoute(route);
-        setAssignModalOpen(true);
-    };
-
-    const handleCloseAssignModal = () => {
-        setAssignModalOpen(false);
-        setSelectedRoute(null);
-    };
 
     const handleSearch = (something) => {
         setSearch(something)
@@ -230,16 +217,7 @@ const Routee = () => {
 
             {/* Table */}
             <TableRoute 
-              refreshTrigger={refreshTrigger} 
-              onAssignDriver={handleOpenAssignModal}
-            />
-
-            {/* Assign Driver Modal */}
-            <AssignDriverModal
-              open={assignModalOpen}
-              onClose={handleCloseAssignModal}
-              route={selectedRoute}
-              onRefresh={() => setRefreshTrigger(prev => prev + 1)}
+              refreshTrigger={refreshTrigger}
             />
         </Box>
     )

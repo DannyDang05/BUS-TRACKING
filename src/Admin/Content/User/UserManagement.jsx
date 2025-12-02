@@ -35,6 +35,8 @@ import {
 import { toast } from 'react-toastify';
 import PaginationControls from '../PaginationControls';
 import ConfirmDialog from '../../Shared/ConfirmDialog';
+import CreateUserWizard from './CreateUserWizard';
+import EditUserModal from './EditUserModal';
 
 const UserManagement = () => {
     const [users, setUsers] = useState([]);
@@ -44,6 +46,8 @@ const UserManagement = () => {
     const [totalPages, setTotalPages] = useState(1);
     const [totalItems, setTotalItems] = useState(0);
     const [openDialog, setOpenDialog] = useState(false);
+    const [openWizard, setOpenWizard] = useState(false);
+    const [openEditModal, setOpenEditModal] = useState(false);
     const [editMode, setEditMode] = useState(false);
     const [selectedUser, setSelectedUser] = useState(null);
     const [confirmDialog, setConfirmDialog] = useState({ open: false, user: null });
@@ -84,14 +88,8 @@ const UserManagement = () => {
 
     const handleOpenDialog = (user = null) => {
         if (user) {
-            setEditMode(true);
             setSelectedUser(user);
-            setFormData({
-                username: user.Username,
-                password: '', // Không hiển thị password cũ
-                role: user.Role,
-                profileId: user.ProfileId || ''
-            });
+            setOpenEditModal(true);
         } else {
             setEditMode(false);
             setSelectedUser(null);
@@ -101,8 +99,8 @@ const UserManagement = () => {
                 role: 'parent',
                 profileId: ''
             });
+            setOpenDialog(true);
         }
-        setOpenDialog(true);
     };
 
     const handleCloseDialog = () => {
@@ -235,7 +233,7 @@ const UserManagement = () => {
                     <Button
                         variant="contained"
                         startIcon={<AddIcon />}
-                        onClick={() => handleOpenDialog()}
+                        onClick={() => setOpenWizard(true)}
                     >
                         Tạo tài khoản
                     </Button>
@@ -407,6 +405,21 @@ const UserManagement = () => {
                 title="Xác nhận xóa"
                 message={`Bạn có chắc chắn muốn xóa tài khoản "${confirmDialog.user?.Username}"?`}
                 onClose={handleDeleteConfirm}
+            />
+
+            {/* Create User Wizard */}
+            <CreateUserWizard
+                open={openWizard}
+                onClose={() => setOpenWizard(false)}
+                onSuccess={fetchUsers}
+            />
+
+            {/* Edit User Modal */}
+            <EditUserModal
+                open={openEditModal}
+                onClose={() => setOpenEditModal(false)}
+                user={selectedUser}
+                onSuccess={fetchUsers}
             />
         </Box>
     );

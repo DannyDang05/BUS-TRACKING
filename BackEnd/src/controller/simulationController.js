@@ -186,7 +186,7 @@ const startSimulation = async (scheduleId, routeId, routeCoordinates, pickupPoin
   let currentIndex = 0;
   const totalPoints = routeCoordinates.length;
   const updateInterval = 1000; // Update every 1 second
-  const stepsPerUpdate = Math.max(2, Math.floor(totalPoints / 1000)); // Larger steps = shorter distance per update
+  const stepsPerUpdate = Math.max(1, Math.floor(totalPoints / 3000)); // Smaller steps = đi chậm hơn, không bỏ qua điểm
 
   console.log(`🚍 Starting simulation for schedule ${scheduleId}, route ${routeId}`);
   console.log(`   Total coordinates: ${totalPoints}, Steps per update: ${stepsPerUpdate}`);

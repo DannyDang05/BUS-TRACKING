@@ -1,71 +1,56 @@
 import React, { useState, useEffect } from 'react';
 import { Dialog, DialogTitle, DialogContent, DialogActions, TextField, Button, Box, IconButton, Grid, Typography, Divider, Paper } from '@mui/material';
 import { useNavigate, useParams } from 'react-router-dom';
-import { updateStudent, getStudentById } from '../../../service/apiService';
+import { updateDriver, getDriverById } from '../../../service/apiService';
 import { toast } from 'react-toastify';
 import { useLanguage } from '../../Shared/LanguageContext';
 import CloseIcon from '@mui/icons-material/Close';
-import SchoolIcon from '@mui/icons-material/School';
+import DriveEtaIcon from '@mui/icons-material/DriveEta';
 import EditIcon from '@mui/icons-material/Edit';
 
-const UpdateStudentModal = ({ open, onClose, student, onRefresh } = {}) => {
+const UpdateDriverModalNew = ({ open = false, onClose, driver = null, onRefresh }) => {
   const navigate = useNavigate();
   const { id } = useParams();
   const [formData, setFormData] = useState({
-    MaHocSinh: '',
-    HoTen: '',
-    Lop: '',
-    TinhTrang: '',
-    MaPhuHuynh: '',
-    MaDiemDon: ''
+    FullName: '',
+    PhoneNumber: '',
+    MaBangLai: ''
   });
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
-
-  // Debug log
-  console.log('UpdateStudentModal render - open:', open, 'student:', student, 'formData:', formData);
 
   useEffect(() => {
     // Reset form khi đóng modal
     if (!open) {
       setFormData({
-        MaHocSinh: '',
-        HoTen: '',
-        Lop: '',
-        TinhTrang: '',
-        MaPhuHuynh: '',
-        MaDiemDon: ''
+        FullName: '',
+        PhoneNumber: '',
+        MaBangLai: ''
       });
       setError('');
       return;
     }
     
     // Load dữ liệu khi modal mở
-    if (student) {
-      console.log('Loading student data:', student);
+    if (driver) {
+      console.log('Loading driver data:', driver);
       setFormData({
-        MaHocSinh: student.MaHocSinh || '',
-        HoTen: student.HoTen || '',
-        Lop: student.Lop || '',
-        TinhTrang: student.TrangThaiHocTap || student.TinhTrang || '',
-        MaPhuHuynh: student.MaPhuHuynh || '',
-        MaDiemDon: student.DiaChi || student.MaDiemDon || ''
+        FullName: driver.FullName || '',
+        PhoneNumber: driver.PhoneNumber || '',
+        MaBangLai: driver.MaBangLai || ''
       });
     } else if (id) {
-      // Chỉ fetch từ API khi không có student prop nhưng có id từ URL
-      getStudentById(id).then(res => {
+      // Chỉ fetch từ API khi không có driver prop nhưng có id từ URL
+      getDriverById(id).then(res => {
         const data = res?.data || res;
         setFormData({
-          MaHocSinh: data.MaHocSinh || '',
-          HoTen: data.HoTen || '',
-          Lop: data.Lop || '',
-          TinhTrang: data.TrangThaiHocTap || data.TinhTrang || '',
-          MaPhuHuynh: data.MaPhuHuynh || '',
-          MaDiemDon: data.DiaChi || data.MaDiemDon || ''
+          FullName: data.FullName || '',
+          PhoneNumber: data.PhoneNumber || '',
+          MaBangLai: data.MaBangLai || ''
         });
-      }).catch(err => console.error('Error fetching student:', err));
+      }).catch(err => console.error('Error fetching driver:', err));
     }
-  }, [open, student, id]);
+  }, [open, driver, id]);
 
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -76,7 +61,7 @@ const UpdateStudentModal = ({ open, onClose, student, onRefresh } = {}) => {
   };
 
   const isValid = () => {
-    return formData.MaHocSinh && formData.HoTen && formData.Lop;
+    return formData.FullName && formData.PhoneNumber && formData.MaBangLai;
   };
 
   const handleSubmit = async () => {
@@ -87,34 +72,39 @@ const UpdateStudentModal = ({ open, onClose, student, onRefresh } = {}) => {
     setLoading(true);
     setError('');
     try {
-      const studentId = student?.MaHocSinh || id;
-      await updateStudent(studentId, formData);
+      const driverId = driver?.Id || id;
+      await updateDriver(driverId, formData);
       if (onRefresh) {
         await onRefresh();
       }
       if (onClose) {
         onClose();
       } else {
-        navigate('/students');
+        navigate('/drivers');
       }
-      toast.success('Cập nhật học sinh thành công!');
+      toast.success('Cập nhật tài xế thành công!');
     } catch (err) {
-      setError(err.response?.data?.message || 'Cập nhật học sinh lỗi');
-      toast.error(err.response?.data?.message || 'Cập nhật học sinh lỗi');
-      console.error('Error updating student:', err);
+      setError(err.response?.data?.message || 'Cập nhật tài xế lỗi');
+      toast.error(err.response?.data?.message || 'Cập nhật tài xế lỗi');
+      console.error('Error updating driver:', err);
     } finally {
       setLoading(false);
     }
   };
 
-  const isOpen = open !== undefined ? open : true;
-  const closeHandler = onClose || (() => navigate('/students'));
+  const closeHandler = () => {
+    if (onClose) {
+      onClose();
+    } else {
+      navigate('/drivers');
+    }
+  };
 
   const { t } = useLanguage();
 
   return (
     <Dialog 
-      open={isOpen} 
+      open={open} 
       onClose={closeHandler} 
       maxWidth="md" 
       fullWidth
@@ -148,7 +138,7 @@ const UpdateStudentModal = ({ open, onClose, student, onRefresh } = {}) => {
             <EditIcon sx={{ fontSize: 28 }} />
           </Box>
           <Typography variant="h6" component="div" sx={{ fontWeight: 600 }}>
-            ❄️ Chỉnh Sửa Thông Tin Học Sinh
+            ❄️ Chỉnh Sửa Thông Tin Tài Xế
           </Typography>
         </Box>
         <IconButton
@@ -194,34 +184,15 @@ const UpdateStudentModal = ({ open, onClose, student, onRefresh } = {}) => {
             alignItems: 'center',
             gap: 1
           }}>
-            <SchoolIcon /> Thông Tin Cơ Bản
+            <DriveEtaIcon /> Thông Tin Cơ Bản
           </Typography>
           <Divider sx={{ marginBottom: '16px' }} />
           <Grid container spacing={2}>
-            <Grid item xs={12} sm={6}>
+            <Grid item xs={12}>
               <TextField
-                label="Mã Học Sinh"
-                name="MaHocSinh"
-                value={formData.MaHocSinh}
-                onChange={handleChange}
-                fullWidth
-                disabled={loading}
-                required
-                sx={{
-                  '& .MuiOutlinedInput-root': {
-                    '& fieldset': { borderColor: '#e0e0e0' },
-                    '&:hover fieldset': { borderColor: '#0097a7' },
-                    '&.Mui-focused fieldset': { borderColor: '#0097a7', borderWidth: '2px' }
-                  },
-                  '& .MuiInputLabel-root.Mui-focused': { color: '#0097a7' }
-                }}
-              />
-            </Grid>
-            <Grid item xs={12} sm={6}>
-              <TextField
-                label="Họ Tên"
-                name="HoTen"
-                value={formData.HoTen}
+                label="Họ và Tên"
+                name="FullName"
+                value={formData.FullName}
                 onChange={handleChange}
                 fullWidth
                 disabled={loading}
@@ -239,7 +210,7 @@ const UpdateStudentModal = ({ open, onClose, student, onRefresh } = {}) => {
           </Grid>
         </Paper>
 
-        {/* Card 2: Thông Tin Học Tập */}
+        {/* Card 2: Thông Tin Liên Hệ */}
         <Paper elevation={2} sx={{
           padding: '20px',
           marginBottom: '16px',
@@ -255,15 +226,15 @@ const UpdateStudentModal = ({ open, onClose, student, onRefresh } = {}) => {
             alignItems: 'center',
             gap: 1
           }}>
-            📚 Thông Tin Học Tập
+            📞 Thông Tin Liên Hệ
           </Typography>
           <Divider sx={{ marginBottom: '16px' }} />
           <Grid container spacing={2}>
-            <Grid item xs={12} sm={6}>
+            <Grid item xs={12}>
               <TextField
-                label="Lớp"
-                name="Lop"
-                value={formData.Lop}
+                label="Số Điện Thoại"
+                name="PhoneNumber"
+                value={formData.PhoneNumber}
                 onChange={handleChange}
                 fullWidth
                 disabled={loading}
@@ -278,28 +249,10 @@ const UpdateStudentModal = ({ open, onClose, student, onRefresh } = {}) => {
                 }}
               />
             </Grid>
-            <Grid item xs={12} sm={6}>
-              <TextField
-                label="Tình Trạng Học Tập"
-                name="TinhTrang"
-                value={formData.TinhTrang}
-                onChange={handleChange}
-                fullWidth
-                disabled={loading}
-                sx={{
-                  '& .MuiOutlinedInput-root': {
-                    '& fieldset': { borderColor: '#e0e0e0' },
-                    '&:hover fieldset': { borderColor: '#0097a7' },
-                    '&.Mui-focused fieldset': { borderColor: '#0097a7', borderWidth: '2px' }
-                  },
-                  '& .MuiInputLabel-root.Mui-focused': { color: '#0097a7' }
-                }}
-              />
-            </Grid>
           </Grid>
         </Paper>
 
-        {/* Card 3: Thông Tin Liên Hệ & Địa Chỉ */}
+        {/* Card 3: Bằng Lái */}
         <Paper elevation={2} sx={{
           padding: '20px',
           borderRadius: '12px',
@@ -314,36 +267,19 @@ const UpdateStudentModal = ({ open, onClose, student, onRefresh } = {}) => {
             alignItems: 'center',
             gap: 1
           }}>
-            👨‍👩‍👧 Thông Tin Liên Hệ & Địa Chỉ
+            🪪 Thông Tin Bằng Lái
           </Typography>
           <Divider sx={{ marginBottom: '16px' }} />
           <Grid container spacing={2}>
-            <Grid item xs={12} sm={6}>
+            <Grid item xs={12}>
               <TextField
-                label="Mã Phụ Huynh"
-                name="MaPhuHuynh"
-                value={formData.MaPhuHuynh}
+                label="Mã Bằng Lái"
+                name="MaBangLai"
+                value={formData.MaBangLai}
                 onChange={handleChange}
                 fullWidth
                 disabled={loading}
-                sx={{
-                  '& .MuiOutlinedInput-root': {
-                    '& fieldset': { borderColor: '#e0e0e0' },
-                    '&:hover fieldset': { borderColor: '#0097a7' },
-                    '&.Mui-focused fieldset': { borderColor: '#0097a7', borderWidth: '2px' }
-                  },
-                  '& .MuiInputLabel-root.Mui-focused': { color: '#0097a7' }
-                }}
-              />
-            </Grid>
-            <Grid item xs={12} sm={6}>
-              <TextField
-                label="Địa Chỉ"
-                name="MaDiemDon"
-                value={formData.MaDiemDon}
-                onChange={handleChange}
-                fullWidth
-                disabled={loading}
+                required
                 sx={{
                   '& .MuiOutlinedInput-root': {
                     '& fieldset': { borderColor: '#e0e0e0' },
@@ -410,4 +346,4 @@ const UpdateStudentModal = ({ open, onClose, student, onRefresh } = {}) => {
   );
 };
 
-export default UpdateStudentModal;
+export default UpdateDriverModalNew;

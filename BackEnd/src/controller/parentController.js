@@ -676,6 +676,90 @@ const addStudent = async (req, res) => {
   }
 };
 
+// POST /api/v1/parents
+// Tạo phụ huynh mới
+const createNewParent = async (req, res) => {
+  const { MaPhuHuynh, HoTen, SoDienThoai, Nhanthongbao } = req.body;
+  
+  if (!MaPhuHuynh || !HoTen || !SoDienThoai) {
+    return res.status(400).json({ 
+      errorCode: 1, 
+      message: 'Thiếu thông tin (Mã Phụ Huynh, Họ Tên, Số Điện Thoại).' 
+    });
+  }
+
+  try {
+    const [result] = await pool.query(
+      'INSERT INTO phuhuynh (MaPhuHuynh, HoTen, SoDienThoai, Nhanthongbao) VALUES (?, ?, ?, ?)',
+      [MaPhuHuynh, HoTen, SoDienThoai, Nhanthongbao !== undefined ? Nhanthongbao : 1]
+    );
+
+    return res.status(201).json({ 
+      errorCode: 0, 
+      message: 'Tạo phụ huynh thành công!', 
+      parentId: MaPhuHuynh 
+    });
+  } catch (e) {
+    if (e.code === 'ER_DUP_ENTRY') {
+      return res.status(409).json({ 
+        errorCode: 2, 
+        message: 'Mã phụ huynh hoặc số điện thoại đã tồn tại.' 
+      });
+    }
+    console.log(e);
+    return res.status(500).json({ errorCode: -1, message: 'Lỗi server.' });
+  }
+};
+
+// PUT /api/v1/parents/:id
+// Cập nhật thông tin phụ huynh
+const updateParent = async (req, res) => {
+  const id = req.params.id;
+  const { HoTen, SoDienThoai, Nhanthongbao, UserId } = req.body;
+
+  try {
+    // Build dynamic update query
+    const fields = [];
+    const values = [];
+
+    if (HoTen !== undefined) {
+      fields.push('HoTen = ?');
+      values.push(HoTen);
+    }
+    if (SoDienThoai !== undefined) {
+      fields.push('SoDienThoai = ?');
+      values.push(SoDienThoai);
+    }
+    if (Nhanthongbao !== undefined) {
+      fields.push('Nhanthongbao = ?');
+      values.push(Nhanthongbao);
+    }
+    if (UserId !== undefined) {
+      fields.push('UserId = ?');
+      values.push(UserId);
+    }
+
+    if (fields.length === 0) {
+      return res.status(400).json({ errorCode: 1, message: 'Không có thông tin để cập nhật.' });
+    }
+
+    values.push(id);
+    const [result] = await pool.query(
+      `UPDATE phuhuynh SET ${fields.join(', ')} WHERE MaPhuHuynh = ?`,
+      values
+    );
+
+    if (result.affectedRows === 0) {
+      return res.status(404).json({ errorCode: 3, message: 'Không tìm thấy phụ huynh.' });
+    }
+
+    return res.status(200).json({ errorCode: 0, message: 'Cập nhật phụ huynh thành công!' });
+  } catch (e) {
+    console.log(e);
+    return res.status(500).json({ errorCode: -1, message: 'Lỗi server.' });
+  }
+};
+
 export { 
   getChildrenRoutes, 
   getParentNotifications, 
@@ -686,5 +770,7 @@ export {
   getVehicleETA,
   getParentSchedules,
   requestAbsence,
-  addStudent
+  addStudent,
+  createNewParent,
+  updateParent
 };

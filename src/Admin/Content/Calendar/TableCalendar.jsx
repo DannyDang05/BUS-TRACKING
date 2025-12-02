@@ -21,6 +21,7 @@ const columns = [
   { field: 'routeCode', headerName: 'Mã Tuyến', width: 150 },
   { field: 'routeName', headerName: 'Tên Tuyến', width: 200 },
   { field: 'date', headerName: 'Ngày', width: 150 },
+  { field: 'shift', headerName: 'Ca', width: 100 },
   { field: 'start_time', headerName: 'Giờ Bắt Đầu', width: 150 },
   { field: 'status', headerName: 'Trạng Thái', width: 150 },
   { field: 'driverName', headerName: 'Tài Xế', width: 180 },
@@ -112,6 +113,7 @@ const TableCalendar = () => {
               <TableCell>Mã Tuyến</TableCell>
               <TableCell>Tên Tuyến</TableCell>
               <TableCell>Ngày</TableCell>
+              <TableCell>Ca</TableCell>
               <TableCell>Giờ Bắt Đầu</TableCell>
               <TableCell>Trạng Thái</TableCell>
               <TableCell>Tài Xế</TableCell>
@@ -121,9 +123,9 @@ const TableCalendar = () => {
           </TableHead>
           <TableBody>
               {loading ? (
-              <TableRow><TableCell colSpan={9} className="table-empty">⏳ {t('loading')}</TableCell></TableRow>
+              <TableRow><TableCell colSpan={10} className="table-empty">⏳ {t('loading')}</TableCell></TableRow>
             ) : displayed.length === 0 ? (
-              <TableRow><TableCell colSpan={9} className="table-empty">{t('noData')}</TableCell></TableRow>
+              <TableRow><TableCell colSpan={10} className="table-empty">{t('noData')}</TableCell></TableRow>
             ) : (
               displayed.map((s) => (
                 <TableRow key={s.id} onClick={() => handleClickOnRow({ row: s })}>
@@ -131,6 +133,19 @@ const TableCalendar = () => {
                   <TableCell>{s.routeCode}</TableCell>
                   <TableCell>{s.routeName}</TableCell>
                   <TableCell>{s.date}</TableCell>
+                  <TableCell>
+                    <span style={{
+                      padding: '4px 12px',
+                      borderRadius: '12px',
+                      fontSize: '0.85rem',
+                      fontWeight: 'bold',
+                      background: s.shift === 'Sáng' ? 'linear-gradient(135deg, #ffa726 0%, #ff9800 100%)' : 'linear-gradient(135deg, #42a5f5 0%, #1e88e5 100%)',
+                      color: 'white',
+                      display: 'inline-block'
+                    }}>
+                      {s.shift === 'Sáng' ? '☀️ Sáng' : '🌙 Chiều'}
+                    </span>
+                  </TableCell>
                   <TableCell>{s.start_time}</TableCell>
                   <TableCell>{s.status}</TableCell>
                   <TableCell>{s.driverName || 'N/A'}</TableCell>

@@ -19,7 +19,7 @@ import PlaceIcon from '@mui/icons-material/Place';
 import DirectionsBusIcon from '@mui/icons-material/DirectionsBus';
 import { getAllRoutesWithPoints, getActiveSimulations, getScheduleStudents } from '../../service/apiService';
 
-const DriverMap = ({ scheduleId, routeId }) => {
+const DriverMap = ({ scheduleId, routeId, forceRefresh }) => {
     const mapRef = useRef();
     const mapContainerRef = useRef();
     const vehicleMarkerRef = useRef();
@@ -84,7 +84,7 @@ const DriverMap = ({ scheduleId, routeId }) => {
     // Fetch route data with realtime simulation position
     const fetchRouteData = async () => {
         try {
-            console.log('🗺️ Fetching route data for scheduleId:', scheduleId, 'routeId:', routeId);
+            console.log('🗺️ Fetching route data for scheduleId:', scheduleId, 'routeId:', routeId, 'forceRefresh:', forceRefresh);
             
             // QUAN TRỌNG: Lấy pickup points từ schedule (có trạng thái đúng)
             const scheduleResponse = await getScheduleStudents(scheduleId);
@@ -638,6 +638,14 @@ const DriverMap = ({ scheduleId, routeId }) => {
             return () => clearInterval(interval);
         }
     }, [routeId]);
+
+    // Force refresh khi cập nhật trạng thái học sinh từ DetailSchedule
+    useEffect(() => {
+        if (forceRefresh && forceRefresh > 0) {
+            console.log('🔄 Force refreshing due to status update (forceRefresh:', forceRefresh, ')');
+            fetchRouteData();
+        }
+    }, [forceRefresh]);
 
     // Recenter on vehicle
     const handleRecenter = () => {

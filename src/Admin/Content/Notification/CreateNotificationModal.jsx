@@ -1,6 +1,9 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { toast } from 'react-toastify';
-import { Dialog, DialogTitle, DialogContent, DialogActions, TextField, Button, Box } from '@mui/material';
+import { 
+  Dialog, DialogTitle, DialogContent, DialogActions, TextField, Button, Box,
+  FormControl, InputLabel, Select, MenuItem, Checkbox, ListItemText, OutlinedInput, Chip
+} from '@mui/material';
 import { useNavigate } from 'react-router-dom';
 import { createNotification } from '../../../service/apiService';
 import { useLanguage } from '../../Shared/LanguageContext';
@@ -11,21 +14,75 @@ const CreateNotificationModal = ({ open, onClose, onRefresh } = {}) => {
     MaThongBao: '',
     NoiDung: '',
     ThoiGian: '',
-    LoaiThongBao: ''
+    LoaiThongBao: '',
+    recipientType: '',
+    recipients: []
   });
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
+  const [drivers, setDrivers] = useState([]);
+  const [parents, setParents] = useState([]);
+
+  // Tự động tạo mã thông báo khi mở modal
+  useEffect(() => {
+    if (open) {
+      const autoMaThongBao = `TB${Date.now()}`;
+      setFormData(prev => ({
+        ...prev,
+        MaThongBao: autoMaThongBao
+      }));
+      loadRecipients();
+    }
+  }, [open]);
+
+  const loadRecipients = async () => {
+    try {
+      const [driversRes, parentsRes] = await Promise.all([
+        fetch('http://localhost:6969/api/v1/notifications/recipients/drivers', {
+          headers: { 'Authorization': `Bearer ${localStorage.getItem('token')}` }
+        }),
+        fetch('http://localhost:6969/api/v1/notifications/recipients/parents', {
+          headers: { 'Authorization': `Bearer ${localStorage.getItem('token')}` }
+        })
+      ]);
+
+      const driversData = await driversRes.json();
+      const parentsData = await parentsRes.json();
+
+      if (driversData.errorCode === 0) setDrivers(driversData.data);
+      if (parentsData.errorCode === 0) setParents(parentsData.data);
+    } catch (err) {
+      console.error('Error loading recipients:', err);
+    }
+  };
 
   const handleChange = (e) => {
     const { name, value } = e.target;
     setFormData(prev => ({
       ...prev,
-      [name]: value
+      [name]: value,
+      // Reset recipients khi đổi recipientType
+      ...(name === 'recipientType' && { recipients: [] })
+    }));
+  };
+
+  const handleRecipientsChange = (event) => {
+    const { value } = event.target;
+    setFormData(prev => ({
+      ...prev,
+      recipients: typeof value === 'string' ? value.split(',') : value
     }));
   };
 
   const isValid = () => {
-    return formData.MaThongBao && formData.NoiDung && formData.ThoiGian && formData.LoaiThongBao;
+    if (!formData.NoiDung || !formData.ThoiGian || !formData.LoaiThongBao || !formData.recipientType) {
+      return false;
+    }
+    // Nếu không phải "all" thì phải chọn ít nhất 1 người nhận
+    if (formData.recipientType !== 'all' && formData.recipients.length === 0) {
+      return false;
+    }
+    return true;
   };
 
   const handleSubmit = async () => {
@@ -37,11 +94,15 @@ const CreateNotificationModal = ({ open, onClose, onRefresh } = {}) => {
     setError('');
     try {
       await createNotification(formData);
+      // Tạo mã mới cho lần tạo tiếp theo
+      const newMaThongBao = `TB${Date.now()}`;
       setFormData({
-        MaThongBao: '',
+        MaThongBao: newMaThongBao,
         NoiDung: '',
         ThoiGian: '',
-        LoaiThongBao: ''
+        LoaiThongBao: '',
+        recipientType: '',
+        recipients: []
       });
       onRefresh?.();
       onClose?.();
@@ -84,19 +145,20 @@ const CreateNotificationModal = ({ open, onClose, onRefresh } = {}) => {
         <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2, pt: 2 }}>
           {error && <Box sx={{ color: '#d32f2f' }}>{error}</Box>}
           <TextField
-            label="Mã Thông Báo"
+            label="Mã Thông Báo (Tự động)"
             name="MaThongBao"
             value={formData.MaThongBao}
             onChange={handleChange}
             fullWidth
-            disabled={loading}
+            disabled={true}
             sx={{
               '& .MuiOutlinedInput-root': {
                 '& fieldset': { borderColor: '#0097a7' },
                 '&:hover fieldset': { borderColor: '#00838f' },
-                '&.Mui-focused fieldset': { borderColor: '#0097a7' }
+                '&.Mui-focused fieldset': { borderColor: '#0097a7' },
+                backgroundColor: 'rgba(0, 151, 167, 0.05)'
               },
-              '& .MuiInputBase-input': { color: '#00838f' }
+              '& .MuiInputBase-input': { color: '#00838f', fontWeight: '600' }
             }}
           />
           <TextField
@@ -151,6 +213,91 @@ const CreateNotificationModal = ({ open, onClose, onRefresh } = {}) => {
               '& .MuiInputBase-input': { color: '#00838f' }
             }}
           />
+
+          <FormControl fullWidth disabled={loading}>
+            <InputLabel>Gửi đến *</InputLabel>
+            <Select
+              name="recipientType"
+              value={formData.recipientType}
+              onChange={handleChange}
+              label="Gửi đến *"
+              sx={{
+                '& .MuiOutlinedInput-notchedOutline': { borderColor: '#0097a7' },
+                '&:hover .MuiOutlinedInput-notchedOutline': { borderColor: '#00838f' },
+                '&.Mui-focused .MuiOutlinedInput-notchedOutline': { borderColor: '#0097a7' }
+              }}
+            >
+              <MenuItem value="driver">Tài xế</MenuItem>
+              <MenuItem value="parent">Phụ huynh</MenuItem>
+              <MenuItem value="all">Tất cả</MenuItem>
+            </Select>
+          </FormControl>
+
+          {formData.recipientType && formData.recipientType !== 'all' && (
+            <FormControl fullWidth disabled={loading}>
+              <InputLabel>
+                {formData.recipientType === 'driver' ? 'Chọn Tài xế *' : 'Chọn Phụ huynh *'}
+              </InputLabel>
+              <Select
+                multiple
+                value={formData.recipients}
+                onChange={handleRecipientsChange}
+                input={<OutlinedInput label={formData.recipientType === 'driver' ? 'Chọn Tài xế *' : 'Chọn Phụ huynh *'} />}
+                renderValue={(selected) => (
+                  <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 0.5 }}>
+                    {selected.map((value) => {
+                      const item = formData.recipientType === 'driver' 
+                        ? drivers.find(d => d.Id === value)
+                        : parents.find(p => p.MaPhuHuynh === value);
+                      return (
+                        <Chip 
+                          key={value} 
+                          label={item ? (formData.recipientType === 'driver' ? item.FullName : item.HoTen) : value}
+                          size="small"
+                          sx={{ 
+                            background: 'linear-gradient(135deg, #0097a7 0%, #00838f 100%)',
+                            color: 'white'
+                          }}
+                        />
+                      );
+                    })}
+                  </Box>
+                )}
+                sx={{
+                  '& .MuiOutlinedInput-notchedOutline': { borderColor: '#0097a7' },
+                  '&:hover .MuiOutlinedInput-notchedOutline': { borderColor: '#00838f' },
+                  '&.Mui-focused .MuiOutlinedInput-notchedOutline': { borderColor: '#0097a7' }
+                }}
+              >
+                {formData.recipientType === 'driver' ? (
+                  drivers.map((driver) => (
+                    <MenuItem key={driver.Id} value={driver.Id}>
+                      <Checkbox checked={formData.recipients.indexOf(driver.Id) > -1} />
+                      <ListItemText primary={`${driver.FullName} (${driver.Id})`} />
+                    </MenuItem>
+                  ))
+                ) : (
+                  parents.map((parent) => (
+                    <MenuItem key={parent.MaPhuHuynh} value={parent.MaPhuHuynh}>
+                      <Checkbox checked={formData.recipients.indexOf(parent.MaPhuHuynh) > -1} />
+                      <ListItemText primary={`${parent.HoTen} (${parent.MaPhuHuynh})`} />
+                    </MenuItem>
+                  ))
+                )}
+              </Select>
+            </FormControl>
+          )}
+
+          {formData.recipientType === 'all' && (
+            <Box sx={{ 
+              padding: 2, 
+              background: 'rgba(0, 151, 167, 0.1)', 
+              borderRadius: 1,
+              border: '1px solid rgba(0, 151, 167, 0.3)'
+            }}>
+              ℹ️ Thông báo sẽ được gửi đến <strong>tất cả tài xế ({drivers.length}) và phụ huynh ({parents.length})</strong>
+            </Box>
+          )}
         </Box>
       </DialogContent>
       <DialogActions sx={{
