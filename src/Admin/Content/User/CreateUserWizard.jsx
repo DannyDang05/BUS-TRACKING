@@ -91,15 +91,28 @@ const CreateUserWizard = ({ open, onClose, onSuccess }) => {
         onClose();
     };
 
+    const validatePhoneNumber = (phone) => {
+        const phoneRegex = /^09\d{8}$/;
+        return phoneRegex.test(phone);
+    };
+
     const validateStep2 = () => {
         if (accountData.role === 'driver') {
             if (!profileData.driverId || !profileData.fullName || !profileData.maBangLai || !profileData.phoneNumber) {
                 toast.error('Vui lòng điền đầy đủ thông tin tài xế');
                 return false;
             }
+            if (!validatePhoneNumber(profileData.phoneNumber)) {
+                toast.error('Số điện thoại tài xế phải bắt đầu bằng 09 và có đúng 10 số!');
+                return false;
+            }
         } else if (accountData.role === 'parent') {
             if (!profileData.parentId || !profileData.parentName || !profileData.parentPhone) {
                 toast.error('Vui lòng điền đầy đủ thông tin phụ huynh');
+                return false;
+            }
+            if (!validatePhoneNumber(profileData.parentPhone)) {
+                toast.error('Số điện thoại phụ huynh phải bắt đầu bằng 09 và có đúng 10 số!');
                 return false;
             }
         }
@@ -328,6 +341,8 @@ const CreateUserWizard = ({ open, onClose, onSuccess }) => {
                 onChange={(e) => setProfileData({ ...profileData, phoneNumber: e.target.value })}
                 required
                 placeholder="VD: 0912345678"
+                error={profileData.phoneNumber && !validatePhoneNumber(profileData.phoneNumber)}
+                helperText={profileData.phoneNumber && !validatePhoneNumber(profileData.phoneNumber) ? 'Phải bắt đầu 09 và có 10 số' : 'Nhập số điện thoại bắt đầu 09'}
             />
 
             <FormControl fullWidth>
@@ -381,6 +396,8 @@ const CreateUserWizard = ({ open, onClose, onSuccess }) => {
                 onChange={(e) => setProfileData({ ...profileData, parentPhone: e.target.value })}
                 required
                 placeholder="VD: 0912345678"
+                error={profileData.parentPhone && !validatePhoneNumber(profileData.parentPhone)}
+                helperText={profileData.parentPhone && !validatePhoneNumber(profileData.parentPhone) ? 'Phải bắt đầu 09 và có 10 số' : 'Nhập số điện thoại bắt đầu 09'}
             />
 
             <Alert severity="success" sx={{ mt: 1 }}>

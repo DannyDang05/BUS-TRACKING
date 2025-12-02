@@ -13,7 +13,6 @@ const CreateNotificationModal = ({ open, onClose, onRefresh } = {}) => {
   const [formData, setFormData] = useState({
     MaThongBao: '',
     NoiDung: '',
-    ThoiGian: '',
     LoaiThongBao: '',
     recipientType: '',
     recipients: []
@@ -23,36 +22,70 @@ const CreateNotificationModal = ({ open, onClose, onRefresh } = {}) => {
   const [drivers, setDrivers] = useState([]);
   const [parents, setParents] = useState([]);
 
-  // Tự động tạo mã thông báo khi mở modal
+  // Tự động tạo mã thông báo khi mở modal hoặc component mount
   useEffect(() => {
-    if (open) {
+    console.log('Modal opened:', open);
+    // Nếu open là undefined (dùng như route) hoặc open = true (dùng như modal)
+    if (open === undefined || open === true) {
       const autoMaThongBao = `TB${Date.now()}`;
+      
       setFormData(prev => ({
         ...prev,
         MaThongBao: autoMaThongBao
       }));
+      console.log('Calling loadRecipients...');
       loadRecipients();
     }
   }, [open]);
 
   const loadRecipients = async () => {
+    console.log('loadRecipients started...');
     try {
+      console.log('Fetching drivers and parents...');
+      const token = localStorage.getItem('token') || localStorage.getItem('bus_token');
+      console.log('Token:', token ? 'exists' : 'missing');
+      console.log('Token value:', token);
+
       const [driversRes, parentsRes] = await Promise.all([
         fetch('http://localhost:6969/api/v1/notifications/recipients/drivers', {
-          headers: { 'Authorization': `Bearer ${localStorage.getItem('token')}` }
+          headers: { 
+            'Authorization': `Bearer ${token}`,
+            'Content-Type': 'application/json'
+          }
         }),
         fetch('http://localhost:6969/api/v1/notifications/recipients/parents', {
-          headers: { 'Authorization': `Bearer ${localStorage.getItem('token')}` }
+          headers: { 
+            'Authorization': `Bearer ${token}`,
+            'Content-Type': 'application/json'
+          }
         })
       ]);
+
+      console.log('Drivers response status:', driversRes.status);
+      console.log('Parents response status:', parentsRes.status);
 
       const driversData = await driversRes.json();
       const parentsData = await parentsRes.json();
 
-      if (driversData.errorCode === 0) setDrivers(driversData.data);
-      if (parentsData.errorCode === 0) setParents(parentsData.data);
+      console.log('Drivers data:', driversData);
+      console.log('Parents data:', parentsData);
+
+      if (driversData.errorCode === 0) {
+        setDrivers(driversData.data || []);
+        console.log('Drivers set, count:', driversData.data?.length || 0);
+      } else {
+        console.error('Drivers error:', driversData);
+      }
+      
+      if (parentsData.errorCode === 0) {
+        setParents(parentsData.data || []);
+        console.log('Parents set, count:', parentsData.data?.length || 0);
+      } else {
+        console.error('Parents error:', parentsData);
+      }
     } catch (err) {
       console.error('Error loading recipients:', err);
+      toast.error('Không thể tải danh sách người nhận: ' + err.message);
     }
   };
 
@@ -75,7 +108,7 @@ const CreateNotificationModal = ({ open, onClose, onRefresh } = {}) => {
   };
 
   const isValid = () => {
-    if (!formData.NoiDung || !formData.ThoiGian || !formData.LoaiThongBao || !formData.recipientType) {
+    if (!formData.NoiDung || !formData.LoaiThongBao || !formData.recipientType) {
       return false;
     }
     // Nếu không phải "all" thì phải chọn ít nhất 1 người nhận
@@ -99,7 +132,6 @@ const CreateNotificationModal = ({ open, onClose, onRefresh } = {}) => {
       setFormData({
         MaThongBao: newMaThongBao,
         NoiDung: '',
-        ThoiGian: '',
         LoaiThongBao: '',
         recipientType: '',
         recipients: []
@@ -169,24 +201,6 @@ const CreateNotificationModal = ({ open, onClose, onRefresh } = {}) => {
             fullWidth
             multiline
             rows={3}
-            disabled={loading}
-            sx={{
-              '& .MuiOutlinedInput-root': {
-                '& fieldset': { borderColor: '#0097a7' },
-                '&:hover fieldset': { borderColor: '#00838f' },
-                '&.Mui-focused fieldset': { borderColor: '#0097a7' }
-              },
-              '& .MuiInputBase-input': { color: '#00838f' }
-            }}
-          />
-          <TextField
-            label="Thời Gian"
-            name="ThoiGian"
-            type="datetime-local"
-            value={formData.ThoiGian}
-            onChange={handleChange}
-            fullWidth
-            InputLabelProps={{ shrink: true }}
             disabled={loading}
             sx={{
               '& .MuiOutlinedInput-root': {
@@ -273,14 +287,42 @@ const CreateNotificationModal = ({ open, onClose, onRefresh } = {}) => {
                   drivers.map((driver) => (
                     <MenuItem key={driver.Id} value={driver.Id}>
                       <Checkbox checked={formData.recipients.indexOf(driver.Id) > -1} />
-                      <ListItemText primary={`${driver.FullName} (${driver.Id})`} />
+                      <ListItemText 
+                        primary={
+                          <Box>
+                            <strong>{driver.FullName}</strong>
+                            <span style={{ marginLeft: '8px', color: '#666', fontSize: '0.9em' }}>
+                              ({driver.Id})
+                            </span>
+                          </Box>
+                        }
+                        secondary={
+                          <span style={{ fontSize: '0.85em', color: '#999' }}>
+                            📞 {driver.PhoneNumber} | 🚗 {driver.MaBangLai}
+                          </span>
+                        }
+                      />
                     </MenuItem>
                   ))
                 ) : (
                   parents.map((parent) => (
                     <MenuItem key={parent.MaPhuHuynh} value={parent.MaPhuHuynh}>
                       <Checkbox checked={formData.recipients.indexOf(parent.MaPhuHuynh) > -1} />
-                      <ListItemText primary={`${parent.HoTen} (${parent.MaPhuHuynh})`} />
+                      <ListItemText 
+                        primary={
+                          <Box>
+                            <strong>{parent.HoTen}</strong>
+                            <span style={{ marginLeft: '8px', color: '#666', fontSize: '0.9em' }}>
+                              ({parent.MaPhuHuynh})
+                            </span>
+                          </Box>
+                        }
+                        secondary={
+                          <span style={{ fontSize: '0.85em', color: '#999' }}>
+                            📞 {parent.SoDienThoai}
+                          </span>
+                        }
+                      />
                     </MenuItem>
                   ))
                 )}

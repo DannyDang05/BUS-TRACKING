@@ -1,6 +1,7 @@
 import { pool } from "../config/connectDB.js";
 import { checkAndCompleteSchedule } from "./scheduleStatusHelper.js";
 import parentNotificationService from "../service/ParentNotificationService.js";
+import { emitPickupStatusUpdate } from "../service/SocketService.js";
 
 // GET /api/v1/pickuppoints?routeId=123
 const getPickupPoints = async (req, res) => {
@@ -174,6 +175,27 @@ const updateSchedulePickupStatus = async (req, res) => {
 
     // Tự động kiểm tra và cập nhật schedule thành "Hoàn thành" nếu đủ điều kiện
     await checkAndCompleteSchedule(scheduleId);
+
+    // Lấy thông tin học sinh để emit socket event
+    const [pointInfo] = await pool.query(`
+      SELECT 
+        hs.HoTen as student_name,
+        pp.DiaChi as pickup_address
+      FROM pickuppoints pp
+      LEFT JOIN hocsinh hs ON pp.MaHocSinh = hs.MaHocSinh
+      WHERE pp.Id = ?
+    `, [pickupPointId]);
+
+    // Emit socket event để cập nhật real-time cho frontend
+    if (pointInfo.length > 0) {
+      emitPickupStatusUpdate({
+        scheduleId,
+        pickupPointId,
+        status,
+        studentName: pointInfo[0].student_name,
+        pickupAddress: pointInfo[0].pickup_address
+      });
+    }
 
     // Gửi thông báo cho phụ huynh ngay lập tức
     if (status === 'Đã đón' || status === 'Đã trả') {

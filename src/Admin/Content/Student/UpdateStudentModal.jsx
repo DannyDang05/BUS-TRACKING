@@ -1,5 +1,5 @@
-import React, { useState, useEffect } from 'react';
-import { Dialog, DialogTitle, DialogContent, DialogActions, TextField, Button, Box, IconButton, Grid, Typography, Divider, Paper } from '@mui/material';
+import React, { useState, useEffect, useRef } from 'react';
+import { Dialog, DialogTitle, DialogContent, DialogActions, TextField, Button, Box, IconButton, Grid, Typography, Divider, Paper, InputAdornment, List, ListItem, ListItemText } from '@mui/material';
 import { useNavigate, useParams } from 'react-router-dom';
 import { updateStudent, getStudentById } from '../../../service/apiService';
 import { toast } from 'react-toastify';
@@ -7,6 +7,10 @@ import { useLanguage } from '../../Shared/LanguageContext';
 import CloseIcon from '@mui/icons-material/Close';
 import SchoolIcon from '@mui/icons-material/School';
 import EditIcon from '@mui/icons-material/Edit';
+import LocationIcon from '@mui/icons-material/LocationOn';
+import ClearIcon from '@mui/icons-material/Clear';
+
+const MAPBOX_TOKEN = 'pk.eyJ1IjoibGlraWpvb25nMSIsImEiOiJjbWg5eXlyN24wMDFlMnJuNmIxY2kxOTc2In0.KDmPuA2vvdV6G28mpeK4KA';
 
 const UpdateStudentModal = ({ open, onClose, student, onRefresh } = {}) => {
   const navigate = useNavigate();
@@ -17,10 +21,15 @@ const UpdateStudentModal = ({ open, onClose, student, onRefresh } = {}) => {
     Lop: '',
     TinhTrang: '',
     MaPhuHuynh: '',
-    MaDiemDon: ''
+    MaDiemDon: '',
+    Latitude: '',
+    Longitude: ''
   });
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
+  const [addressSuggestions, setAddressSuggestions] = useState([]);
+  const [showSuggestions, setShowSuggestions] = useState(false);
+  const debounceTimer = useRef(null);
 
   // Debug log
   console.log('UpdateStudentModal render - open:', open, 'student:', student, 'formData:', formData);
@@ -34,7 +43,9 @@ const UpdateStudentModal = ({ open, onClose, student, onRefresh } = {}) => {
         Lop: '',
         TinhTrang: '',
         MaPhuHuynh: '',
-        MaDiemDon: ''
+        MaDiemDon: '',
+        Latitude: '',
+        Longitude: ''
       });
       setError('');
       return;
@@ -49,7 +60,9 @@ const UpdateStudentModal = ({ open, onClose, student, onRefresh } = {}) => {
         Lop: student.Lop || '',
         TinhTrang: student.TrangThaiHocTap || student.TinhTrang || '',
         MaPhuHuynh: student.MaPhuHuynh || '',
-        MaDiemDon: student.DiaChi || student.MaDiemDon || ''
+        MaDiemDon: student.DiaChi || student.MaDiemDon || '',
+        Latitude: student.Latitude || '',
+        Longitude: student.Longitude || ''
       });
     } else if (id) {
       // Chỉ fetch từ API khi không có student prop nhưng có id từ URL
@@ -67,6 +80,52 @@ const UpdateStudentModal = ({ open, onClose, student, onRefresh } = {}) => {
     }
   }, [open, student, id]);
 
+  const searchAddress = async (query) => {
+    if (!query || query.length < 3) {
+      setAddressSuggestions([]);
+      return;
+    }
+
+    try {
+      const response = await fetch(
+        `https://api.mapbox.com/geocoding/v5/mapbox.places/${encodeURIComponent(query)}.json?access_token=${MAPBOX_TOKEN}&country=VN&language=vi&limit=5`
+      );
+      const data = await response.json();
+
+      if (data.features) {
+        setAddressSuggestions(data.features);
+        setShowSuggestions(true);
+      }
+    } catch (error) {
+      console.error('Error searching address:', error);
+    }
+  };
+
+  const handleAddressChange = (e) => {
+    const value = e.target.value;
+    setFormData(prev => ({ ...prev, MaDiemDon: value }));
+
+    if (debounceTimer.current) {
+      clearTimeout(debounceTimer.current);
+    }
+
+    debounceTimer.current = setTimeout(() => {
+      searchAddress(value);
+    }, 500);
+  };
+
+  const handleSelectAddress = (feature) => {
+    const [longitude, latitude] = feature.geometry.coordinates;
+    setFormData(prev => ({
+      ...prev,
+      MaDiemDon: feature.place_name,
+      Latitude: latitude.toString(),
+      Longitude: longitude.toString()
+    }));
+    setShowSuggestions(false);
+    setAddressSuggestions([]);
+  };
+
   const handleChange = (e) => {
     const { name, value } = e.target;
     setFormData(prev => ({
@@ -76,7 +135,7 @@ const UpdateStudentModal = ({ open, onClose, student, onRefresh } = {}) => {
   };
 
   const isValid = () => {
-    return formData.MaHocSinh && formData.HoTen && formData.Lop;
+    return formData.MaHocSinh && formData.HoTen && formData.Lop && formData.MaDiemDon;
   };
 
   const handleSubmit = async () => {
@@ -205,15 +264,20 @@ const UpdateStudentModal = ({ open, onClose, student, onRefresh } = {}) => {
                 value={formData.MaHocSinh}
                 onChange={handleChange}
                 fullWidth
-                disabled={loading}
+                disabled={true}
                 required
+                helperText="Không thể chỉnh sửa trường này"
                 sx={{
                   '& .MuiOutlinedInput-root': {
                     '& fieldset': { borderColor: '#e0e0e0' },
-                    '&:hover fieldset': { borderColor: '#0097a7' },
-                    '&.Mui-focused fieldset': { borderColor: '#0097a7', borderWidth: '2px' }
+                    '&:hover fieldset': { borderColor: '#e0e0e0' },
+                    '&.Mui-focused fieldset': { borderColor: '#e0e0e0', borderWidth: '1px' }
                   },
-                  '& .MuiInputLabel-root.Mui-focused': { color: '#0097a7' }
+                  '& .MuiInputLabel-root.Mui-focused': { color: '#757575' },
+                  '& .MuiInputBase-input.Mui-disabled': {
+                    WebkitTextFillColor: '#757575',
+                    backgroundColor: '#f5f5f5'
+                  }
                 }}
               />
             </Grid>
@@ -285,14 +349,19 @@ const UpdateStudentModal = ({ open, onClose, student, onRefresh } = {}) => {
                 value={formData.TinhTrang}
                 onChange={handleChange}
                 fullWidth
-                disabled={loading}
+                disabled={true}
+                helperText="Không thể chỉnh sửa trường này"
                 sx={{
                   '& .MuiOutlinedInput-root': {
                     '& fieldset': { borderColor: '#e0e0e0' },
-                    '&:hover fieldset': { borderColor: '#0097a7' },
-                    '&.Mui-focused fieldset': { borderColor: '#0097a7', borderWidth: '2px' }
+                    '&:hover fieldset': { borderColor: '#e0e0e0' },
+                    '&.Mui-focused fieldset': { borderColor: '#e0e0e0', borderWidth: '1px' }
                   },
-                  '& .MuiInputLabel-root.Mui-focused': { color: '#0097a7' }
+                  '& .MuiInputLabel-root.Mui-focused': { color: '#757575' },
+                  '& .MuiInputBase-input.Mui-disabled': {
+                    WebkitTextFillColor: '#757575',
+                    backgroundColor: '#f5f5f5'
+                  }
                 }}
               />
             </Grid>
@@ -325,34 +394,96 @@ const UpdateStudentModal = ({ open, onClose, student, onRefresh } = {}) => {
                 value={formData.MaPhuHuynh}
                 onChange={handleChange}
                 fullWidth
-                disabled={loading}
+                disabled={true}
+                helperText="Không thể chỉnh sửa trường này"
                 sx={{
                   '& .MuiOutlinedInput-root': {
                     '& fieldset': { borderColor: '#e0e0e0' },
-                    '&:hover fieldset': { borderColor: '#0097a7' },
-                    '&.Mui-focused fieldset': { borderColor: '#0097a7', borderWidth: '2px' }
+                    '&:hover fieldset': { borderColor: '#e0e0e0' },
+                    '&.Mui-focused fieldset': { borderColor: '#e0e0e0', borderWidth: '1px' }
                   },
-                  '& .MuiInputLabel-root.Mui-focused': { color: '#0097a7' }
+                  '& .MuiInputLabel-root.Mui-focused': { color: '#757575' },
+                  '& .MuiInputBase-input.Mui-disabled': {
+                    WebkitTextFillColor: '#757575',
+                    backgroundColor: '#f5f5f5'
+                  }
                 }}
               />
             </Grid>
             <Grid item xs={12} sm={6}>
-              <TextField
-                label="Địa Chỉ"
-                name="MaDiemDon"
-                value={formData.MaDiemDon}
-                onChange={handleChange}
-                fullWidth
-                disabled={loading}
-                sx={{
-                  '& .MuiOutlinedInput-root': {
-                    '& fieldset': { borderColor: '#e0e0e0' },
-                    '&:hover fieldset': { borderColor: '#0097a7' },
-                    '&.Mui-focused fieldset': { borderColor: '#0097a7', borderWidth: '2px' }
-                  },
-                  '& .MuiInputLabel-root.Mui-focused': { color: '#0097a7' }
-                }}
-              />
+              <Box sx={{ position: 'relative' }}>
+                <TextField
+                  label="Địa Chỉ"
+                  name="MaDiemDon"
+                  value={formData.MaDiemDon}
+                  onChange={handleAddressChange}
+                  fullWidth
+                  disabled={loading}
+                  required
+                  helperText="Trường bắt buộc - Nhập và chọn từ gợi ý"
+                  InputProps={{
+                    startAdornment: (
+                      <InputAdornment position="start">
+                        <LocationIcon sx={{ color: '#0097a7' }} />
+                      </InputAdornment>
+                    ),
+                    endAdornment: formData.MaDiemDon && (
+                      <InputAdornment position="end">
+                        <IconButton
+                          size="small"
+                          onClick={() => {
+                            setFormData({ ...formData, MaDiemDon: '', Latitude: '', Longitude: '' });
+                            setAddressSuggestions([]);
+                          }}
+                        >
+                          <ClearIcon />
+                        </IconButton>
+                      </InputAdornment>
+                    )
+                  }}
+                  sx={{
+                    '& .MuiOutlinedInput-root': {
+                      '& fieldset': { borderColor: '#e0e0e0' },
+                      '&:hover fieldset': { borderColor: '#0097a7' },
+                      '&.Mui-focused fieldset': { borderColor: '#0097a7', borderWidth: '2px' }
+                    },
+                    '& .MuiInputLabel-root.Mui-focused': { color: '#0097a7' }
+                  }}
+                />
+
+                {showSuggestions && addressSuggestions.length > 0 && (
+                  <Paper
+                    elevation={3}
+                    sx={{
+                      position: 'absolute',
+                      top: '100%',
+                      left: 0,
+                      right: 0,
+                      zIndex: 1000,
+                      maxHeight: 300,
+                      overflow: 'auto',
+                      mt: 1
+                    }}
+                  >
+                    <List>
+                      {addressSuggestions.map((feature, index) => (
+                        <ListItem
+                          key={index}
+                          button
+                          onClick={() => handleSelectAddress(feature)}
+                          sx={{ '&:hover': { backgroundColor: 'action.hover' } }}
+                        >
+                          <LocationIcon sx={{ mr: 2, color: '#0097a7' }} />
+                          <ListItemText
+                            primary={feature.text}
+                            secondary={feature.place_name}
+                          />
+                        </ListItem>
+                      ))}
+                    </List>
+                  </Paper>
+                )}
+              </Box>
             </Grid>
           </Grid>
         </Paper>

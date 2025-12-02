@@ -326,9 +326,9 @@ const getAutoRoutes = async (req, res) => {
 // GET /api/v1/routes/all-with-points - Lấy TẤT CẢ các tuyến kèm điểm đón (cho map)
 const getAllRoutesWithPoints = async (req, res) => {
   try {
-    console.log('🗺️ Đang lấy tất cả routes với pickup points...');
+    console.log('🗺️ Đang lấy tất cả routes với pickup points và schedule status...');
     
-    // Lấy tất cả routes - Try with currentLatitude/currentLongitude first
+    // Lấy tất cả routes - Lấy status từ schedule của hôm nay (nếu có)
     let routes;
     try {
       const [routesData] = await pool.query(`
@@ -336,7 +336,8 @@ const getAllRoutesWithPoints = async (req, res) => {
           r.Id as routeId,
           r.MaTuyen as routeCode,
           r.Name as routeName,
-          r.Status as status,
+          COALESCE(s.status, r.Status) as status,
+          s.id as scheduleId,
           r.currentLatitude as latitude,
           r.currentLongitude as longitude,
           v.Id as vehicleId,
@@ -348,10 +349,12 @@ const getAllRoutesWithPoints = async (req, res) => {
           d.PhoneNumber as driverPhone,
           COUNT(DISTINCT p.Id) as totalStudents
         FROM routes r
+        LEFT JOIN schedules s ON s.route_id = r.Id 
+          AND s.date = CURDATE()
         LEFT JOIN vehicles v ON r.VehicleId = v.Id
         LEFT JOIN drivers d ON r.DriverId = d.Id
         LEFT JOIN pickuppoints p ON p.RouteId = r.Id
-        GROUP BY r.Id
+        GROUP BY r.Id, s.id
         ORDER BY r.Id
       `);
       routes = routesData;
@@ -363,7 +366,8 @@ const getAllRoutesWithPoints = async (req, res) => {
           r.Id as routeId,
           r.MaTuyen as routeCode,
           r.Name as routeName,
-          r.Status as status,
+          COALESCE(s.status, r.Status) as status,
+          s.id as scheduleId,
           NULL as latitude,
           NULL as longitude,
           v.Id as vehicleId,
@@ -375,10 +379,12 @@ const getAllRoutesWithPoints = async (req, res) => {
           d.PhoneNumber as driverPhone,
           COUNT(DISTINCT p.Id) as totalStudents
         FROM routes r
+        LEFT JOIN schedules s ON s.route_id = r.Id 
+          AND s.date = CURDATE()
         LEFT JOIN vehicles v ON r.VehicleId = v.Id
         LEFT JOIN drivers d ON r.DriverId = d.Id
         LEFT JOIN pickuppoints p ON p.RouteId = r.Id
-        GROUP BY r.Id
+        GROUP BY r.Id, s.id
         ORDER BY r.Id
       `);
       routes = routesData;
@@ -388,22 +394,50 @@ const getAllRoutesWithPoints = async (req, res) => {
 
     // Lấy pickup points cho từng route (bao gồm cả điểm trường)
     for (let route of routes) {
-      const [pickupPoints] = await pool.query(`
-        SELECT 
-          p.Id as id,
-          p.MaHocSinh,
-          p.PointOrder,
-          p.DiaChi as address,
-          p.Latitude as latitude,
-          p.Longitude as longitude,
-          p.TinhTrangDon as status,
-          h.HoTen as studentName,
-          h.Lop as class
-        FROM pickuppoints p
-        LEFT JOIN hocsinh h ON p.MaHocSinh = h.MaHocSinh
-        WHERE p.RouteId = ?
-        ORDER BY p.PointOrder
-      `, [route.routeId]);
+      // Nếu có schedule hôm nay, lấy status từ schedule_pickup_status
+      // Nếu không có schedule, dùng TinhTrangDon mặc định từ pickuppoints
+      let pickupPoints;
+      if (route.scheduleId) {
+        // Có schedule - lấy status thực tế từ schedule_pickup_status
+        const [points] = await pool.query(`
+          SELECT 
+            p.Id as id,
+            p.MaHocSinh,
+            p.PointOrder,
+            p.DiaChi as address,
+            p.Latitude as latitude,
+            p.Longitude as longitude,
+            COALESCE(sps.TinhTrangDon, p.TinhTrangDon, 'Chưa đón') as status,
+            h.HoTen as studentName,
+            h.Lop as class
+          FROM pickuppoints p
+          LEFT JOIN hocsinh h ON p.MaHocSinh = h.MaHocSinh
+          LEFT JOIN schedule_pickup_status sps ON sps.PickupPointId = p.Id 
+            AND sps.ScheduleId = ?
+          WHERE p.RouteId = ?
+          ORDER BY p.PointOrder
+        `, [route.scheduleId, route.routeId]);
+        pickupPoints = points;
+      } else {
+        // Không có schedule - dùng status mặc định
+        const [points] = await pool.query(`
+          SELECT 
+            p.Id as id,
+            p.MaHocSinh,
+            p.PointOrder,
+            p.DiaChi as address,
+            p.Latitude as latitude,
+            p.Longitude as longitude,
+            p.TinhTrangDon as status,
+            h.HoTen as studentName,
+            h.Lop as class
+          FROM pickuppoints p
+          LEFT JOIN hocsinh h ON p.MaHocSinh = h.MaHocSinh
+          WHERE p.RouteId = ?
+          ORDER BY p.PointOrder
+        `, [route.routeId]);
+        pickupPoints = points;
+      }
       
       route.pickupPoints = pickupPoints;
       

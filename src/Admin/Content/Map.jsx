@@ -87,7 +87,9 @@ const Map = (props) => {
                 setAllRoutes(routesData);
                 const runningVehicles = routesData.filter(route => 
                     route.latitude && route.longitude && 
-                    (route.status?.toLowerCase().includes('chạy') || route.status?.toLowerCase() === 'running')
+                    (route.status?.toLowerCase().includes('chạy') || route.status?.toLowerCase() === 'running') &&
+                    !route.status?.toLowerCase().includes('hoàn thành') &&
+                    route.status?.toLowerCase() !== 'completed'
                 );
                 setVehicles(runningVehicles);
                 setError(null);
@@ -96,7 +98,9 @@ const Map = (props) => {
             // Always update markers (smooth position updates)
             const runningVehicles = routesData.filter(route => 
                 route.latitude && route.longitude && 
-                (route.status?.toLowerCase().includes('chạy') || route.status?.toLowerCase() === 'running')
+                (route.status?.toLowerCase().includes('chạy') || route.status?.toLowerCase() === 'running') &&
+                !route.status?.toLowerCase().includes('hoàn thành') &&
+                route.status?.toLowerCase() !== 'completed'
             );
             
             if (viewMode === 'running') {
@@ -382,13 +386,21 @@ const Map = (props) => {
         const sourceId = `route-${route.routeId}`;
         const layerId = `route-layer-${route.routeId}`;
 
-        // Remove existing route layer
-        if (mapRef.current.getLayer(layerId)) {
-            mapRef.current.removeLayer(layerId);
-        }
-        if (mapRef.current.getSource(sourceId)) {
-            mapRef.current.removeSource(sourceId);
-        }
+        // Remove ALL existing route layers and sources (xóa tất cả tuyến cũ)
+        Object.keys(routeLayersRef.current).forEach(oldRouteId => {
+            const oldLayerId = `route-layer-${oldRouteId}`;
+            const oldSourceId = `route-${oldRouteId}`;
+            
+            if (mapRef.current.getLayer(oldLayerId)) {
+                mapRef.current.removeLayer(oldLayerId);
+            }
+            if (mapRef.current.getSource(oldSourceId)) {
+                mapRef.current.removeSource(oldSourceId);
+            }
+        });
+        
+        // Clear route layers reference
+        routeLayersRef.current = {};
 
         // Use pickupPoints from route data (bao gồm điểm trường từ backend)
         const points = route.pickupPoints || [];
@@ -477,6 +489,9 @@ const Map = (props) => {
                     }
                 });
 
+                // Store reference to this route layer
+                routeLayersRef.current[route.routeId] = true;
+
                 // Fit bounds to show entire route
                 const coordinates = routeGeometry.coordinates;
                 const bounds = coordinates.reduce((bounds, coord) => {
@@ -517,6 +532,9 @@ const Map = (props) => {
                     }
                 });
 
+                // Store reference to this route layer
+                routeLayersRef.current[route.routeId] = true;
+
                 // Fit bounds to show all waypoints
                 const bounds = new mapboxgl.LngLatBounds();
                 waypoints.forEach(coord => bounds.extend(coord));
@@ -556,6 +574,9 @@ const Map = (props) => {
                 }
             });
 
+            // Store reference to this route layer
+            routeLayersRef.current[route.routeId] = true;
+
             // Fit bounds to show all waypoints
             const bounds = new mapboxgl.LngLatBounds();
             waypoints.forEach(coord => bounds.extend(coord));
@@ -564,14 +585,14 @@ const Map = (props) => {
                 duration: 1000
             });
         }
-
-        // Store layer info for cleanup
-        routeLayersRef.current[route.routeId] = { sourceId, layerId };
     };
 
     // Clear route layers
     const clearRouteLayers = () => {
-        Object.values(routeLayersRef.current).forEach(({ layerId, sourceId }) => {
+        Object.keys(routeLayersRef.current).forEach(routeId => {
+            const layerId = `route-layer-${routeId}`;
+            const sourceId = `route-${routeId}`;
+            
             if (mapRef.current.getLayer(layerId)) {
                 mapRef.current.removeLayer(layerId);
             }

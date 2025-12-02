@@ -81,7 +81,7 @@ const getScheduleStudents = async (req, res) => {
   try {
     // Lấy route_id và thông tin schedule
     const [scheduleRows] = await pool.query(
-      'SELECT route_id, shift, status FROM schedules WHERE id = ?',
+      'SELECT route_id, shift, status, date FROM schedules WHERE id = ?',
       [scheduleId]
     );
 
@@ -95,6 +95,7 @@ const getScheduleStudents = async (req, res) => {
     const routeId = scheduleRows[0].route_id;
     const shift = scheduleRows[0].shift;
     const scheduleStatus = scheduleRows[0].status;
+    const scheduleDate = scheduleRows[0].date;
 
     // Lấy thông tin route
     const [routeInfo] = await pool.query(`
@@ -138,7 +139,8 @@ const getScheduleStudents = async (req, res) => {
       routeName: routeInfo[0]?.Name || null,
       licensePlate: routeInfo[0]?.LicensePlate || null,
       shift: shift,
-      scheduleStatus: scheduleStatus
+      scheduleStatus: scheduleStatus,
+      scheduleDate: scheduleDate
     }));
 
     return res.status(200).json({

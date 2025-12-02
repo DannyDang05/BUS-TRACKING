@@ -147,7 +147,31 @@ const TableCalendar = () => {
                     </span>
                   </TableCell>
                   <TableCell>{s.start_time}</TableCell>
-                  <TableCell>{s.status}</TableCell>
+                  <TableCell>
+                    <span style={{
+                      padding: '4px 12px',
+                      borderRadius: '12px',
+                      fontSize: '0.85rem',
+                      fontWeight: 'bold',
+                      display: 'inline-block',
+                      background: 
+                        s.status === 'Hoàn thành' ? 'linear-gradient(135deg, #66bb6a 0%, #43a047 100%)' :
+                        s.status === 'Đã hủy' ? 'linear-gradient(135deg, #ef5350 0%, #e53935 100%)' :
+                        s.status === 'Đang chạy' ? 'linear-gradient(135deg, #42a5f5 0%, #1e88e5 100%)' :
+                        s.status === 'Sắp diễn ra' ? 'linear-gradient(135deg, #ffa726 0%, #ff9800 100%)' :
+                        s.status === 'Đã phân công' ? 'linear-gradient(135deg, #ab47bc 0%, #8e24aa 100%)' :
+                        'linear-gradient(135deg, #bdbdbd 0%, #9e9e9e 100%)',
+                      color: 'white',
+                      boxShadow: '0 2px 4px rgba(0,0,0,0.1)'
+                    }}>
+                      {s.status === 'Hoàn thành' ? '✅ ' : 
+                       s.status === 'Đã hủy' ? '❌ ' :
+                       s.status === 'Đang chạy' ? '🚌 ' :
+                       s.status === 'Sắp diễn ra' ? '⏰ ' :
+                       s.status === 'Đã phân công' ? '📋 ' : ''}
+                      {s.status}
+                    </span>
+                  </TableCell>
                   <TableCell>{s.driverName || 'N/A'}</TableCell>
                   <TableCell>{s.licensePlate || 'N/A'}</TableCell>
                   <TableCell align="center">

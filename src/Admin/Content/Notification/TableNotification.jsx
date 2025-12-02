@@ -108,7 +108,7 @@ const TableNotification = ({ onUpdate }) => {
               displayed.map((n, index) => (
                 <TableRow 
                   key={n.MaThongBao} 
-                  onClick={() => handleClickOnRow({ row: n })}
+                  // onClick={() => handleClickOnRow({ row: n })}
                   sx={{
                     cursor: 'pointer',
                     transition: 'all 0.2s ease',

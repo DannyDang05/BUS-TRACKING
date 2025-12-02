@@ -137,6 +137,55 @@ export const unsubscribeFromParentBus = (busId) => {
     console.log(`❌ Unsubscribed from bus ${busId}`);
 };
 
+// ========== DRIVER SCHEDULE FUNCTIONS ==========
+
+/**
+ * Driver: Subscribe to schedule pickup status updates
+ * @param {number} scheduleId - ID của schedule
+ * @param {Function} callback - Callback khi nhận update (data: { scheduleId, pickupPointId, status, studentName, pickupAddress })
+ */
+export const subscribeToScheduleUpdates = (scheduleId, callback) => {
+    const s = getSocket();
+    
+    const doSubscribe = () => {
+        // Gửi lệnh subscribe
+        s.emit('driver:subscribe:schedule', { scheduleId });
+        console.log(`📡 Subscribed to schedule ${scheduleId} updates`);
+
+        // Lắng nghe pickup status updates
+        s.on('pickup:status:updated', (data) => {
+            if (data.scheduleId === scheduleId) {
+                callback(data);
+            }
+        });
+    };
+
+    // Nếu đã connected, subscribe ngay
+    if (s.connected) {
+        doSubscribe();
+    } else {
+        // Nếu chưa connected, chờ event 'connect'
+        console.log('⏳ Socket not connected yet, waiting for connection...');
+        s.once('connect', () => {
+            console.log('✅ Socket connected, subscribing to schedule', scheduleId);
+            doSubscribe();
+        });
+    }
+};
+
+/**
+ * Driver: Unsubscribe from schedule updates
+ * @param {number} scheduleId - ID của schedule
+ */
+export const unsubscribeFromScheduleUpdates = (scheduleId) => {
+    const s = getSocket();
+    if (!s) return;
+
+    s.emit('driver:unsubscribe:schedule', { scheduleId });
+    s.off('pickup:status:updated');
+    console.log(`❌ Unsubscribed from schedule ${scheduleId}`);
+};
+
 // ========== ADMIN FUNCTIONS (optional) ==========
 
 /**
@@ -173,6 +222,8 @@ export default {
     emitDriverLocation,
     subscribeToParentBus,
     unsubscribeFromParentBus,
+    subscribeToScheduleUpdates,
+    unsubscribeFromScheduleUpdates,
     subscribeToAllBuses,
     unsubscribeFromAllBuses
 };

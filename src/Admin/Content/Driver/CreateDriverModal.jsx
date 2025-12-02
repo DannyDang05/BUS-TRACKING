@@ -14,16 +14,30 @@ const CreateDriverModal = () => {
     const [MaBangLai, setMaBangLai] = useState("");
     const [loading, setLoading] = useState(false);
 
+    const validatePhoneNumber = (phone) => {
+        const phoneRegex = /^09\d{8}$/;
+        return phoneRegex.test(phone);
+    };
+
     const isValid = () => {
         if (Id.trim() === "") return false;
         if (FullName.trim() === "") return false;
         if (MaBangLai.trim() === "") return false;
         if (PhoneNumber.trim() === "") return false;
+        if (!validatePhoneNumber(PhoneNumber)) return false;
         return true;
     };
 
     const handleSubmit = async (e) => {
         e.preventDefault();
+        if (!PhoneNumber.trim()) {
+            toast.error('Vui lòng nhập số điện thoại!');
+            return;
+        }
+        if (!validatePhoneNumber(PhoneNumber)) {
+            toast.error('Số điện thoại phải bắt đầu bằng 09 và có đúng 10 số!');
+            return;
+        }
         if (!isValid()) {
             toast.error('Vui lòng điền đầy đủ thông tin!');
             return;
@@ -87,6 +101,8 @@ const CreateDriverModal = () => {
                 variant="outlined"
                 value={PhoneNumber}
                 onChange={(event) => setPhoneNumber(event.target.value)}
+                error={PhoneNumber && !validatePhoneNumber(PhoneNumber)}
+                helperText={PhoneNumber && !validatePhoneNumber(PhoneNumber) ? 'Số điện thoại phải bắt đầu 09 và có 10 số' : 'VD: 0912345678'}
             />
 
             <TextField

@@ -362,9 +362,17 @@ const Calendar = () => {
                                   onClick={(e) => handleOpenEditModal(morning, e)}
                                   sx={{
                                     padding: '10px',
-                                    background: 'linear-gradient(135deg, #c8e6c9 0%, #a5d6a7 100%)',
+                                    background: 
+                                      morning.status === 'Hoàn thành' ? 'linear-gradient(135deg, #c8e6c9 0%, #a5d6a7 100%)' :
+                                      morning.status === 'Đã hủy' ? 'linear-gradient(135deg, #ffcdd2 0%, #ef9a9a 100%)' :
+                                      morning.status === 'Đang chạy' ? 'linear-gradient(135deg, #b3e5fc 0%, #81d4fa 100%)' :
+                                      'linear-gradient(135deg, #fff9c4 0%, #fff59d 100%)',
                                     borderRadius: '8px',
-                                    border: '1px solid #66bb6a',
+                                    border: 
+                                      morning.status === 'Hoàn thành' ? '1px solid #66bb6a' :
+                                      morning.status === 'Đã hủy' ? '1px solid #e57373' :
+                                      morning.status === 'Đang chạy' ? '1px solid #4fc3f7' :
+                                      '1px solid #fff176',
                                     cursor: 'pointer',
                                     transition: 'all 0.2s ease',
                                     '&:hover': {
@@ -476,9 +484,17 @@ const Calendar = () => {
                                   onClick={(e) => handleOpenEditModal(afternoon, e)}
                                   sx={{
                                     padding: '10px',
-                                    background: 'linear-gradient(135deg, #c8e6c9 0%, #a5d6a7 100%)',
+                                    background: 
+                                      afternoon.status === 'Hoàn thành' ? 'linear-gradient(135deg, #c8e6c9 0%, #a5d6a7 100%)' :
+                                      afternoon.status === 'Đã hủy' ? 'linear-gradient(135deg, #ffcdd2 0%, #ef9a9a 100%)' :
+                                      afternoon.status === 'Đang chạy' ? 'linear-gradient(135deg, #b3e5fc 0%, #81d4fa 100%)' :
+                                      'linear-gradient(135deg, #fff9c4 0%, #fff59d 100%)',
                                     borderRadius: '8px',
-                                    border: '1px solid #66bb6a',
+                                    border: 
+                                      afternoon.status === 'Hoàn thành' ? '1px solid #66bb6a' :
+                                      afternoon.status === 'Đã hủy' ? '1px solid #e57373' :
+                                      afternoon.status === 'Đang chạy' ? '1px solid #4fc3f7' :
+                                      '1px solid #fff176',
                                     cursor: 'pointer',
                                     transition: 'all 0.2s ease',
                                     '&:hover': {

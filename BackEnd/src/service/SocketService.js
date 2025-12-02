@@ -58,6 +58,24 @@ export const initSocketIO = (httpServer) => {
       }
     });
 
+    // Driver subscribe to schedule updates
+    socket.on('driver:subscribe:schedule', (data) => {
+      const { scheduleId } = data;
+      if (scheduleId) {
+        socket.join(`schedule-${scheduleId}`);
+        console.log(`📡 Driver ${socket.id} subscribed to schedule-${scheduleId}`);
+      }
+    });
+
+    // Driver unsubscribe from schedule
+    socket.on('driver:unsubscribe:schedule', (data) => {
+      const { scheduleId } = data;
+      if (scheduleId) {
+        socket.leave(`schedule-${scheduleId}`);
+        console.log(`📤 Driver ${socket.id} unsubscribed from schedule-${scheduleId}`);
+      }
+    });
+
     // Disconnect
     socket.on('disconnect', () => {
       console.log(`🔌 Client disconnected: ${socket.id}`);
@@ -271,6 +289,31 @@ const calculateDistance = (lat1, lon1, lat2, lon2) => {
     Math.sin(dLon / 2) * Math.sin(dLon / 2);
   const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
   return R * c; // Distance in km
+};
+
+/**
+ * Emit pickup status update to all connected clients
+ * @param {Object} data - { scheduleId, pickupPointId, status, studentName, pickupAddress }
+ */
+export const emitPickupStatusUpdate = (data) => {
+  if (!io) {
+    console.warn('⚠️ Socket.IO not initialized, cannot emit pickup status update');
+    return;
+  }
+
+  const { scheduleId, pickupPointId, status, studentName, pickupAddress } = data;
+  
+  // Broadcast to schedule room
+  io.to(`schedule-${scheduleId}`).emit('pickup:status:updated', {
+    scheduleId,
+    pickupPointId,
+    status,
+    studentName,
+    pickupAddress,
+    timestamp: Date.now()
+  });
+
+  console.log(`📢 Emitted pickup status update for schedule ${scheduleId}, point ${pickupPointId}: ${status}`);
 };
 
 export const getIO = () => io;

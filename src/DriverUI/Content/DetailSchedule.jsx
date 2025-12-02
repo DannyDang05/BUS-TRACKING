@@ -56,6 +56,7 @@ const DetailSchedule = () => {
     // STATE CHO DỮ LIỆU
     const [students, setStudents] = useState([]);
     const [routeInfo, setRouteInfo] = useState(null);
+    const [scheduleDate, setScheduleDate] = useState(null);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
     const [showMap, setShowMap] = useState(false);
@@ -105,6 +106,8 @@ const DetailSchedule = () => {
                         DriverName: localStorage.getItem('driver_name') || 'Tài xế',
                         LicensePlate: firstStudent.licensePlate || 'N/A'
                     });
+                    // Lưu ngày của schedule
+                    setScheduleDate(firstStudent.scheduleDate);
                 } else {
                     setRouteInfo({
                         RouteCode: `SCHEDULE-${scheduleId}`,
@@ -124,6 +127,40 @@ const DetailSchedule = () => {
         if (scheduleId) {
             fetchScheduleDetails();
         }
+    }, [scheduleId]);
+
+    // ===================================
+    // AUTO-REFRESH (POLLING) - Tự động reload dữ liệu mỗi 3 giây
+    // ===================================
+    useEffect(() => {
+        if (!scheduleId) return;
+
+        const intervalId = setInterval(async () => {
+            try {
+                const response = await getScheduleStudents(scheduleId);
+                const studentData = response.data || [];
+                
+                // Cập nhật danh sách học sinh
+                setStudents(studentData.map(s => ({
+                    pickupPointId: s.pickupPointId,
+                    StudentId: s.studentId,
+                    Name: s.studentName,
+                    PickupPoint: s.pickupAddress,
+                    Status: s.status,
+                    studentClass: s.studentClass,
+                    parentName: s.parentName,
+                    parentPhone: s.parentPhone
+                })));
+
+                // Trigger refresh map để cập nhật marker
+                setForceRefresh(prev => prev + 1);
+            } catch (err) {
+                console.error('Error auto-refreshing schedule:', err);
+            }
+        }, 3000); // Refresh mỗi 3 giây
+
+        // Cleanup: Clear interval khi component unmount
+        return () => clearInterval(intervalId);
     }, [scheduleId]);
 
     // ===================================
@@ -162,6 +199,23 @@ const DetailSchedule = () => {
     };
 
     const handleStartTrip = async () => {
+        // Kiểm tra xem có phải ngày hôm nay không
+        if (scheduleDate) {
+            const today = new Date();
+            const scheduleDateObj = new Date(scheduleDate);
+            
+            // So sánh chỉ ngày, tháng, năm (bỏ qua giờ)
+            const isSameDay = 
+                today.getFullYear() === scheduleDateObj.getFullYear() &&
+                today.getMonth() === scheduleDateObj.getMonth() &&
+                today.getDate() === scheduleDateObj.getDate();
+            
+            if (!isSameDay) {
+                toast.error('Chỉ có thể bắt đầu lịch trình trong ngày hiện tại!');
+                return;
+            }
+        }
+
         try {
             // Update schedule status to "Đang chạy"
             await updateScheduleStatus(scheduleId, 'Đang chạy');
@@ -247,6 +301,18 @@ const DetailSchedule = () => {
         { label: 'Đã trả', status: 'Đã trả', color: 'primary' },
     ];
 
+    // Kiểm tra xem có phải ngày hôm nay không
+    const isToday = () => {
+        if (!scheduleDate) return true; // Cho phép nếu chưa có thông tin
+        const today = new Date();
+        const scheduleDateObj = new Date(scheduleDate);
+        return (
+            today.getFullYear() === scheduleDateObj.getFullYear() &&
+            today.getMonth() === scheduleDateObj.getMonth() &&
+            today.getDate() === scheduleDateObj.getDate()
+        );
+    };
+
     // Hiển thị loading
     if (loading) {
         return (
@@ -287,14 +353,22 @@ const DetailSchedule = () => {
                 >
                     {showMap ? 'Ẩn Bản đồ' : 'Xem Bản đồ'}
                 </Button>
-                <Button
-                    variant="contained"
-                    color="success"
-                    startIcon={<PlayArrowIcon />}
-                    onClick={handleStartTrip}
+                <Tooltip 
+                    title={!isToday() ? "Chỉ có thể bắt đầu lịch trình trong ngày hiện tại" : ""}
+                    arrow
                 >
-                    Bắt đầu Hành trình
-                </Button>
+                    <span>
+                        <Button
+                            variant="contained"
+                            color="success"
+                            startIcon={<PlayArrowIcon />}
+                            onClick={handleStartTrip}
+                            disabled={!isToday()}
+                        >
+                            Bắt đầu Hành trình
+                        </Button>
+                    </span>
+                </Tooltip>
                 <Button
                     variant="contained"
                     color="error"

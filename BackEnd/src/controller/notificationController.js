@@ -193,7 +193,7 @@ const reportIssue = async (req, res) => {
 const getAllDriversForNotification = async (req, res) => {
   try {
     const [drivers] = await pool.query(
-      'SELECT Id, FullName, PhoneNumber FROM drivers WHERE IsActive = 1 ORDER BY FullName'
+      'SELECT Id, FullName, PhoneNumber, MaBangLai FROM drivers WHERE IsActive = 1 ORDER BY FullName'
     );
     return res.status(200).json({ errorCode: 0, data: drivers });
   } catch (e) {

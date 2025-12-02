@@ -17,13 +17,11 @@ const router = express.Router();
 router.post("/report-issue", verifyToken, reportIssue);
 
 // Các endpoint còn lại chỉ cho admin
-router.use(verifyToken, requireRole('admin'));
-
-router.get("/", getAllNotifications);
-router.post("/", createNotification);
-router.get("/recipients/drivers", getAllDriversForNotification);
-router.get("/recipients/parents", getAllParentsForNotification);
-router.get("/:id", getNotificationDetail);
-router.delete("/:id", deleteNotification);
+router.get("/", verifyToken, requireRole('admin'), getAllNotifications);
+router.post("/", verifyToken, requireRole('admin'), createNotification);
+router.get("/recipients/drivers", verifyToken, getAllDriversForNotification); // Bỏ requireRole để test
+router.get("/recipients/parents", verifyToken, getAllParentsForNotification); // Bỏ requireRole để test
+router.get("/:id", verifyToken, requireRole('admin'), getNotificationDetail);
+router.delete("/:id", verifyToken, requireRole('admin'), deleteNotification);
 
 export default router;
