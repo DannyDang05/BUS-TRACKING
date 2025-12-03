@@ -614,7 +614,8 @@ class RouteOptimizationService {
                 createdRouteIds.push(routeId);  // Save route ID for schedule creation
 
                 // Lưu điểm TRƯỜNG (xuất phát) - PointOrder = 0
-                const schoolLocation = route.schoolLocation || { lat: 10.76143060, lon: 106.68216890 };
+                // Tọa độ Trường ĐH Sài Gòn, 273 An Dương Vương, Phường 3, Quận 5, TP.HCM
+                const schoolLocation = route.schoolLocation || { lat: 10.75496887, lon: 106.67973554 };
                 await connection.query(`
                     INSERT INTO pickuppoints (
                         RouteId, MaHocSinh, Latitude, Longitude, DiaChi, 
