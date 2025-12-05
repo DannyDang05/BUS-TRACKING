@@ -133,13 +133,15 @@ const Calendar = () => {
             const day = String(selectedDate.getDate()).padStart(2, '0');
             const dateStr = `${year}-${month}-${day}`;
             
-            // Tạo schedule cho ca đã chọn
+            // Tạo schedule với driver_id và vehicle_id
             const scheduleData = {
                 route_id: selectedRoute.Id,
                 date: dateStr,
                 start_time: startTime || (selectedShift === 'Sáng' ? '07:00:00' : '16:00:00'),
                 shift: selectedShift,
-                status: 'Đã phân công'
+                status: 'Đã phân công',
+                driver_id: driverId,
+                vehicle_id: vehicleId
             };
             
             await createSchedule(scheduleData);
@@ -160,7 +162,7 @@ const Calendar = () => {
         // Format ngày đúng (tránh timezone UTC)
         const year = date.getFullYear();
         const month = String(date.getMonth() + 1).padStart(2, '0');
-        const day = String(date.getDate()-1).padStart(2, '0');
+        const day = String(date.getDate()).padStart(2, '0');
         const dateStr = `${year}-${month}-${day}`;
         
         const found = schedules.filter(s => {
@@ -320,7 +322,7 @@ const Calendar = () => {
                           // Lấy tất cả schedules cho ngày này
                           const year = day.getFullYear();
                           const month = String(day.getMonth() + 1).padStart(2, '0');
-                          const dayStr = String(day.getDate()-1).padStart(2, '0');
+                          const dayStr = String(day.getDate()).padStart(2, '0');
                           const dateStr = `${year}-${month}-${dayStr}`;
                           
                           const schedulesForDay = schedules.filter(s => {

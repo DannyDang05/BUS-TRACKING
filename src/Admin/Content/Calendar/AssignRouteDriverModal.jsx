@@ -60,15 +60,7 @@ const AssignRouteDriverModal = ({ open, onClose, route, date, shift, onSuccess }
 
     setLoading(true);
     try {
-      // 1. Cập nhật route với driver và vehicle
-      await updateRoute(route.Id, {
-        MaTuyen: route.MaTuyen,
-        Name: route.Name,
-        DriverId: selectedDriverId,
-        VehicleId: selectedVehicleId
-      });
-
-      // 2. Callback để tạo schedule cho ca đã chọn
+      // Callback để tạo schedule với driver_id và vehicle_id
       await onSuccess(selectedDriverId, selectedVehicleId, startTime);
       
       onClose();

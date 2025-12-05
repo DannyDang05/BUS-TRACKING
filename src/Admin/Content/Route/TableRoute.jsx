@@ -104,8 +104,8 @@ const TableRoute = (props) => {
             <TableHead>
               <TableRow>
                 <TableCell>ID</TableCell>
-                <TableCell>Mã Tuyến</TableCell>
-                <TableCell>ID Xe</TableCell>
+                <TableCell>Tên Tuyến</TableCell>
+                {/* <TableCell>ID Xe</TableCell> */}
                 <TableCell>Tổng Quãng Đường</TableCell>
                 <TableCell>Thời Gian Ước Tính</TableCell>
                 <TableCell>Hành Động</TableCell>
@@ -140,9 +140,9 @@ const TableRoute = (props) => {
                         )}
                       </Box>
                     </TableCell>
-                    <TableCell>
+                    {/* <TableCell>
                       {r.VehicleId || 'Chưa có'}
-                    </TableCell>
+                    </TableCell> */}
                     <TableCell>
                       {r.TotalDistance ? `${parseFloat(r.TotalDistance).toFixed(2)} km` : 'N/A'}
                     </TableCell>

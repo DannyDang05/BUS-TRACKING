@@ -31,10 +31,10 @@ const getDriverSchedules = async (req, res) => {
         SUM(CASE WHEN sps.TinhTrangDon = 'Đã trả' THEN 1 ELSE 0 END) AS droppedOffCount
       FROM schedules s
       INNER JOIN routes r ON s.route_id = r.Id
-      LEFT JOIN vehicles v ON r.VehicleId = v.Id
+      LEFT JOIN vehicles v ON s.vehicle_id = v.Id
       LEFT JOIN pickuppoints pp ON r.Id = pp.RouteId
       LEFT JOIN schedule_pickup_status sps ON sps.ScheduleId = s.id AND sps.PickupPointId = pp.Id
-      WHERE r.DriverId = ? AND s.date >= ?
+      WHERE s.driver_id = ? AND s.date >= ?
       GROUP BY s.id, s.date, s.start_time, s.shift, s.status, r.Id, r.MaTuyen, r.Name, v.LicensePlate, v.Model
       ORDER BY s.date ASC, s.start_time ASC
     `, [driverId, today]);
@@ -97,13 +97,19 @@ const getScheduleStudents = async (req, res) => {
     const scheduleStatus = scheduleRows[0].status;
     const scheduleDate = scheduleRows[0].date;
 
-    // Lấy thông tin route
-    const [routeInfo] = await pool.query(`
-      SELECT r.Id, r.MaTuyen, r.Name, v.LicensePlate
-      FROM routes r
-      LEFT JOIN vehicles v ON r.VehicleId = v.Id
-      WHERE r.Id = ?
-    `, [routeId]);
+    // Lấy thông tin route và vehicle từ schedule
+    const [scheduleInfo] = await pool.query(`
+      SELECT 
+        r.Id, r.MaTuyen, r.Name,
+        v.LicensePlate,
+        s.driver_id, s.vehicle_id
+      FROM schedules s
+      INNER JOIN routes r ON s.route_id = r.Id
+      LEFT JOIN vehicles v ON s.vehicle_id = v.Id
+      WHERE s.id = ?
+    `, [scheduleId]);
+    
+    const routeInfo = scheduleInfo;
 
     // Lấy TẤT CẢ điểm đón theo thứ tự (BAO GỒM ĐIỂM TRƯỜNG có MaHocSinh = NULL)
     // LUÔN lấy trạng thái từ schedule_pickup_status (không fallback về pickuppoints)
@@ -272,21 +278,22 @@ const getAllSchedules = async (req, res) => {
       SELECT 
         s.id,
         s.route_id,
-        s.date,
+        DATE_FORMAT(s.date, '%Y-%m-%d') as date,
         s.start_time,
         s.shift,
         s.end_time,
         s.status,
         s.created_at,
+        s.driver_id as DriverId,
+        s.vehicle_id,
         r.MaTuyen as routeCode,
         r.Name as routeName,
-        r.DriverId,
         d.FullName as driverName,
         v.LicensePlate as licensePlate
       FROM schedules s
       INNER JOIN routes r ON s.route_id = r.Id
-      LEFT JOIN drivers d ON r.DriverId = d.Id
-      LEFT JOIN vehicles v ON r.VehicleId = v.Id
+      LEFT JOIN drivers d ON s.driver_id = d.Id
+      LEFT JOIN vehicles v ON s.vehicle_id = v.Id
       ${where}
       ORDER BY s.date DESC, s.start_time DESC
       LIMIT ? OFFSET ?
@@ -341,7 +348,7 @@ const getScheduleById = async (req, res) => {
  * Tạo schedule mới và tự động tạo pickup status records
  */
 const createSchedule = async (req, res) => {
-  const { route_id, date, start_time, shift, status } = req.body;
+  const { route_id, date, start_time, shift, status, driver_id, vehicle_id } = req.body;
   
   if (!route_id || !date || !start_time) {
     return res.status(400).json({ 
@@ -355,12 +362,32 @@ const createSchedule = async (req, res) => {
     await connection.beginTransaction();
 
     // Log để debug
-    console.log('📅 Creating schedule:', { date, start_time, shift, status });
+    console.log('📅 Creating schedule:', { date, start_time, shift, status, driver_id, vehicle_id });
     
-    // 1. Tạo schedule
+    // 0. Kiểm tra driver conflict (nếu có driver_id)
+    if (driver_id) {
+      const shiftValue = shift || 'Sáng';
+      const [existingSchedules] = await connection.query(`
+        SELECT s.id, r.Name as routeName
+        FROM schedules s
+        INNER JOIN routes r ON s.route_id = r.Id
+        WHERE s.driver_id = ? AND s.date = ? AND s.shift = ? AND s.status != 'Đã hủy'
+      `, [driver_id, date, shiftValue]);
+
+      if (existingSchedules.length > 0) {
+        await connection.rollback();
+        const routeName = existingSchedules[0].routeName;
+        return res.status(400).json({ 
+          errorCode: 2, 
+          message: `Tài xế đã được phân công cho tuyến "${routeName}" vào ca ${shiftValue} ngày ${date}. Một tài xế không thể phân công cho nhiều tuyến trong cùng ca.` 
+        });
+      }
+    }
+    
+    // 1. Tạo schedule với driver_id và vehicle_id
     const [result] = await connection.query(
-      'INSERT INTO schedules (route_id, date, start_time, shift, status) VALUES (?, ?, ?, ?, ?)',
-      [route_id, date, start_time, shift || 'Sáng', status || 'Chưa phân công']
+      'INSERT INTO schedules (route_id, date, start_time, shift, status, driver_id, vehicle_id) VALUES (?, ?, ?, ?, ?, ?, ?)',
+      [route_id, date, start_time, shift || 'Sáng', status || 'Chưa phân công', driver_id || null, vehicle_id || null]
     );
     
     const scheduleId = result.insertId;
@@ -412,7 +439,7 @@ const createSchedule = async (req, res) => {
  */
 const updateSchedule = async (req, res) => {
   const id = req.params.id;
-  const { route_id, date, start_time, end_time, status } = req.body;
+  const { route_id, date, start_time, end_time, status, driver_id, vehicle_id } = req.body;
 
   if (!route_id || !date || !start_time) {
     return res.status(400).json({ 
@@ -423,8 +450,8 @@ const updateSchedule = async (req, res) => {
 
   try {
     const [result] = await pool.query(
-      'UPDATE schedules SET route_id = ?, date = ?, start_time = ?, end_time = ?, status = ? WHERE id = ?',
-      [route_id, date, start_time, end_time, status, id]
+      'UPDATE schedules SET route_id = ?, date = ?, start_time = ?, end_time = ?, status = ?, driver_id = ?, vehicle_id = ? WHERE id = ?',
+      [route_id, date, start_time, end_time, status, driver_id || null, vehicle_id || null, id]
     );
     
     if (result.affectedRows === 0) {
@@ -477,11 +504,43 @@ const assignDriverToRoute = async (req, res) => {
   try {
     await connection.beginTransaction();
 
-    // 1. Cập nhật DriverId vào route
-    await connection.query(
-      'UPDATE routes SET DriverId = ? WHERE Id = ?',
-      [driverId, routeId]
+    // 0. Kiểm tra tài xế đã được phân công ca Sáng hoặc Chiều trong ngày này chưa
+    const [existingSchedules] = await connection.query(`
+      SELECT s.id, s.shift, r.Name as routeName
+      FROM schedules s 
+      INNER JOIN routes r ON s.route_id = r.Id
+      WHERE s.driver_id = ? AND s.date = ? AND s.status != 'Đã hủy'
+    `, [driverId, date]);
+
+    // Kiểm tra conflict cho từng ca sẽ tạo
+    const conflictShifts = [];
+    if (morningStartTime) {
+      const morningConflict = existingSchedules.find(s => s.shift === 'Sáng');
+      if (morningConflict) {
+        conflictShifts.push(`Sáng (tuyến "${morningConflict.routeName}")`);
+      }
+    }
+    if (afternoonStartTime) {
+      const afternoonConflict = existingSchedules.find(s => s.shift === 'Chiều');
+      if (afternoonConflict) {
+        conflictShifts.push(`Chiều (tuyến "${afternoonConflict.routeName}")`);
+      }
+    }
+
+    if (conflictShifts.length > 0) {
+      await connection.rollback();
+      return res.status(400).json({ 
+        errorCode: 2, 
+        message: `Tài xế đã được phân công ca ${conflictShifts.join(' và ')} trong ngày ${date}. Một tài xế không thể phân công nhiều tuyến trong cùng ca.` 
+      });
+    }
+
+    // 1. Lấy vehicle_id từ route
+    const [routeData] = await connection.query(
+      'SELECT VehicleId FROM routes WHERE Id = ?',
+      [routeId]
     );
+    const vehicleId = routeData[0]?.VehicleId || null;
 
     // 2. Lấy danh sách TẤT CẢ pickup points trên route (bao gồm điểm trường)
     const [pickupPoints] = await connection.query(
@@ -493,9 +552,9 @@ const assignDriverToRoute = async (req, res) => {
     let morningScheduleId = null;
     if (morningStartTime) {
       const [morningResult] = await connection.query(`
-        INSERT INTO schedules (route_id, date, start_time, shift, status)
-        VALUES (?, ?, ?, 'Sáng', 'Đã phân công')
-      `, [routeId, date, morningStartTime]);
+        INSERT INTO schedules (route_id, date, start_time, shift, status, driver_id, vehicle_id)
+        VALUES (?, ?, ?, 'Sáng', 'Đã phân công', ?, ?)
+      `, [routeId, date, morningStartTime, driverId, vehicleId]);
       morningScheduleId = morningResult.insertId;
 
       // Tạo pickup status records cho ca sáng (bao gồm điểm trường)
@@ -518,9 +577,9 @@ const assignDriverToRoute = async (req, res) => {
     let afternoonScheduleId = null;
     if (afternoonStartTime) {
       const [afternoonResult] = await connection.query(`
-        INSERT INTO schedules (route_id, date, start_time, shift, status)
-        VALUES (?, ?, ?, 'Chiều', 'Đã phân công')
-      `, [routeId, date, afternoonStartTime]);
+        INSERT INTO schedules (route_id, date, start_time, shift, status, driver_id, vehicle_id)
+        VALUES (?, ?, ?, 'Chiều', 'Đã phân công', ?, ?)
+      `, [routeId, date, afternoonStartTime, driverId, vehicleId]);
       afternoonScheduleId = afternoonResult.insertId;
 
       // Tạo pickup status records cho ca chiều (bao gồm điểm trường)
@@ -576,9 +635,9 @@ const updateScheduleDriver = async (req, res) => {
   }
 
   try {
-    // Lấy route_id từ schedule
+    // Lấy thông tin schedule hiện tại
     const [schedules] = await pool.query(
-      'SELECT route_id FROM schedules WHERE id = ?',
+      'SELECT route_id, date, shift FROM schedules WHERE id = ?',
       [scheduleId]
     );
 
@@ -586,18 +645,35 @@ const updateScheduleDriver = async (req, res) => {
       return res.status(404).json({ errorCode: 3, message: 'Không tìm thấy lịch trình.' });
     }
 
-    const routeId = schedules[0].route_id;
+    const { route_id: routeId, date, shift } = schedules[0];
 
-    // Cập nhật DriverId vào route
-    await pool.query(
-      'UPDATE routes SET DriverId = ? WHERE Id = ?',
-      [driverId, routeId]
+    // Kiểm tra tài xế đã được phân công trong cùng ngày và ca chưa
+    const [existingSchedules] = await pool.query(`
+      SELECT s.id, r.Name as routeName
+      FROM schedules s
+      INNER JOIN routes r ON s.route_id = r.Id
+      WHERE s.driver_id = ? AND s.date = ? AND s.shift = ? AND s.id != ? AND s.status != 'Đã hủy'
+    `, [driverId, date, shift, scheduleId]);
+
+    if (existingSchedules.length > 0) {
+      const routeName = existingSchedules[0].routeName;
+      return res.status(400).json({ 
+        errorCode: 2, 
+        message: `Tài xế đã được phân công cho tuyến "${routeName}" vào ca ${shift} ngày ${date}. Một tài xế không thể phân công cho nhiều tuyến trong cùng ca.` 
+      });
+    }
+
+    // Lấy vehicle_id từ route
+    const [routeData] = await pool.query(
+      'SELECT VehicleId FROM routes WHERE Id = ?',
+      [routeId]
     );
+    const vehicleId = routeData[0]?.VehicleId || null;
 
-    // Cập nhật status schedule thành "Đã phân công"
+    // Cập nhật driver_id, vehicle_id và status trong schedules
     await pool.query(
-      "UPDATE schedules SET status = 'Đã phân công' WHERE id = ?",
-      [scheduleId]
+      "UPDATE schedules SET driver_id = ?, vehicle_id = ?, status = 'Đã phân công' WHERE id = ?",
+      [driverId, vehicleId, scheduleId]
     );
 
     return res.status(200).json({ 

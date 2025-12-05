@@ -30,6 +30,7 @@ const RouteMapViewer = ({ open, onClose, routeId }) => {
     if (!open || !routeId) return;
     const load = async () => {
       setLoading(true);
+      setOptimizedOrder([]); // Reset optimized order when loading new route
       try {
         const [routeRes, pointsRes] = await Promise.all([
           getRouteById(routeId),
@@ -58,7 +59,7 @@ const RouteMapViewer = ({ open, onClose, routeId }) => {
         mapRef.current = new mapboxgl.Map({
           container: containerRef.current,
           style: 'mapbox://styles/mapbox/streets-v11',
-          center: [106.6297, 10.8231], // Trường ĐH Sài Gòn Quận 5
+          center: [106.67973554, 10.75496887], // Trường ĐH Sài Gòn Quận 5
           zoom: 13
         });
 
@@ -191,6 +192,10 @@ const RouteMapViewer = ({ open, onClose, routeId }) => {
     for (let i = 0; i < order.length - 1; i++) {
       const p1 = pts[order[i]];
       const p2 = pts[order[i + 1]];
+      if (!p1 || !p2) {
+        console.error(`Invalid point at index ${order[i]} or ${order[i + 1]}. Order:`, order, 'Points length:', pts.length);
+        continue;
+      }
       total += calculateDistance(
         parseFloat(p1.Latitude), parseFloat(p1.Longitude),
         parseFloat(p2.Latitude), parseFloat(p2.Longitude)
@@ -213,7 +218,7 @@ const RouteMapViewer = ({ open, onClose, routeId }) => {
     schoolEl.style.cursor = 'pointer';
     schoolEl.style.filter = 'drop-shadow(0 2px 4px rgba(0,0,0,0.3))';
     const schoolMarker = new mapboxgl.Marker({ element: schoolEl })
-      .setLngLat([106.6297, 10.8231])
+      .setLngLat([106.68216890, 10.76143060])
       .setPopup(new mapboxgl.Popup({ offset: 25 }).setHTML(`
         <div style="padding: 10px; min-width: 200px; text-align: center;">
           <h4 style="margin: 0 0 5px 0; font-size: 16px; color: #f44336; font-weight: bold;">
@@ -225,35 +230,36 @@ const RouteMapViewer = ({ open, onClose, routeId }) => {
       .addTo(map);
     markersRef.current.push(schoolMarker);
 
-    // ❌ LỌC BỎ các điểm có trạng thái "Vắng mặt" (nếu có thông tin status)
-    // NOTE: Admin route viewer chỉ hiển thị route tĩnh, không có real-time status
-    // Để lọc theo schedule, cần pass scheduleId vào component này
-    const activePts = pts.filter(p => {
-      // Nếu không có thông tin status, hiển thị tất cả
-      const status = p.TinhTrangDon || p.status || p.pickup_status;
-      return !status || status !== 'Vắng mặt';
-    });
-
-    console.log(`🗺️ Displaying ${activePts.length}/${pts.length} pickup points (excluded absent students)`);
+    // NOTE: Admin route viewer displays static route configuration
+    // Don't filter by pickup status - show all configured pickup points
+    console.log(`🗺️ Displaying ${pts.length} pickup points`);
 
     // Calculate or use existing optimized order
-    const order = optimizedOrder.length > 0 ? optimizedOrder : findShortestPath(activePts);
+    const order = optimizedOrder.length > 0 ? optimizedOrder : findShortestPath(pts);
     
-    // Tọa độ điểm đón học sinh (chỉ các điểm active)
+    // Tọa độ điểm đón học sinh
     const studentCoords = order.map(idx => {
-      const p = activePts[idx];
+      const p = pts[idx];
+      if (!p) {
+        console.error(`Point at index ${idx} is undefined. Order: ${order}, Points length: ${pts.length}`);
+        return null;
+      }
       return [parseFloat(p.Longitude), parseFloat(p.Latitude)];
-    }).filter(c => Number.isFinite(c[0]) && Number.isFinite(c[1]));
+    }).filter(c => c && Number.isFinite(c[0]) && Number.isFinite(c[1]));
 
     // Tạo route hoàn chỉnh: Trường -> Học sinh -> Trường
-    const schoolCoord = [106.6297, 10.8231];
+    const schoolCoord = [106.68216890, 10.75496887];
     const coords = [schoolCoord, ...studentCoords, schoolCoord];
 
     console.log('Drawing map with coords:', coords, 'Order:', order);
 
-    // Add markers với icon nhỏ gọn 30px (chỉ cho các điểm active)
+    // Add markers với icon nhỏ gọn 30px
     order.forEach((originalIdx, displayIdx) => {
-      const p = activePts[originalIdx];
+      const p = pts[originalIdx];
+      if (!p) {
+        console.error(`Cannot create marker: Point at index ${originalIdx} is undefined`);
+        return;
+      }
       const lng = parseFloat(p.Longitude);
       const lat = parseFloat(p.Latitude);
       
@@ -350,7 +356,11 @@ const RouteMapViewer = ({ open, onClose, routeId }) => {
   };
 
   const calculateTotalDistance = () => {
-    const order = optimizedOrder.length > 0 ? optimizedOrder : Array.from({ length: points.length }, (_, i) => i);
+    if (!points || points.length === 0) return 0;
+    let order = optimizedOrder.length > 0 ? optimizedOrder : Array.from({ length: points.length }, (_, i) => i);
+    // Filter out invalid indices
+    order = order.filter(idx => idx >= 0 && idx < points.length);
+    if (order.length < 2) return 0;
     return getPathDistance(points, order);
   };
 

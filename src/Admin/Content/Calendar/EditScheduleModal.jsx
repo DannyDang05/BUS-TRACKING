@@ -59,19 +59,15 @@ const EditScheduleModal = ({ open, onClose, schedule, onSuccess }) => {
 
     setLoading(true);
     try {
-      // 1. Cập nhật route với driver và vehicle
-      await updateRoute(schedule.route_id, {
-        DriverId: selectedDriverId,
-        VehicleId: selectedVehicleId
-      });
-
-      // 2. Cập nhật schedule với thời gian mới
+      // Cập nhật schedule với driver_id, vehicle_id và thời gian mới
       await updateSchedule(schedule.id, {
         route_id: schedule.route_id,
         date: schedule.date.split('T')[0],
         start_time: startTime + ':00',
         shift: schedule.shift,
-        status: schedule.status
+        status: schedule.status,
+        driver_id: selectedDriverId,
+        vehicle_id: selectedVehicleId
       });
 
       toast.success('Cập nhật lịch trình thành công!');

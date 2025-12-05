@@ -84,8 +84,12 @@ const UpdateCalendarModal = ({ open, onClose, schedule }) => {
     setError('');
     try {
       await updateSchedule(scheduleId, formData);
-      onClose();
       toast.success('Cập nhật lịch trình thành công!');
+      onClose();
+      // Gọi callback để refresh data nếu có
+      if (schedule?.onUpdateSuccess) {
+        schedule.onUpdateSuccess();
+      }
     } catch (err) {
       setError(err.response?.data?.message || 'Cập nhật lịch trình lỗi');
       toast.error(err.response?.data?.message || 'Cập nhật lịch trình lỗi');

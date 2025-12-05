@@ -201,4 +201,8 @@ export const getDriverNotifications = (driverId, page, limit) => {
 export const markDriverNotificationRead = (notificationId) => apiService.post(`/drivers/notifications/${notificationId}/mark-read`);
 export const markAllDriverNotificationsRead = (driverId) => apiService.post(`/drivers/notifications/mark-all-read/${driverId}`);
 
+// --- API DASHBOARD (Thống kê tổng quan) ---
+export const getDashboardStats = () => apiService.get('/dashboard/stats');
+export const getRecentActivities = () => apiService.get('/dashboard/recent-activities');
+
 export default apiService;

@@ -1,13 +1,15 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { Box, Button, Typography, Paper, Table, TableBody, TableCell, TableContainer, TableHead, TableRow, Dialog, DialogTitle, DialogContent, DialogActions, TextField, IconButton, Chip, Divider } from '@mui/material';
+import { Box, Button, Typography, Paper, Table, TableBody, TableCell, TableContainer, TableHead, TableRow, Dialog, DialogTitle, DialogContent, DialogActions, TextField, IconButton, Chip, Divider, MenuItem, Select, FormControl, InputLabel } from '@mui/material';
 import { Delete as DeleteIcon, Edit as EditIcon, Add as AddIcon, MapOutlined as MapIcon, Navigation as NavigationIcon } from '@mui/icons-material';
 import mapboxgl from 'mapbox-gl';
 import 'mapbox-gl/dist/mapbox-gl.css';
-import { getPickupPoints, createPickupPoint, updatePickupPoint, deletePickupPoint } from '../../../service/apiService';
+import { getPickupPoints, createPickupPoint, updatePickupPoint, deletePickupPoint, getAllStudents } from '../../../service/apiService';
 import PaginationControls from '../PaginationControls';
 import ConfirmDialog from '../../Shared/ConfirmDialog';
 import { useLanguage } from '../../Shared/LanguageContext';
+import AddressAutocomplete from '../../Shared/AddressAutocomplete';
+import { toast } from 'react-toastify';
 
 const MAPBOX_TOKEN = 'pk.eyJ1IjoibGlraWpvb25nMSIsImEiOiJjbWg5eXlyN24wMDFlMnJuNmIxY2kxOTc2In0.KDmPuA2vvdV6G28mpeK4KA';
 
@@ -16,13 +18,16 @@ const RouteStopsPage = () => {
   const navigate = useNavigate();
   const [points, setPoints] = useState([]);
   const [loading, setLoading] = useState(false);
+  const [students, setStudents] = useState([]);
 
   // dialog state
   const [openDialog, setOpenDialog] = useState(false);
   const [editingPoint, setEditingPoint] = useState(null);
-  const [form, setForm] = useState({ PointOrder: '', PointName: '', Address: '', Latitude: '', Longitude: '' });
+  const [form, setForm] = useState({ PointOrder: '', PointName: '', Address: '', Latitude: '', Longitude: '', StudentId: '' });
   const [confirmOpen, setConfirmOpen] = useState(false);
   const [confirmTarget, setConfirmTarget] = useState(null);
+  
+
 
   // map refs
   const mapRef = useRef(null);
@@ -45,7 +50,17 @@ const RouteStopsPage = () => {
 
   useEffect(() => {
     loadPoints();
+    loadStudents();
   }, [id]);
+
+  const loadStudents = async () => {
+    try {
+      const res = await getAllStudents('', 1, 1000);
+      setStudents(res?.data || []);
+    } catch (err) {
+      console.error('Failed to load students', err);
+    }
+  };
 
   const loadPoints = async () => {
     setLoading(true);
@@ -170,15 +185,32 @@ const RouteStopsPage = () => {
 
   const { t } = useLanguage();
 
+  // Chọn địa chỉ từ AddressAutocomplete component
+  const handleSelectAddress = (suggestion) => {
+    setForm(prev => ({
+      ...prev,
+      Address: suggestion.address,
+      Latitude: suggestion.latitude.toString(),
+      Longitude: suggestion.longitude.toString()
+    }));
+  };
+
   const handleOpenAdd = () => {
     setEditingPoint(null);
-    setForm({ PointOrder: '', PointName: '', Address: '', Latitude: '', Longitude: '' });
+    setForm({ PointOrder: '', PointName: '', Address: '', Latitude: '', Longitude: '', StudentId: '' });
     setOpenDialog(true);
   };
 
   const handleEdit = (p) => {
     setEditingPoint(p);
-    setForm({ PointOrder: p.PointOrder, PointName: p.MaHocSinh || '', Address: p.DiaChi || '', Latitude: p.Latitude, Longitude: p.Longitude });
+    setForm({ 
+      PointOrder: p.PointOrder, 
+      PointName: p.MaHocSinh || '', 
+      Address: p.DiaChi || '', 
+      Latitude: p.Latitude, 
+      Longitude: p.Longitude,
+      StudentId: p.MaHocSinh || ''
+    });
     setOpenDialog(true);
   };
 
@@ -189,30 +221,32 @@ const RouteStopsPage = () => {
 
   const handleSubmit = async () => {
     if (!form.PointOrder || form.Latitude === '' || form.Longitude === '') {
-      alert('Vui lòng nhập Thứ tự, Latitude và Longitude');
+      toast.error('Vui lòng nhập Thứ tự, Latitude và Longitude');
       return;
     }
     const payload = {
       RouteId: id,
       PointOrder: Number(form.PointOrder),
-      PointName: form.PointName,
-      Address: form.Address,
+      MaHocSinh: (form.StudentId && form.StudentId.trim() !== '') ? form.StudentId : null, // Dùng StudentId đã chọn
+      DiaChi: form.Address || null,
       Latitude: Number(form.Latitude),
       Longitude: Number(form.Longitude)
     };
     try {
       if (editingPoint) {
         await updatePickupPoint(editingPoint.Id, payload);
+        toast.success('Cập nhật điểm đón thành công!');
       } else {
         await createPickupPoint(payload);
+        toast.success('Thêm điểm đón thành công!');
       }
       setOpenDialog(false);
       await loadPoints();
     } catch (err) {
       console.error('Save failed', err);
-      alert('Lỗi khi lưu điểm đón');
+      toast.error(err?.message || 'Lỗi khi lưu điểm đón');
     }
-  };
+  }
 
   const handleConfirmResult = async (result) => {
     setConfirmOpen(false);
@@ -262,12 +296,23 @@ const RouteStopsPage = () => {
                   ) : points.length === 0 ? (
                         <TableRow><TableCell colSpan={5} align="center" sx={{ py: 3, color: '#999' }}>📍 {t('noData')}</TableCell></TableRow>
                   ) : (
-                    displayedPoints.map((p, idx) => (
+                    displayedPoints.map((p, idx) => {
+                      const student = students.find(s => s.MaHocSinh === p.MaHocSinh);
+                      return (
                       <TableRow key={p.Id} sx={{ '&:hover': { bgcolor: '#fff5f2' }, '&:nth-of-type(even)': { bgcolor: '#fafafa' } }}>
                         <TableCell sx={{ fontWeight: 'bold', bgcolor: '#fff3f0' }}>
                           <Chip label={page * rowsPerPage + idx + 1} size="small" sx={{ bgcolor: '#00838f', color: 'white', fontWeight: 'bold' }} />
                         </TableCell>
-                        <TableCell sx={{ fontWeight: '500' }}>{p.MaHocSinh || '—'}</TableCell>
+                        <TableCell sx={{ fontWeight: '500' }}>
+                          {student ? (
+                            <Box>
+                              <Typography sx={{ fontWeight: 'bold', fontSize: '0.9rem' }}>{student.HoTen}</Typography>
+                              <Typography sx={{ fontSize: '0.75rem', color: '#666' }}>{p.MaHocSinh} {student.Lop ? `- ${student.Lop}` : ''}</Typography>
+                            </Box>
+                          ) : (
+                            p.MaHocSinh || <em style={{ color: '#999' }}>Không có học sinh</em>
+                          )}
+                        </TableCell>
                         <TableCell sx={{ fontSize: '0.85rem', color: '#555' }}>{p.DiaChi || t('noPickupPoints')}</TableCell>
                         <TableCell sx={{ fontSize: '0.8rem', fontFamily: 'monospace', color: '#666' }}>{Number(p.Latitude).toFixed(4)}<br/>{Number(p.Longitude).toFixed(4)}</TableCell>
                         <TableCell align="center">
@@ -275,7 +320,8 @@ const RouteStopsPage = () => {
                           <IconButton size="small" onClick={() => handleDelete(p)} color="error" title={t('delete')}><DeleteIcon fontSize="small" /></IconButton>
                         </TableCell>
                       </TableRow>
-                    ))
+                    );
+                    })
                   )}
                 </TableBody>
               </Table>
@@ -309,31 +355,46 @@ const RouteStopsPage = () => {
         <DialogContent>
           <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2.5, pt: 2 }}>
             <TextField 
+              label="Thứ tự"
               type="number"
               value={form.PointOrder} 
               onChange={(e) => setForm(prev => ({ ...prev, PointOrder: e.target.value }))} 
               fullWidth
               size="small"
+              placeholder="VD: 1, 2, 3..."
             />
-            <TextField 
-              label="Tên điểm đón" 
-              name="PointName" 
-              value={form.PointName} 
-              onChange={(e) => setForm(prev => ({ ...prev, PointName: e.target.value }))} 
-              fullWidth
-              size="small"
-              placeholder="VD: Trường Tiểu học ABC"
-            />
-            <TextField 
-              label="Địa chỉ" 
-              name="Address" 
-              value={form.Address} 
-              onChange={(e) => setForm(prev => ({ ...prev, Address: e.target.value }))} 
-              fullWidth
-              size="small"
-              multiline
-              rows={2}
+            
+            <FormControl fullWidth size="small">
+              <InputLabel>Chọn học sinh (tùy chọn)</InputLabel>
+              <Select
+                value={form.StudentId}
+                onChange={(e) => setForm(prev => ({ ...prev, StudentId: e.target.value, PointName: e.target.value }))}
+                label="Chọn học sinh (tùy chọn)"
+                sx={{
+                  '& .MuiOutlinedInput-notchedOutline': { borderColor: '#0097a7' },
+                  '&:hover .MuiOutlinedInput-notchedOutline': { borderColor: '#00838f' },
+                  '&.Mui-focused .MuiOutlinedInput-notchedOutline': { borderColor: '#0097a7' }
+                }}
+              >
+                <MenuItem value="">
+                  <em>-- Không chọn học sinh --</em>
+                </MenuItem>
+                {students.map((student) => (
+                  <MenuItem key={student.MaHocSinh} value={student.MaHocSinh}>
+                    {student.MaHocSinh} - {student.HoTen} {student.Lop ? `(${student.Lop})` : ''}
+                  </MenuItem>
+                ))}
+              </Select>
+            </FormControl>
+            <AddressAutocomplete
+              value={form.Address}
+              onChange={(value) => setForm(prev => ({ ...prev, Address: value }))}
+              onSelectAddress={handleSelectAddress}
+              label="Địa chỉ"
               placeholder="VD: 123 Nguyễn Hữu Cảnh, Quận 1, TP HCM"
+              helperText="💡 Nhập địa chỉ để tự động lấy tọa độ"
+              multiline={true}
+              rows={2}
             />
             <Divider sx={{ my: 1 }}>{t('gpsCoordinates')}</Divider>
             <Box sx={{ display: 'flex', gap: 1.5 }}>

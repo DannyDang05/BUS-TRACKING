@@ -11,6 +11,7 @@ import scheduleRoute from "./scheduleRoute.js";
 import simulationRoute from "./simulationRoute.js";
 import parentRoute from "./parentRoute.js";
 import userRoute from "./userRoute.js";
+import dashboardRoute from "./dashboardRoute.js";
 
 const router = express.Router();
 
@@ -29,6 +30,7 @@ const initAPIRouter = (app) => {
   router.use("/v1/schedules", scheduleRoute);
   router.use("/v1/simulation", simulationRoute);
   router.use("/v1/parent", parentRoute);
+  router.use("/v1/dashboard", dashboardRoute);
 
   // Gắn Router tổng vào Express app với prefix /api
   return app.use("/api", router);

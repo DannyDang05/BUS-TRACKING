@@ -6,56 +6,92 @@ import {
   FaChartBar,
   FaClock
 } from 'react-icons/fa';
-import { Box, Card, CardContent, Typography, Grid } from '@mui/material';
+import { Box, Card, CardContent, Typography, Grid, CircularProgress } from '@mui/material';
 import { useLanguage } from '../../Shared/LanguageContext';
+import { useState, useEffect } from 'react';
+import { getDashboardStats } from '../../../service/apiService';
+import { toast } from 'react-toastify';
 
 const MainPage = () => {
   const { t } = useLanguage();
+  const [dashboardData, setDashboardData] = useState(null);
+  const [loading, setLoading] = useState(true);
 
-  const stats = [
+  useEffect(() => {
+    fetchDashboardStats();
+  }, []);
+
+  const fetchDashboardStats = async () => {
+    try {
+      setLoading(true);
+      const response = await getDashboardStats();
+      setDashboardData(response.data);
+    } catch (error) {
+      console.error('Lỗi tải thống kê:', error);
+      toast.error('Không thể tải thống kê dashboard!');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const stats = dashboardData ? [
     { 
       icon: <FaBus size={32} />, 
       label: t('totalBuses'), 
-      value: '12', 
+      value: dashboardData.totalBuses, 
       color: '#0097a7',
       bg: 'rgba(0, 151, 167, 0.1)'
     },
     { 
       icon: <FaUsers size={32} />, 
       label: t('driversLabel'), 
-      value: '8', 
+      value: dashboardData.totalDrivers, 
       color: '#00838f',
       bg: 'rgba(0, 131, 143, 0.1)'
     },
     { 
       icon: <FaRoute size={32} />, 
       label: t('routesLabel'), 
-      value: '6', 
+      value: dashboardData.totalRoutes, 
       color: '#0097a7',
       bg: 'rgba(0, 151, 167, 0.1)'
     },
     { 
       icon: <FaUsers size={32} />, 
       label: t('studentsLabel'), 
-      value: '156', 
+      value: dashboardData.totalStudents, 
       color: '#00838f',
       bg: 'rgba(0, 131, 143, 0.1)'
     },
     { 
       icon: <FaCalendar size={32} />, 
       label: t('schedulesLabel'), 
-      value: '24', 
+      value: dashboardData.totalSchedules, 
       color: '#0097a7',
       bg: 'rgba(0, 151, 167, 0.1)'
     },
     { 
       icon: <FaClock size={32} />, 
       label: t('activeToday'), 
-      value: '5', 
+      value: dashboardData.activeToday, 
       color: '#00838f',
       bg: 'rgba(0, 131, 143, 0.1)'
     }
-  ];
+  ] : [];
+
+  if (loading) {
+    return (
+      <Box sx={{ 
+        display: 'flex', 
+        justifyContent: 'center', 
+        alignItems: 'center', 
+        height: '100vh',
+        background: 'linear-gradient(135deg, #e8f4f8 0%, #d4e8f0 100%)'
+      }}>
+        <CircularProgress sx={{ color: '#0097a7' }} />
+      </Box>
+    );
+  }
 
   return (
     <Box sx={{ 
@@ -181,11 +217,14 @@ const MainPage = () => {
             gridTemplateColumns: { xs: '1fr', md: '1fr 1fr' },
             gap: '16px'
           }}>
-            {[
-              { title: `🚌 ${t('tripsToday')}`, count: '12/15' },
-              { title: `✅ ${t('completed')}`, count: '10' },
-              { title: `⏳ ${t('running')}`, count: '2' },
-              { title: `⚠️ ${t('delayed')}`, count: '0' }
+            {dashboardData && [
+              { 
+                title: `🚌 ${t('tripsToday')}`, 
+                count: `${dashboardData.todayTrips.completed + dashboardData.todayTrips.running}/${dashboardData.todayTrips.total}` 
+              },
+              { title: `✅ ${t('completed')}`, count: dashboardData.todayTrips.completed },
+              { title: `⏳ ${t('running')}`, count: dashboardData.todayTrips.running },
+              { title: `⚠️ ${t('delayed')}`, count: dashboardData.todayTrips.delayed }
             ].map((item, idx) => (
               <Box 
                 key={idx}

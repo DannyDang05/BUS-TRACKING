@@ -22,10 +22,27 @@ const __dirname = path.resolve();
 app.use("/public", express.static(path.join(__dirname, "public")));
 app.use(bodyParser.json({ limit: "50mb" }));
 app.use(bodyParser.urlencoded({ extended: true, limit: "50mb" }));
+// CORS Configuration - hỗ trợ nhiều origins
+const allowedOrigins = process.env.CORS_ORIGIN 
+  ? process.env.CORS_ORIGIN.split(',').map(origin => origin.trim())
+  : ['http://localhost:5173'];
+
 app.use(
   cors({
-    origin: process.env.CORS_ORIGIN || "http://localhost:5173",
+    origin: function(origin, callback) {
+      // Allow requests with no origin (mobile apps, Postman, etc.)
+      if (!origin) return callback(null, true);
+      
+      if (allowedOrigins.indexOf(origin) !== -1 || allowedOrigins.includes('*')) {
+        callback(null, true);
+      } else {
+        console.warn(`⚠️  CORS blocked origin: ${origin}`);
+        callback(new Error('Not allowed by CORS'));
+      }
+    },
     credentials: true,
+    methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
+    allowedHeaders: ['Content-Type', 'Authorization', 'Cookie']
   })
 );
 app.use(helmet());
@@ -44,8 +61,14 @@ const server = createServer(app);
 
 initSocketIO(server);
 
-server.listen(port, () => {
-  console.log(`✅ Server (HTTP & Socket.IO) running on http://localhost:${port}`);
+server.listen(port, '0.0.0.0', () => {
+  const env = process.env.NODE_ENV || 'development';
+  const serverUrl = process.env.SERVER_URL || `http://localhost:${port}`;
+  
+  console.log(`✅ Server (HTTP & Socket.IO) running on port ${port}`);
+  console.log(`🌍 Environment: ${env}`);
+  console.log(`🔗 Server URL: ${serverUrl}`);
+  console.log(`✅ CORS Origins: ${allowedOrigins.join(', ')}`);
   console.log(`✅ Using in-memory storage for bus locations`);
   
   // Khởi động Parent Notification Service

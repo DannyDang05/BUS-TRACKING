@@ -38,10 +38,17 @@ const getPickupPointById = async (req, res) => {
 
 // POST /api/v1/pickuppoints
 const createPickupPoint = async (req, res) => {
-  const { MaHocSinh, RouteId, DiaChi, Latitude, Longitude, PointOrder, TinhTrangDon } = req.body;
-  if (!MaHocSinh || !RouteId || Latitude == null || Longitude == null || PointOrder == null) {
-    return res.status(400).json({ errorCode: 1, message: 'Thiếu thông tin bắt buộc (MaHocSinh, RouteId, Latitude, Longitude, PointOrder).' });
+  let { MaHocSinh, RouteId, DiaChi, Latitude, Longitude, PointOrder, TinhTrangDon } = req.body;
+  
+  // Convert empty string to null
+  if (MaHocSinh === '' || MaHocSinh === undefined) {
+    MaHocSinh = null;
   }
+  
+  if (!RouteId || Latitude == null || Longitude == null || PointOrder == null) {
+    return res.status(400).json({ errorCode: 1, message: 'Thiếu thông tin bắt buộc (RouteId, Latitude, Longitude, PointOrder).' });
+  }
+  
   try {
     const [result] = await pool.query(
       'INSERT INTO pickuppoints (MaHocSinh, RouteId, DiaChi, Latitude, Longitude, PointOrder, TinhTrangDon) VALUES (?, ?, ?, ?, ?, ?, ?)',

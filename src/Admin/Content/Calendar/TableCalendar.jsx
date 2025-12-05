@@ -127,12 +127,24 @@ const TableCalendar = () => {
             ) : displayed.length === 0 ? (
               <TableRow><TableCell colSpan={10} className="table-empty">{t('noData')}</TableCell></TableRow>
             ) : (
-              displayed.map((s) => (
+              displayed.map((s) => {
+                // Format ngày đúng (tránh timezone UTC lùi ngày)
+                const formatDate = (dateStr) => {
+                  if (!dateStr) return '';
+                  console.log('dateStr từ DB:', dateStr);
+                  // Parse trực tiếp chuỗi YYYY-MM-DD, không dùng new Date()
+                  const [year, month, day] = dateStr.split('T')[0].split('-');
+                  const result = `${day}/${month}/${year}`;
+                  console.log('Sau khi format:', result);
+                  return result;
+                };
+                
+                return (
                 <TableRow key={s.id} onClick={() => handleClickOnRow({ row: s })}>
                   <TableCell>{s.id}</TableCell>
                   <TableCell>{s.routeCode}</TableCell>
                   <TableCell>{s.routeName}</TableCell>
-                  <TableCell>{s.date}</TableCell>
+                  <TableCell>{formatDate(s.date)}</TableCell>
                   <TableCell>
                     <span style={{
                       padding: '4px 12px',
@@ -180,7 +192,8 @@ const TableCalendar = () => {
                     </IconButton>
                   </TableCell>
                 </TableRow>
-              ))
+              );
+              })
             )}
           </TableBody>
         </Table>
